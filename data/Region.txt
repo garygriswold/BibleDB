@@ -1,0 +1,249 @@
+AF|AS|AS-SOU|ap-southeast-1|Afghanistan
+AX|EU|EU-NOR|eu-west-1|Åland Islands
+AL|EU|EU-SOU|eu-west-1|Albania
+DZ|AF|AF-NOR|eu-west-1|Algeria
+AS|OC|OC-POL|ap-southeast-2|American Samoa
+AD|EU|EU-SOU|eu-west-1|Andorra
+AO|AF|AF-MID|eu-west-1|Angola
+AI|SA|SA-CAR|us-east-1|Anguilla
+AQ|AN|AN-ANT|ap-southeast-2|Antarctica
+AG|SA|SA-CAR|us-east-1|Antigua and Barbuda
+AR|SA|SA-SOU|us-east-1|Argentina
+AM|AS|AS-WES|eu-west-1|Armenia
+AW|SA|SA-CAR|us-east-1|Aruba
+AU|OC|OC-AUS|ap-southeast-2|Australia
+AT|EU|EU-WES|eu-west-1|Austria
+AZ|AS|AS-WES|eu-west-1|Azerbaijan
+BS|SA|SA-CAR|us-east-1|Bahamas
+BH|AS|AS-WES|eu-west-1|Bahrain
+BD|AS|AS-SOU|ap-southeast-1|Bangladesh
+BB|SA|SA-CAR|us-east-1|Barbados
+BY|EU|EU-EAS|eu-west-1|Belarus
+BZ|SA|SA-CEN|us-east-1|Belize
+BE|EU|EU-WES|eu-west-1|Belgium
+BJ|AF|AF-WES|eu-west-1|Benin
+BM|NA|NA-NOR|us-east-1|Bermuda
+BT|AS|AS-SOU|ap-southeast-1|Bhutan
+BO|SA|SA-SOU|us-east-1|Bolivia
+BQ|SA|SA-CAR|us-east-1|Bonaire
+BA|EU|EU-SOU|eu-west-1|Bosnia and Herzegovina
+BW|AF|AF-SOU|eu-west-1|Botswana
+BV|AN|AN-ANT|ap-southeast-2|Bouvet Island
+BR|SA|SA-SOU|us-east-1|Brazil
+IO|EU|EU-WES|eu-west-1|British Indian Ocean Territory
+BN|AS|AS-SEA|ap-southeast-1|Brunei Darussalam
+BG|EU|EU-EAS|eu-west-1|Bulgaria
+BF|AF|AF-WES|eu-west-1|Burkina Faso
+BI|AF|AF-EAS|eu-west-1|Burundi
+CV|AF|AF-WES|eu-west-1|Cabo Verde
+KH|AS|AS-SEA|ap-southeast-1|Cambodia
+CM|AF|AF-MID|eu-west-1|Cameroon
+CA|NA|NA-NOR|us-east-1|Canada
+KY|SA|SA-CAR|us-east-1|Cayman Islands
+CF|AF|AF-MID|eu-west-1|Central African Republic
+TD|AF|AF-MID|eu-west-1|Chad
+CL|SA|SA-SOU|us-east-1|Chile
+CN|AS|AS-EAS|ap-northeast-1|China
+CX|OC|OC-AUS|ap-southeast-2|Christmas Island
+CC|OC|OC-AUS|ap-southeast-2|Cocos Islands
+CO|SA|SA-SOU|us-east-1|Colombia
+KM|AF|AF-EAS|eu-west-1|Comoros
+CG|AF|AF-MID|eu-west-1|Congo
+CD|AF|AF-MID|eu-west-1|Congo Democratic Republic
+CK|OC|OC-POL|ap-southeast-2|Cook Islands
+CR|SA|SA-CEN|us-east-1|Costa Rica
+CI|AF|AF-WES|eu-west-1|Côte d'Ivoire
+HR|EU|EU-SOU|eu-west-1|Croatia
+CU|SA|SA-CAR|us-east-1|Cuba
+CW|SA|SA-CAR|us-east-1|Curaçao
+CY|EU|AS-WES|eu-west-1|Cyprus
+CZ|EU|EU-EAS|eu-west-1|Czechia
+DK|EU|EU-NOR|eu-west-1|Denmark
+DJ|AF|AF-EAS|eu-west-1|Djibouti
+DM|SA|SA-CAR|us-east-1|Dominica
+DO|SA|SA-CAR|us-east-1|Dominican Republic
+EC|SA|SA-SOU|us-east-1|Ecuador
+EG|AF|AF-NOR|eu-west-1|Egypt
+SV|SA|SA-CEN|us-east-1|El Salvador
+GQ|AF|AF-MID|eu-west-1|Equatorial Guinea
+ER|AF|AF-EAS|eu-west-1|Eritrea
+EE|EU|EU-NOR|eu-west-1|Estonia
+ET|AF|AF-EAS|eu-west-1|Ethiopia
+FK|SA|SA-SOU|us-east-1|Falkland Islands
+FO|EU|EU-NOR|eu-west-1|Faroe Islands
+FJ|OC|OC-MEL|ap-southeast-2|Fiji
+FI|EU|EU-NOR|eu-west-1|Finland
+FR|EU|EU-WES|eu-west-1|France
+GF|SA|SA-SOU|us-east-1|French Guiana
+PF|OC|OC-POL|ap-southeast-2|French Polynesia
+TF|AN|AN-ANT|ap-southeast-2|French Southern Territories
+GA|AF|AF-MID|eu-west-1|Gabon
+GM|AF|AF-WES|eu-west-1|Gambia
+GE|AS|AS-WES|eu-west-1|Georgia
+DE|EU|EU-WES|eu-west-1|Germany
+GH|AF|AF-WES|eu-west-1|Ghana
+GI|EU|EU-SOU|eu-west-1|Gibraltar
+GR|EU|EU-SOU|eu-west-1|Greece
+GL|NA|NA-NOR|us-east-1|Greenland
+GD|SA|SA-CAR|us-east-1|Grenada
+GP|SA|SA-CAR|us-east-1|Guadeloupe
+GU|OC|OC-MIC|ap-southeast-2|Guam
+GT|SA|SA-CEN|us-east-1|Guatemala
+GG|EU|EU-NOR|eu-west-1|Guernsey
+GN|AF|AF-WES|eu-west-1|Guinea
+GW|AF|AF-WES|eu-west-1|Guinea-Bissau
+GY|SA|SA-SOU|us-east-1|Guyana
+HT|SA|SA-CAR|us-east-1|Haiti
+HM|AN|AN-ANT|ap-southeast-2|Heard Island and McDonald Islands
+VA|EU|EU-SOU|eu-west-1|Holy See
+HN|SA|SA-CEN|us-east-1|Honduras
+HK|AS|AS-EAS|ap-northeast-1|Hong Kong
+HU|EU|EU-EAS|eu-west-1|Hungary
+IS|EU|EU-NOR|eu-west-1|Iceland
+IN|AS|AS-SOU|ap-southeast-1|India
+ID|AS|AS-SEA|ap-southeast-1|Indonesia
+IR|AS|AS-SOU|ap-southeast-1|Iran
+IQ|AS|AS-WES|eu-west-1|Iraq
+IE|EU|EU-NOR|eu-west-1|Ireland
+IM|EU|EU-NOR|eu-west-1|Isle of Man
+IL|AS|AS-WES|eu-west-1|Israel
+IT|EU|EU-SOU|eu-west-1|Italy
+JM|SA|SA-CAR|us-east-1|Jamaica
+JP|AS|AS-EAS|ap-northeast-1|Japan
+JE|EU|EU-NOR|eu-west-1|Jersey
+JO|AS|AS-WES|eu-west-1|Jordan
+KZ|AS|AS-CEN|ap-northeast-1|Kazakhstan
+KE|AF|AF-EAS|eu-west-1|Kenya
+KI|OC|OC-MIC|ap-southeast-2|Kiribati
+KP|AS|AS-EAS|ap-northeast-1|North Korea
+KR|AS|AS-EAS|ap-northeast-1|South Korea
+KW|AS|AS-WES|eu-west-1|Kuwait
+KG|AS|AS-CEN|ap-northeast-1|Kyrgyzstan
+LA|AS|AS-SEA|ap-southeast-1|Lao
+LV|EU|EU-NOR|eu-west-1|Latvia
+LB|AS|AS-WES|eu-west-1|Lebanon
+LS|AF|AF-SOU|eu-west-1|Lesotho
+LR|AF|AF-WES|eu-west-1|Liberia
+LY|AF|AF-NOR|eu-west-1|Libya
+LI|EU|EU-WES|eu-west-1|Liechtenstein
+LT|EU|EU-NOR|eu-west-1|Lithuania
+LU|EU|EU-WES|eu-west-1|Luxembourg
+MO|AS|AS-EAS|ap-northeast-1|Macao
+MK|EU|EU-SOU|eu-west-1|Macedonia
+MG|AF|AF-EAS|eu-west-1|Madagascar
+MW|AF|AF-EAS|eu-west-1|Malawi
+MY|AS|AS-SEA|ap-southeast-1|Malaysia
+MV|AS|AS-SOU|ap-southeast-1|Maldives
+ML|AF|AF-WES|eu-west-1|Mali
+MT|EU|EU-SOU|eu-west-1|Malta
+MH|OC|OC-MIC|ap-southeast-2|Marshall Islands
+MQ|SA|SA-CAR|us-east-1|Martinique
+MR|AF|AF-WES|eu-west-1|Mauritania
+MU|AF|AF-EAS|eu-west-1|Mauritius
+YT|AF|AF-EAS|eu-west-1|Mayotte
+MX|NA|SA-CEN|us-east-1|Mexico
+FM|OC|OC-MIC|ap-southeast-2|Micronesia
+MD|EU|EU-EAS|eu-west-1|Moldova
+MC|EU|EU-WES|eu-west-1|Monaco
+MN|AS|AS-EAS|ap-northeast-1|Mongolia
+ME|EU|EU-SOU|eu-west-1|Montenegro
+MS|SA|SA-CAR|us-east-1|Montserrat
+MA|AF|AF-NOR|eu-west-1|Morocco
+MZ|AF|AF-EAS|eu-west-1|Mozambique
+MM|AS|AS-SEA|ap-southeast-1|Myanmar
+NA|AF|AF-SOU|eu-west-1|Namibia
+NR|OC|OC-MIC|ap-southeast-2|Nauru
+NP|AS|AS-SOU|ap-southeast-1|Nepal
+NL|EU|EU-WES|eu-west-1|Netherlands
+NC|OC|OC-MEL|ap-southeast-2|New Caledonia
+NZ|OC|OC-AUS|ap-southeast-2|New Zealand
+NI|SA|SA-CEN|us-east-1|Nicaragua
+NE|AF|AF-WES|eu-west-1|Niger
+NG|AF|AF-WES|eu-west-1|Nigeria
+NU|OC|OC-POL|ap-southeast-2|Niue
+NF|OC|OC-AUS|ap-southeast-2|Norfolk Island
+MP|OC|OC-MIC|ap-southeast-2|Northern Mariana Islands
+NO|EU|EU-NOR|eu-west-1|Norway
+OM|AS|AS-WES|eu-west-1|Oman
+PK|AS|AS-SOU|ap-southeast-1|Pakistan
+PW|OC|OC-MIC|ap-southeast-2|Palau
+PS|AS|AS-WES|eu-west-1|Palestine
+PA|SA|SA-CEN|us-east-1|Panama
+PG|OC|OC-MEL|ap-southeast-2|Papua New Guinea
+PY|SA|SA-SOU|us-east-1|Paraguay
+PE|SA|SA-SOU|us-east-1|Peru
+PH|AS|AS-SEA|ap-southeast-1|Philippines
+PN|OC|OC-POL|ap-southeast-2|Pitcairn
+PL|EU|EU-EAS|eu-west-1|Poland
+PT|EU|EU-SOU|eu-west-1|Portugal
+PR|SA|SA-CAR|us-east-1|Puerto Rico
+QA|AS|AS-WES|eu-west-1|Qatar
+RE|AF|AF-EAS|eu-west-1|Réunion
+RO|EU|EU-EAS|eu-west-1|Romania
+RU|EU|EU-EAS|eu-west-1|Russian Federation
+RW|AF|AF-EAS|eu-west-1|Rwanda
+BL|SA|SA-CAR|us-east-1|Saint Barthélemy
+SH|AF|AF-WES|eu-west-1|Saint Helena
+KN|SA|SA-CAR|us-east-1|Saint Kitts and Nevis
+LC|SA|SA-CAR|us-east-1|Saint Lucia
+MF|SA|SA-CAR|us-east-1|Saint Martin
+PM|NA|NA-NOR|us-east-1|Saint Pierre and Miquelon
+VC|SA|SA-CAR|us-east-1|Saint Vincent and the Grenadines
+WS|OC|OC-POL|ap-southeast-2|Samoa
+SM|EU|EU-SOU|eu-west-1|San Marino
+ST|AF|AF-MID|eu-west-1|Sao Tome and Principe
+SA|AS|AS-WES|eu-west-1|Saudi Arabia
+SN|AF|AF-WES|eu-west-1|Senegal
+RS|EU|EU-SOU|eu-west-1|Serbia
+SC|AF|AF-EAS|eu-west-1|Seychelles
+SL|AF|AF-WES|eu-west-1|Sierra Leone
+SG|AS|AS-SEA|ap-southeast-1|Singapore
+SX|SA|SA-CAR|us-east-1|Sint Maarten
+SK|EU|EU-EAS|eu-west-1|Slovakia
+SI|EU|EU-SOU|eu-west-1|Slovenia
+SB|OC|OC-MEL|ap-southeast-2|Solomon Islands
+SO|AF|AF-EAS|eu-west-1|Somalia
+ZA|AF|AF-SOU|eu-west-1|South Africa
+GS|AN|AN-ANT|ap-southeast-2|South Georgia
+SS|AF|AF-EAS|eu-west-1|South Sudan
+ES|EU|EU-SOU|eu-west-1|Spain
+LK|AS|AS-SOU|ap-southeast-1|Sri Lanka
+SD|AF|AF-NOR|eu-west-1|Sudan
+SR|SA|SA-SOU|us-east-1|Suriname
+SJ|EU|EU-NOR|eu-west-1|Svalbard and Jan Mayen
+SZ|AF|AF-SOU|eu-west-1|Swaziland
+SE|EU|EU-NOR|eu-west-1|Sweden
+CH|EU|EU-WES|eu-west-1|Switzerland
+SY|AS|AS-WES|eu-west-1|Syrian Arab Republic
+TW|AS|AS-EAS|ap-northeast-1|Taiwan
+TJ|AS|AS-CEN|ap-northeast-1|Tajikistan
+TZ|AF|AF-EAS|eu-west-1|Tanzania
+TH|AS|AS-SEA|ap-southeast-1|Thailand
+TL|AS|AS-SEA|ap-southeast-1|Timor-Leste
+TG|AF|AF-WES|eu-west-1|Togo
+TK|OC|OC-POL|ap-southeast-2|Tokelau
+TO|OC|OC-POL|ap-southeast-2|Tonga
+TT|SA|SA-CAR|us-east-1|Trinidad and Tobago
+TN|AF|AF-NOR|eu-west-1|Tunisia
+TR|AS|AS-WES|eu-west-1|Turkey
+TM|AS|AS-CEN|ap-northeast-1|Turkmenistan
+TC|SA|SA-CAR|us-east-1|Turks and Caicos Islands
+TV|OC|OC-POL|ap-southeast-2|Tuvalu
+UG|AF|AF-EAS|eu-west-1|Uganda
+UA|EU|EU-EAS|eu-west-1|Ukraine
+AE|AS|AS-WES|eu-west-1|United Arab Emirates
+GB|EU|EU-NOR|eu-west-1|United Kingdom
+UM|NA|NA-NOR|us-east-1|US Minor Outlying Islands
+US|NA|NA-NOR|us-east-1|United States
+UY|SA|SA-SOU|us-east-1|Uruguay
+UZ|AS|AS-CEN|ap-northeast-1|Uzbekistan
+VU|OC|OC-MEL|ap-southeast-2|Vanuatu
+VE|SA|SA-SOU|us-east-1|Venezuela
+VN|AS|AS-SEA|ap-southeast-1|Viet Nam
+VG|SA|SA-CAR|us-east-1|British Virgin Islands
+VI|SA|SA-CAR|us-east-1|US Virgin Islands
+WF|OC|OC-POL|ap-southeast-2|Wallis and Futuna
+EH|AF|AF-NOR|eu-west-1|Western Sahara
+YE|AS|AS-WES|eu-west-1|Yemen
+ZM|AF|AF-EAS|eu-west-1|Zambia
+ZW|AF|AF-EAS|eu-west-1|Zimbabwe

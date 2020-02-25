@@ -1,0 +1,218 @@
+af|af||Afrikaans
+agq|agq||Aghem
+ak|ak||Akan
+am|am||Amharic
+ar|ar||Arabic
+as|as||Assamese
+asa|asa||Asu
+ast|ast||Asturian
+az|az||Azerbaijani
+az_Cyrl|az|Cyrl|Azerbaijani (Cyrillic)
+az_Latn|az||Azerbaijani (Latin)
+bas|bas||Basaa
+be|be||Belarusian
+bem|bem||Bemba
+bez|bez||Bena
+bg|bg||Bulgarian
+bm|bm||Bambara
+bn|bn||Bangla
+bo|bo||Tibetan
+br|br||Breton
+brx|brx||Bodo
+bs|bs||Bosnian
+bs_Cyrl|bs|Cyrl|Bosnian (Cyrillic)
+bs_Latn|bs||Bosnian (Latin)
+ca|ca||Catalan
+ccp|ccp||Chakma
+ce|ce||Chechen
+cgg|cgg||Chiga
+chr|chr||Cherokee
+ckb|ckb||Central Kurdish
+cs|cs||Czech
+cy|cy||Welsh
+da|da||Danish
+dav|dav||Taita
+de|de||German
+dje|dje||Zarma
+dsb|dsb||Lower Sorbian
+dua|dua||Duala
+dyo|dyo||Jola-Fonyi
+dz|dz||Dzongkha
+ebu|ebu||Embu
+ee|ee||Ewe
+el|el||Greek
+en|en||English
+eo|eo||Esperanto
+es|es||Spanish
+et|et||Estonian
+eu|eu||Basque
+ewo|ewo||Ewondo
+fa|fa||Persian
+ff|ff||Fulah
+fi|fi||Finnish
+fil|fil||Filipino
+fo|fo||Faroese
+fr|fr||French
+fur|fur||Friulian
+fy|fy||Western Frisian
+ga|ga||Irish
+gd|gd||Scottish Gaelic
+gl|gl||Galician
+gsw|gsw||Swiss German
+gu|gu||Gujarati
+guz|guz||Gusii
+gv|gv||Manx
+ha|ha||Hausa
+haw|haw||Hawaiian
+he|he||Hebrew
+hi|hi||Hindi
+hr|hr||Croatian
+hsb|hsb||Upper Sorbian
+hu|hu||Hungarian
+hy|hy||Armenian
+id|id||Indonesian
+ig|ig||Igbo
+ii|ii||Sichuan Yi
+is|is||Icelandic
+it|it||Italian
+iu|iu||Inuktitut
+ja|ja||Japanese
+jgo|jgo||Ngomba
+jmc|jmc||Machame
+ka|ka||Georgian
+kab|kab||Kabyle
+kam|kam||Kamba
+kde|kde||Makonde
+kea|kea||Kabuverdianu
+khq|khq||Koyra Chiini
+ki|ki||Kikuyu
+kk|kk||Kazakh
+kkj|kkj||Kako
+kl|kl||Kalaallisut
+kln|kln||Kalenjin
+km|km||Khmer
+kn|kn||Kannada
+ko|ko||Korean
+kok|kok||Konkani
+ks|ks||Kashmiri
+ksb|ksb||Shambala
+ksf|ksf||Bafia
+ksh|ksh||Colognian
+kw|kw||Cornish
+ky|ky||Kyrgyz
+lag|lag||Langi
+lb|lb||Luxembourgish
+lg|lg||Ganda
+lkt|lkt||Lakota
+ln|ln||Lingala
+lo|lo||Lao
+lrc|lrc||Northern Luri
+lt|lt||Lithuanian
+lu|lu||Luba-Katanga
+luo|luo||Luo
+luy|luy||Luyia
+lv|lv||Latvian
+mas|mas||Masai
+mer|mer||Meru
+mfe|mfe||Morisyen
+mg|mg||Malagasy
+mgh|mgh||Makhuwa-Meetto
+mgo|mgo||Metaʼ
+mk|mk||Macedonian
+ml|ml||Malayalam
+mn|mn||Mongolian
+mr|mr||Marathi
+ms|ms||Malay
+ms_Arab|ms|Arab|Malay (Arabic)
+mt|mt||Maltese
+mua|mua||Mundang
+my|my||Burmese
+mzn|mzn||Mazanderani
+naq|naq||Nama
+nb|nb||Norwegian Bokmål
+nd|nd||North Ndebele
+nds|nds||Low German
+ne|ne||Nepali
+nl|nl||Dutch
+nmg|nmg||Kwasio
+nn|nn||Norwegian Nynorsk
+nnh|nnh||Ngiemboon
+nus|nus||Nuer
+nyn|nyn||Nyankole
+om|om||Oromo
+or|or||Odia
+os|os||Ossetic
+pa|pa||Punjabi
+pa_Arab|pa|Arab|Punjabi (Arabic)
+pa_Guru|pa||Punjabi (Gurmukhi)
+pl|pl||Polish
+ps|ps||Pashto
+pt|pt||Portuguese
+qu|qu||Quechua
+rm|rm||Romansh
+rn|rn||Rundi
+ro|ro||Romanian
+rof|rof||Rombo
+ru|ru||Russian
+rw|rw||Kinyarwanda
+rwk|rwk||Rwa
+sah|sah||Sakha
+saq|saq||Samburu
+sbp|sbp||Sangu
+se|se||Northern Sami
+seh|seh||Sena
+ses|ses||Koyraboro Senni
+sg|sg||Sango
+shi|shi||Tachelhit
+shi_Latn|shi||Tachelhit (Latin)
+shi_Tfng|shi|Tfng|Tachelhit (Tifinagh)
+si|si||Sinhala
+sk|sk||Slovak
+sl|sl||Slovenian
+smn|smn||Inari Sami
+sn|sn||Shona
+so|so||Somali
+sq|sq||Albanian
+sr|sr||Serbian
+sr_Cyrl|sr||Serbian (Cyrillic)
+sr_Latn|sr|Latn|Serbian (Latin)
+sv|sv||Swedish
+sw|sw||Swahili
+ta|ta||Tamil
+te|te||Telugu
+teo|teo||Teso
+tg|tg||Tajik
+th|th||Thai
+ti|ti||Tigrinya
+tk|tk||Turkmen
+to|to||Tongan
+tr|tr||Turkish
+tt|tt||Tatar
+twq|twq||Tasawaq
+tzm|tzm||Central Atlas Tamazight
+ug|ug||Uyghur
+uk|uk||Ukrainian
+ur|ur||Urdu
+uz|uz||Uzbek
+uz_Arab|uz|Arab|Uzbek (Arabic)
+uz_Cyrl|uz||Uzbek (Cyrillic)
+uz_Latn|uz|Latn|Uzbek (Latin)
+vai|vai||Vai
+vai_Latn|vai|Latn|Vai (Latin)
+vai_Vaii|vai||Vai (Vai)
+vi|vi||Vietnamese
+vun|vun||Vunjo
+wae|wae||Walser
+wo|wo||Wolof
+xog|xog||Soga
+yav|yav||Yangben
+yi|yi||Yiddish
+yo|yo||Yoruba
+yue|yue||Cantonese
+yue_Hans|yue|Hans|Cantonese (Simplified)
+yue_Hant|yue|Hant|Cantonese (Traditional)
+zgh|zgh||Standard Moroccan Tamazight
+zh|zh||Chinese
+zh_Hans|zh|Hans|Chinese (Simplified)
+zh_Hant|zh|Hant|Chinese (Traditional)
+zu|zu||Zulu

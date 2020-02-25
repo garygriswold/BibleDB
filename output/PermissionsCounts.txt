@@ -1,0 +1,204 @@
+1060 	*/info.json
+287 	text/ALSABV/ALSABV/ALSABV_*.html	260 NT chapters + 27 title pages
+1255 	text/ARBBIB/ARBBIB/ARBBIB_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/ARBIBS/ARBIBS/ARBIBS_*.html	260 NT chapters + 27 title pages
+968 	text/ARBVDV/ARZVDV/ARZVDV_*.html	929 OT + 39 title pages
+1258 	text/ARBWTC/ARBWTC/ARBWTC_*.html	929 OT + 260 NT chapters + 66 title pages + FRT, GLO, BAK
+1256 	text/AZBEMV/AZBEMV/AZBEMV_*.html	929 OT + 260 NT chapters + 66 title pages + FRT
+1256 	text/AZEBSA/AZEBSA/AZEBSA_*.html	929 OT + 260 NT chapters + 66 title pages + XXG
+319 	text/BELJFC/BELJFC/BELJFC_*.html	260 NT + 31 Proverbs + 28 title pages
+287 	text/BENBBS/BNGBBS/BNGBBS_*.html	260 NT chapters + 27 title pages
+1255 	text/BENCLV/BNGCLV/BNGCLV_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/BENRBV/BNGRBV/BNGRBV_*.html	260 NT chapters + 27 title pages
+287 	text/BENWTC/BNGWTC/BNGWTC_*.html	260 NT chapters + 27 title pages
+1255 	text/CHEIBT/CHEIBT/CHEIBT_*.html	929 OT + 260 NT chapters + 66 title pages
+1255 	text/CMNUNV/CMNUNV/CMNUNV_*.html	929 OT + 260 NT chapters + 66 title pages
+1255 	text/DEUL12/GERL12/GERL12_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/ELLAPE/GRKEPT/GRKEPT_*.html	260 NT chapters + 27 title pages
+287 	text/ELLELL/GRKSFT/GRKSFT_*.html	260 NT chapters + 27 title pages
+1255 	text/ENGESV/ENGESV/ENGESV_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/ENGNAB/ENGNAB/ENGNAB_*.html	260 NT chapters + 27 title pages
+1485 	text/ENGWEB/ENGWEB/ENGWEB_*.html	929 OT + 260 NT chapters + 66 title + 228 Apocryphal + FRT, GLO
+287 	text/EUSBSS/EUSEAB/EUSEAB_*.html	260 NT chapters + 27 title pages
+287 	text/EWEB11/EWEBSG/EWEBSG_*.html	260 NT chapters + 27 title pages
+287 	text/EWEIBS/EWEIBS/EWEIBS_*.html	260 NT chapters + 27 title pages
+287 	text/FFMWBT/FFMTBL/FFMTBL_*.html	260 NT chapters + 27 title pages
+1255 	text/FRALSG/FRNLSV/FRNLSV_*.html	929 OT + 260 NT chapters + 66 title pages
+1255 	text/FRNTLS/FRNTLS/FRNTLS_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/FUHSIM/FUHSIM/FUHSIM_*.html	260 NT chapters + 27 title pages
+287 	text/FUHWBT/FU3WBT/FU3WBT_*.html	260 NT chapters + 27 title pages
+287 	text/FUQWBT/FUQWBT/FUQWBT_*.html	260 NT chapters + 27 title pages
+287 	text/HAEBSE/HAEBSE/HAEBSE_*.html	260 NT chapters + 27 title pages
+287 	text/HAUCLV/HAUCLV/HAUCLV_*.html	260 NT chapters + 27 title pages
+287 	text/HINWTC/HNDWTC/HNDWTC_*.html	260 NT chapters + 27 title pages
+287 	text/HNDSKV/HNDSKV/HNDSKV_*.html	260 NT chapters + 27 title pages
+287 	text/HUNHUN/HUNRNT/HUNRNT_*.html	260 NT chapters + 27 title pages
+1255 	text/HUNK90/HUNK90/HUNK90_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/INDWBT/INZTSI/INZTSI_*.html	260 NT chapters + 27 title pages
+287 	text/ISLIB07/ISLICE/ISLICE_*.html	260 NT chapters + 27 title pages
+287 	text/KANWTC/ERVWTC/ERVWTC_*.html	260 NT chapters + 27 title pages
+287 	text/KAZKAZ/KAZKAZ/KAZKAZ_*.html	260 NT chapters + 27 title pages
+287 	text/KDEDVRNT/KDEDPI/KDEDPI_*.html	260 NT chapters + 27 title pages
+287 	text/KHQBIV/KHQBIV/KHQBIV_*.html	260 NT chapters + 27 title pages
+284 	text/KINSIX/RUAICG/RUAICG_*.html	260 NT chapters + 24 title pages (none of PHM, 2JN, 3JN)
+1255 	text/KORKRV/KORKRV/KKNKRV_*.html	929 OT + 260 NT chapters + 66 title pages
+1255 	text/KORVOM/KO2VOM/KO2VOM_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/LTZBIV/LTZBIV/LTZBIV_*.html	260 NT chapters + 27 title pages
+287 	text/MALNIB/MJSWTC/MJSWTC_*.html	260 NT chapters + 27 title pages
+287 	text/MARWTC/MARWTC/MARWTC_*.html	260 NT chapters + 27 title pages
+1137 	text/MERUBS/MERUBS/MERUBS_*.html	Missing 1&2 Sam, 1&2 King, 1&2 Chron, 1&2 Thes, 1&2 Tim, 1&2 Pet, 1,2,3 John, and added 9 Apocryphyl books (TOB, JDT, ESG, WIS, SIR, BAR, S3Y, SUS, BEL)
+287 	text/MYABJB/MYAOJV/MYAOJV_*.html	260 NT chapters + 27 title pages
+287 	text/NUSBSS/NUSBSS/NUSBSS_*.html	260 NT chapters + 27 title pages
+287 	text/NYNBSU/NYNBSU/NYNBSU_*.html	260 NT chapters + 27 title pages
+287 	text/ORYWTC/ORYWTC/ORYWTC_*.html	260 NT chapters + 27 title pages
+1255 	text/PESNMV/PESEMV/PESEMV_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/PESTPV/PESTPV/PESTPV_*.html	260 NT chapters + 27 title pages
+287 	text/POLNCV/POLNCV/POLNCV_*.html	260 NT chapters + 27 title pages
+1255 	text/PORACF/PORACF/PORACF_*.html	929 OT + 260 NT chapters + 66 title pages
+1255 	text/PORJFA/PORJFA/PORJFA_*.html	929 OT + 260 NT chapters + 66 title pages
+1255 	text/PRSGNN/PRSGNN/PRSGNN_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/QUHQUE/QUHRBV/QUHRBV_*.html	260 NT chapters + 27 title pages
+287 	text/QXHWBT/QXHWBT/QXHWBT_*.html	260 NT chapters + 27 title pages
+291 	text/QXRBSE/QXRBSE/QXRBSE_*.html	260 NT chapters + 27 title pages + FRT, GLO, INT, OTH
+1255 	text/RONCORN/RONDCV/RONDCV_*.html	929 OT + 260 NT chapters + 66 title pages
+1257 	text/RUSWTC/RUSWTC/RUSWTC_*.html	929 OT + 260 NT chapters + 66 title pages + FRT, GLO
+439 	text/SAHIBT/SAHIBT/SAHIBT_*.html	260 NT + 151 Psalms + 28 title pages
+287 	text/SEHBSM/SEHBSM/SEHBSM_*.html	260 NT chapters + 27 title pages
+287 	text/SPABDA/SPNBDA/SPNBDA_*.html	260 NT chapters + 27 title pages
+1255 	text/SPANVI/SPNNVI/SPNNVI_*.html	929 OT + 260 NT chapters + 66 title pages
+1255 	text/SPAR60/SPNR60/SPNR60_*.html	929 OT + 260 NT chapters + 66 title pages
+1255 	text/SPARVC/SPNRVC/SPNRVC_*.html	929 OT + 260 NT chapters + 66 title pages
+1283 	text/SPAWTC/SPNWTC/SPNWTC_*.html	929 OT + 260 NT chapters + 66 title pages + 28 FRT, XXA, XXB, XXC, GLO, BAK, OTH
+1255 	text/SWABIB/SWABIB/SWABIB_*.html	929 OT + 260 NT chapters + 66 title pages
+1255 	text/SWES17/SWES17/SWES17_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/SWESFV/SWESFV/SWESFV_*.html	260 NT chapters + 27 title pages
+287 	text/TAMWTC/TCVWTC/TCVWTC_*.html	260 NT chapters + 27 title pages
+290 	text/TATIBT/TTRIBT/TTRIBT_*.html	260 NT chapters + 27 title pages + GLO, INT, XXA
+1255 	text/TELWTC/TCWWTC/TCWWTC_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/TEOBSU/TEOBSU/TEOBSU_*.html	260 NT chapters + 27 title pages
+303 	text/TGKIBT/TGKIBT/TGKIBT_*.html	260 NT + 4 Ruth + 10 Esther chapters + 29 title pages
+287 	text/THAKJV/THAKJV/THAKJV_*.html	260 NT chapters + 27 title pages
+287 	text/THATSV/THATSV/THATSV_*.html	260 NT chapters + 27 title pages
+287 	text/TIRTBI/TIRUBS/TIRUBS_*.html	260 NT chapters + 27 title pages
+1255 	text/TONBAX/TONRWT/TONRWT_*.html	929 OT + 260 NT chapters + 66 title pages
+287 	text/TONBSP/TONBSP/TONBSP_*.html	260 NT chapters + 27 title pages
+1283 	text/TUKIBT/TUKIBT/TUKIBT_*.html	929 OT + 260 NT chapters + 66 title + 27 GLO + INT
+287 	text/TURBLI/TRKWTC/TRKWTC_*.html	260 NT chapters + 27 title pages
+287 	text/URDWTC/URDWTC/URDWTC_*.html	260 NT chapters + 27 title pages
+489 	text/UZNIBT/UZBIBT/UZBIBT_*.html	260 NT + 150 Psalms + 50 Genesis chapters + 29 title pages
+1257 	text/VIEWTC/VIEWTC/VIEWTC_*.html	929 OT + 260 NT chapters + 66 title pages + 2 XXF
+287 	text/XMMLAI/XMMLAI/XMMLAI_*.html	260 NT chapters + 27 title pages
+287 	text/XOGBSU/XOGBSU/XOGBSU_*.html	260 NT chapters + 27 title pages
+287 	text/YORYOR/YORUBS/YORUBS_*.html	260 NT chapters + 27 title pages
+287 	text/YUEUNV/YUHUNV/YUHUNV_*.html	260 NT chapters + 27 title pages
+1260 	text/ZLMAVB/ZLMAVB/ZLMAVB_*.html	929 OT + 260 NT chapters + 66 title pages + FRT, GLO, INT, OTH, BAK
+287 	text/ZLMTMV/MLYBSM/MLYBSM_*.html	260 NT chapters + 27 title pages
+260 	audio/ARBIBS/ARBIBSN2DA/B*ARBIBSN2DA.mp3	260 NT chapters
+929 	audio/ARBVDV/ARZVDVO2DA/A*ARZVDVO2DA.mp3	929 OT chapters
+260 	audio/ARBVDV/ARZVDVN2DA/B*ARZVDVN2DA.mp3	260 NT chapters
+929 	audio/ARBVDV/ARZVDVO2DA/A*ARZVDVO2DA.mp3	929 OT chapters
+260 	audio/ARBVDV/ARZVDVN2DA/B*ARZVDVN2DA.mp3	260 NT chapters
+929 	audio/ARBWTC/ARBWTCO1DA/A*ARBWTCO1DA.mp3	929 OT chapters
+260 	audio/ARBWTC/ARBWTCN1DA/B*ARBWTCN1DA.mp3	260 NT chapters
+929 	audio/AZBEMV/AZBEMVO1DA/A*AZBEMVO1DA.mp3	929 NT chapters
+260 	audio/AZBEMV/AZBEMVN1DA/B*AZBEMVN1DA.mp3	260 NT chapters
+260 	audio/AZEBSA/AZEBSAN2DA/B*AZEBSAN2DA.mp3	260 NT chapters
+260 	audio/BENBBS/BNGBBSN2DA/B*BNGBBSN2DA.mp3	260 NT chapters
+260 	audio/BENCLV/BNGCLVN2DA/B*BNGCLVN2DA.mp3	260 NT chapters
+260 	audio/BENRBV/BNGRBVN2DA/B*BNGRBVN2DA.mp3	260 NT chapters
+260 	audio/BENWTC/BNGWTCN2DA/B*BNGWTCN2DA.mp3	260 NT chapters
+260 	audio/CHEIBT/CHEIBTN2DA/B*CHEIBTN2DA.mp3	260 NT chapters
+929 	audio/CMNUNV/CHNUNVO2DA/A*CHNUNVO2DA.mp3	929 OT chapters
+260 	audio/CMNUNV/CHNUNVN2DA/B*CHNUNVN2DA.mp3	260 NT chapters
+1101 	audio/ELLAPE/GRKAVSO1DA/A*O1GRKAVS.mp3		929 OT chapters + 172 Apocryphal chapters
+260 	audio/ELLAPE/GRKEPTN1DA/B*GRKEPTN1DA.mp3	260 NT chapters
+260 	audio/ELLELL/GRKSFTN1DA/B*GRKSFTN1DA.mp3	260 NT chapters
+929 	audio/ENGESV/ENGESVO2DA/A*ENGESVO2DA.mp3	929 OT chapters
+260 	audio/ENGESV/ENGESVN2DA/B*ENGESVN2DA.mp3	260 NT chapters
+260 	audio/ENGNAB/ENGNABN2DA/B*N2NABXXX.mp3		260 NT chapters
+929 	audio/ENGWEB/EN1WEBO2DA/A*EN1WEBO2DA.mp3	929 OT chapters
+260 	audio/ENGWEB/EN1WEBN2DA/B*EN1WEBN2DA.mp3	260 NT chapters
+929 	audio/ARBWTC/ARBWTCO1DA/A*ARBWTCO1DA.mp3	929 OT chapters
+260 	audio/ARBWTC/ARBWTCN1DA/B*ARBWTCN1DA.mp3	260 NT chapters
+260 	audio/BENWTC/BNGWTCN2DA/B*BNGWTCN2DA.mp3	260 NT chapters
+260 	audio/BULPRB/BLGAMBN1DA/B*BLGAMBN1DA.mp3	260 NT chapters
+929 	audio/CMNUNV/CHNUNVO2DA/A*CHNUNVO2DA.mp3	929 NT chapters
+260 	audio/CMNUNV/CHNUNVN2DA/B*CHNUNVN2DA.mp3	260 NT chapters
+929 	audio/ENGESV/ENGESVO2DA/A*ENGESVO2DA.mp3	929 NT chapters
+260 	audio/ENGESV/ENGESVN2DA/B*ENGESVN2DA.mp3	260 NT chapters
+260 	audio/HINWTC/HNDWTCN2DA/B*HNDWTCN2DA.mp3	260 NT chapters
+260 	audio/HUNHBS/HUNHBSN1DA/B*HUNHBSN1DA.mp3	260 NT chapters
+260 	audio/INDSHL/INZSHLN2DA/B*INZSHLN2DA.mp3	260 NT chapters
+260 	audio/KANWTC/ERVWTCN2DA/B*ERVWTCN2DA.mp3	260 NT chapters
+260 	audio/MARWTC/MARWTCN2DA/B*MARWTCN2DA.mp3	260 NT chapters
+260 	audio/ORYWTC/ORYWTCN2DA/B*ORYWTCN2DA.mp3	260 NT chapters
+260 	audio/PORBAR/PORARAN2DA/B*PORARAN2DA.mp3	260 NT chapters
+929 	audio/RUSS76/RUSS76O2DA/A*RUSS76O2DA.mp3	929 OT chapters
+260 	audio/RUSS76/RUSS76N2DA/B*RUSS76N2DA.mp3	260 NT chapters
+260 	audio/SPAWTC/SPNWTCN2DA/B*SPNWTCN2DA.mp3	260 NT chapters
+260 	audio/TAMWTC/TCVWTCN1DA/B*TCVWTCN1DA.mp3	260 NT chapters
+260 	audio/UKRN39/UKRO95N2DA/B*UKRO95N2DA.mp3	260 NT chapters
+260 	audio/URDWTC/URDWTCN2DA/B*URDWTCN2DA.mp3	260 NT chapters
+260 	audio/EUSBSS/EUSEABN2DA/B*EUSEABN2DA.mp3	260 NT chapters
+260 	audio/EWEB11/EWEBSGN2DA/B*EWEBSGN2DA.mp3	260 NT chapters
+260 	audio/EWEIBS/EWEIBSN2DA/B*EWEIBSN2DA.mp3	260 NT chapters
+260 	audio/FFMWBT/FFMTBLN2DA/B*FFMTBLN2DA.mp3	260 NT chapters
+929 	audio/FRNTLS/FRNTLSO2DA/A*O2FRATLS.mp3		929 OT chapters
+260 	audio/FRNTLS/FRNTLSN2DA/B*N2FRATLS.mp3		260 NT chapters
+260 	audio/FUHSIM/FUHSIMN1DA/B*FUHSIMN1DA.mp3	260 NT chapters
+260 	audio/FUHWBT/FU3WBTN2DA/B*FU3WBTN2DA.mp3	260 NT chapters
+260 	audio/FUQWBT/FUQWBTN2DA/B*FUQWBTN2DA.mp3	260 NT chapters
+260 	audio/HAEBSE/HAEBSEN2DA/B*HAEBSEN2DA.mp3	260 NT chapters
+260 	audio/HAUCLV/HAUCLVN2DA/B*HAUCLVN2DA.mp3	260 NT chapters
+260 	audio/HINWTC/HNDWTCN2DA/B*HNDWTCN2DA.mp3	260 NT chapters
+260 	audio/HNDSKV/HNDSKVN2DA/B*HNDSKVN2DA.mp3	260 NT chapters
+929 	audio/HUNHUN/HUNRNTO1DA/A*HUNRNTO1DA.mp3	929 OT chapters
+260 	audio/HUNHUN/HUNRNTN1DA/B*HUNRNTN1DA.mp3	260 NT chapters
+260 	audio/INDWBT/INZTSIN2DA/B*INZTSIN2DA.mp3	260 NT chapters
+260 	audio/KANWTC/ERVWTCN2DA/B*ERVWTCN2DA.mp3	260 NT chapters
+260 	audio/KAZKAZ/KAZKAZN2DA/B*KAZKAZN2DA.mp3	260 NT chapters
+260 	audio/KDEDVRNT/KDEDPIN1DA/B*KDEPBTN1DA.mp3	260 NT chapters
+260 	audio/KHQBIV/KHQBIVN1DA/B*KHQBIVN1DA.mp3	260 NT chapters
+260 	audio/KINSIX/RUAICGN2DA/B*RUAICGN2DA.mp3	260 NT chapters
+929 	audio/ENGKJV/ENGKJVO2DA/A*ENGKJVO2DA.mp3	929 OT chapters
+260 	audio/ENGKJV/ENGKJVN2DA/B*ENGKJVN2DA.mp3	260 NT chapters
+260 	audio/KORVOM/KO2VOMN2DA/B*KO2VOMN2DA.mp3	260 NT chapters
+260 	audio/MALNIB/MJSWTCN2DA/B*MJSWTCN2DA.mp3	260 NT chapters
+260 	audio/MARWTC/MARWTCN2DA/B*MARWTCN2DA.mp3	260 NT chapters
+260 	audio/MYABJB/MYAOJVN2DA/B*MYAOJVN2DA.mp3	260 NT chapters
+260 	audio/NUSBSS/NUSBSSN2DA/B*NUSBSSN2DA.mp3	260 NT chapters
+260 	audio/NYNBSU/NYNBSUN2DA/B*NYNBSUN2DA.mp3	260 NT chapters
+260 	audio/ORYWTC/ORYWTCN2DA/B*ORYWTCN2DA.mp3	260 NT chapters
+260 	audio/PESTPV/PESTPVN2DA/B*PESTPVN2DA.mp3	260 NT chapters
+260 	audio/POLNCV/POLNCVN2DA/B*POLNCVN2DA.mp3	260 NT chapters
+260 	audio/PRSGNN/PRSGNNN2DA/B*N2PRSGNN.mp3		260 NT chapters
+260 	audio/QUHQUE/QUHRBVN2DA/B*QUHRBVN2DA.mp3	260 NT chapters
+260 	audio/QXHWBT/QXHWBTN2DA/B*QXHWBTN2DA.mp3	260 NT chapters
+260 	audio/QXRBSE/QXRBSEN2DA/B*QXRBSEN2DA.mp3	260 NT chapters
+929 	audio/RONCORN/RONDCVO1DA/A*RONDCVO1DA.mp3	929 OT chapters
+260 	audio/RONCORN/RONDCVN1DA/B*RONDCVN1DA.mp3	260 NT chapters
+260 	audio/SEHBSM/SEHBSMN2DA/B*SEHBSMN2DA.mp3	260 NT chapters
+260 	audio/SPABDA/SPNBDAN2DA/B*SPNBDAN2DA.mp3	260 NT chapters
+260 	audio/SPANVI/SPNNVIN2DA/B*SPNNVIN2DA.mp3	260 NT chapters
+929 	audio/SPAR60/SPNR60O1DA/A*SPNR60O1DA.mp3	929 OT chapters
+260 	audio/SPAR60/SPNR60N1DA/B*SPNR60N1DA.mp3	260 NT chapters
+260 	audio/SPAWTC/SPNWTCN2DA/B*SPNWTCN2DA.mp3	260 NT chapters
+260 	audio/SWESFV/SWESFVN2DA/B*SWESFVN2DA.mp3	260 NT chapters
+260 	audio/TAMWTC/TCVWTCN2DA/B*TCVWTCN2DA.mp3	260 NT chapters
+260 	audio/TATIBT/TTRIBTN2DA/B*TTRIBTN2DA.mp3	260 NT chapters
+260 	audio/TELWTC/TCWWTCN2DA/B*TCWWTCN2DA.mp3	260 NT chapters
+260 	audio/TEOBSU/TEOBSUN2DA/B*TEOBSUN2DA.mp3	260 NT chapters
+260 	audio/TGKIBT/TGKIBTN2DA/B*TGKIBTN2DA.mp3	260 NT chapters
+260 	audio/THATSV/THATSVN2DA/B*THATSVN2DA.mp3	260 NT chapters
+260 	audio/TIRTBI/TIRUBSN2DA/B*TIRUBSN2DA.mp3	260 NT chapters
+929 	audio/TUKIBT/TUKIBTO2DA/A*TUKIBTO2DA.mp3	929 NT chapters
+260 	audio/TURBLI/TRKWTCN2DA/B*TRKWTCN2DA.mp3	260 NT chapters
+260 	audio/URDWTC/URDWTCN2DA/B*URDWTCN2DA.mp3	260 NT chapters
+260 	audio/UZNIBT/UZBIBTN2DA/B*UZBIBTN2DA.mp3	260 NT chapters
+929 	audio/ENGWEB/ENGWEBO2DA/A*ENGWEBO2DA.mp3	929 OT chapters
+260 	audio/ENGWEB/ENGWEBN2DA/B*ENGWEBN2DA.mp3	260 NT chapters
+260 	audio/XMMLAI/XMMLAIN2DA/B*XMMLAIN2DA.mp3	260 NT chapters
+260 	audio/XOGBSU/XOGBSUN2DA/B*XOGBSUN2DA.mp3	260 NT chapters
+260 	audio/YORYOR/YORUBSN2DA/B*YORUBSN2DA.mp3	260 NT chapters
+260 	audio/YUEUNV/YUHUNVN2DA/B*YUHUNVN2DA.mp3	260 NT chapters
+260 	audio/ZLMAVB/ZLMAVBN2DA/B*ZLMAVBN2DA.mp3	260 NT chapters

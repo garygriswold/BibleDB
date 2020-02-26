@@ -1,5 +1,7 @@
+PRAGMA foreign_keys = ON;
 
-CREATE TABLE Region (
+DROP TABLE IF EXISTS regions;
+CREATE TABLE regions (
   country_id TEXT NOT NULL PRIMARY KEY,
   country_name TEXT NOT NULL,
   continent_id TEXT NOT NULL CHECK (continent_id IN('AF','EU','AS','NA','SA','OC','AN')),
@@ -13,63 +15,79 @@ CREATE TABLE Region (
     'ap-northeast-1', 'ap-southeast-1', 'ap-southeast-2',
     'eu-west-1', 'us-east-1')));
 
-Question: Text and Audio are associated with a version, but Video, 
-is not, it is only associated with a language
-
+DROP TABLE IF EXISTS credentials;
 CREATE TABLE credentials ( -- For in-app use only??
   name TEXT PRIMARY KEY,
   access_key TEXT NOT NULL,
   secret_key TEXT NOT NULL);
 
+-- This is here primarily to be a foreign key for iso3
+DROP TABLE IF EXISTS languages;
+CREATE TABLE languages ( 
+  iso3 TEXT NOT NULL PRIMARY KEY,
+  english_name TEXT NOT NULL);
+
+-- When the first 3 chars of a bible_id is not a valid language code, it should be found here.
+-- This table does not need to exist in final database
+-- It could be a lookup table in a program instead
+DROP TABLE IF EXISTS language_corrections;
+CREATE TABLE language_corrections (
+  fcbh_iso3 TEXT NOT NULL PRIMARY KEY,
+  iso3 TEXT NOT NULL,
+  FOREIGN KEY (iso3) REFERENCES languages(iso3));
+
 -- This table exists as a table of allowed locales in the APP os, and
 -- is a constraint on this data in bibles
-
-CREATE TABLE locale (
+DROP TABLE IF EXISTS locales;
+CREATE TABLE locales (
   iso TEXT NOT NULL, -- this can be a 2 char or 3 char iso
   script TEXT NULL, -- This should contain the valid script codes for each iso1
-  country TEXT NULL,
-  -- are there other variants that I should consider?
-  direction TEXT NOT NULL CHECK (direction IN ('ltr', 'rtl') -- This is associated with script code
-  name TEXT NOT NULL,
-  PRIMARY KEY (iso, script, country));
+  country_id TEXT NULL,
+  -- I should include other variants that are produced by Apple or Android
+  direction TEXT NOT NULL CHECK (direction IN ('ltr', 'rtl')), -- This is associated with script code
+  english_name TEXT NOT NULL,
+    -- there could be a locale as PRIMARY KEY, but the problem of _ vs - makes this a bad idea
+  PRIMARY KEY (iso, script, country_id));
 
+DROP TABLE IF EXISTS numerals;
 CREATE TABLE numerals (
-  numeral_code,
-  sequence,
-  number, -- This is the number taken from the info.json
-  -- possibly instead of a normalized table, this should be an array of numbrs
-  unicode_zero -- possibly, this would work, but maybe not after 9 
-)
+  numerals_id TEXT NOT NULL,
+  numbers TEXT NOT NULL -- numbers are stored as text in a comma delimited array
+  -- unicode_zero -- possibly, this would work, but maybe not after 9 
+);
 
+-- When we received a users locale we could attempt to match on all three if present.
+-- If, not present, we could drop country code and match again, and then drop script
+-- and match again.  If all matches fail we have no match.
 
-When we received a users locale we could attempt to match on all three if present.
-If, not present, we could drop country code and match again, and then drop script
-and match again.  If all matches fail we have no match.
+-- A bible would have an iso code, an optional script code and many countries.
+-- ???? What is the source of the country data for bibles ?? I think that is incorrect
 
-A bible would have an iso code, an optional script code and many countries.
-???? What is the source of the country data for bibles ?? I think that is incorrect
+DROP TABLE IF EXISTS books;
+CREATE TABLE books( -- This is needed as an integrity constraint
+  book_id TEXT NOT NULL PRIMARY KEY,
+  english_name
+);
 
-CREATE TABLE bible_owners (
+DROP TABLE IF EXISTS bible_owners;
+CREATE TABLE bible_owners ( -- I think my only source for this is DBP API
   owner_id TEXT PRIMARY KEY NOT NULL,
   english_name TEXT NOT NULL,
   localized_name TEXT NOT NULL,
-  copyright_msg TEXT NOT NULL, -- what about the text:, audio:, video: copyright message
+  copyright_msg TEXT NOT NULL); -- what about the text:, audio:, video: copyright message
   -- could we have a message without preceeding copyright symbols. so that we prepend
   -- copyright date
 
-  owner_url TEXT NOT NULL); -- I won't use.  How is this populated?
-
-CREATE TABLE bible_sets(
-  bible_set_id PRIMARY KEY (fcbh bible_id)
-  version_code (e.g. KJV)
-  version_name -- from info.json
-  english_name -- from info.json
-  localized_name -- from google translate
-  description -- do I have a source for version description, or just video
-  version_priority (affects position in version list, manually set)
-  iso 3?-- I might not need this here?, or should this be iso3, which is what is in info.json
-  FOREIGN KEY (iso) REFERENCES locale (iso1) -- I might not need this here?
-  );
+DROP TABLE IF EXISTS bible_sets;
+CREATE TABLE bible_sets (
+  bible_set_id TEXT NOT NULL PRIMARY KEY, -- (fcbh bible_id)
+  iso3 TEXT NOT NULL, -- I think iso3 and version code are how I associate items in a set
+  version_code TEXT NOT NULL, -- (e.g. KJV)
+  version_name TEXT NOT NULL, -- from info.json
+  english_name TEXT NOT NULL, -- from info.json
+  localized_name TEXT NULL, -- from google translate
+  version_priority INT NOT NULL DEFAULT 0, -- (affects position in version list, manually set)
+  FOREIGN KEY (iso3) REFERENCES languages (iso3));
 
 -- The locale table is searched in three steps. iso-script-country, iso-script, iso
 -- Or, should is also try iso-country
@@ -79,328 +97,78 @@ CREATE TABLE bible_sets(
 
 -- If, I do this, I need to make certain that video is in the right set.
 
-CREATE TABLE bibles( set_id -- or call this bible
-  bible_id PRIMARY KEY (fcbh fileset_id)
-  bible_set_id TEXT NOT NULL
-  type_code TEXT NOT NULL CHECK (type_code IN('audio', 'drama', 'video', 'text'))
+DROP TABLE IF EXISTS bibles;
+CREATE TABLE bibles( -- set_id -- or call this bible
+  bible_id TEXT NOT NULL PRIMARY KEY, -- (fcbh fileset_id)
+  bible_set_id TEXT NOT NULL,
+  type_code TEXT NOT NULL CHECK (type_code IN('audio', 'drama', 'video', 'text')),
   size_code TEXT NOT NULL, -- NT,OT, NTOT, NTP, etc.
-  bucket TEXT NOT NULL
-  iso
-  script -- only required for text
-  numerals -- get this from info.json, should there be an index, and this a foreign key.
-  -- ?? numeral is not unique for script, but it should be possible to break ties with country
-  iso3 -- info.json, should this be considered an iso-country
-  font -- info.json
-  copyright_year
-  owner_id 
-  filename_template --
-  FOREIGN KEY (bible_set_id) REFERENCES bible_sets (bible_set_id)
+  bucket TEXT NOT NULL,
+  iso TEXT NOT NULL,
+  script TEXT NULL, -- only required for text
+  numerals_id TEXT NULL, -- get this from info.json, should there be an index, and this a foreign key.
+  font TEXT NOT NULL, -- info.json
+  owner_id TEXT NOT NULL, -- source unknown
+  copyright_year INT NOT NULL, 
+  filename_template TEXT NOT NULL,
+  FOREIGN KEY (bible_set_id) REFERENCES bible_sets (bible_set_id),
+  -- can there be a foreign key to locale.  Would it be useful or correct without country?
+  FOREIGN KEY (numerals_id) REFERENCES numerals (numerals_id),
   FOREIGN KEY (owner_id) REFERENCES bible_owners (owner_id)
 );
 
-CREATE TABLE bible_countries( -- This table is used to select specific bibles, esp
-	-- audio bibles, when there are differnt versions for different countries
-  bible_id
-  country_id
+DROP TABLE IF EXISTS bible_countries;
+-- This table is used to select specific bibles, esp
+-- audio bibles, when there are differnt versions for different countries
+CREATE TABLE bible_countries (
+  bible_id TEXT NOT NULL,
+  country_id TEXT NOT NULL,
   PRIMARY KEY (bible_id, country_id),
-  FOREIGN KEY bible_id REFERENCES bibles (bible_id)
+  FOREIGN KEY (bible_id) REFERENCES bibles (bible_id),
+  FOREIGN KEY (country_id) REFERENCES regions (country_id)
 );
 
-CREATE TABLE bible_videos( -- this could be in bibles table
-  bible_id PRIMARY KEY
+DROP TABLE IF EXISTS bible_videos;
+CREATE TABLE bible_videos ( -- these columns could be in bibles table
+  bible_id TEXT NOT NULL PRIMARY KEY,
   title TEXT NOT NULL,
   lengthMS INT NOT NULL,
   HLS_URL TEXT NOT NULL,
-  description TEXT NULL, -- could this be in bibles
-)
+  description TEXT NULL -- could this be in bibles
+);
 
+-- This table is being repeated for each bible in a set, book_name, book_abbrev, book_heading
+-- and possibly num_chapters are redundant
+-- It would suffice to have a table associated with the bible_set, and then have
+-- a reduced table that contained which books were in a set
+DROP TABLE IF EXISTS bible_books;
 CREATE TABLE bible_books(
-  bible_id
-  book_id
-  book_order
-  book_name
-  book_abbrev -- I cannot get this from meta-data, but I can from bible
-  book_heading -- I cannot get this from meta-data, but I can from bible
-  num_chapters
-  PRIMARY KEY (bible_id, book_id)
-  FOREIGN KEY (bible_id) REFERENCES bibles (bible_id)
+  bible_id TEXT NOT NULL,
+  book_id TEXT NOT NULL,
+  book_order INT NOT NULL,
+  book_name TEXT NOT NULL,
+  book_abbrev TEXT NOT NULL, -- I cannot get this from meta-data, but I can from bible
+  book_heading TEXT NOT NULL,-- I cannot get this from meta-data, but I can from bible
+  num_chapters INT NOT NULL,
+  PRIMARY KEY (bible_id, book_id),
+  FOREIGN KEY (bible_id) REFERENCES bibles (bible_id),
   FOREIGN KEY (book_id) REFERENCES books (book_id)
-)
+);
+-- It would be nice to associate text, and audio, and video closely
+-- Would it help to do that by having the bibles share a bible_books table.
+-- I am not sure it would matter, the App code would request Text by book_id/chapter
+-- and audio and video would do the same.
 
-CREATE TABLE books( -- This is needed as an integrity constraint
-	book_id PRIMARY KEY
-	english_name
-)
-
+DROP TABLE IF EXISTS bible_timestamps;
 CREATE TABLE bible_timestamps(
-  bible_id
-  book_id
-  chapter
-  verse_positions -- this is not normalized, but this is more efficient.
-  PRIMARY KEY (bible_id, book_id, chapter)
+  bible_id TEXT NOT NULL,
+  book_id TEXT NOT NULL,
+  chapter INT NOT NULL,
+  verse_positions TEXT NOT NULL,-- this is not normalized, but this is more efficient.
+  PRIMARY KEY (bible_id, book_id, chapter),
   FOREIGN KEY (bible_id, book_id) REFERENCES bible_set_books (bible_id, book_id)
-)
+);
 
 -- Use logical keys, because the database will always be recreated, not updated.
  
 
-
- ---- Release 2.1
-
-XCREATE TABLE AudioBook(
-X  damId TEXT NOT NULL REFERENCES Audio(damId),
-X  bookId TEXT NOT NULL,
-X  bookOrder TEXT NOT NULL,
-X  bookName TEXT NOT NULL,
-X  numberOfChapters INTEGER NOT NULL,
-X  PRIMARY KEY (damId, bookId));
-
-XCREATE TABLE AudioChapter(
-X  damId TEXT NOT NULL REFERENCES Audio(damId),
-X  bookId TEXT NOT NULL,
-X  chapter INTEGER NOT NULL,
-X  versePositions TEXT NOT NULL,
-X  PRIMARY KEY (damId, bookId, chapter),
-X  FOREIGN KEY (damId, bookId) REFERENCES AudioBook(damId, bookId));
-
-CREATE TABLE Bible(
-X  bibleId TEXT NOT NULL PRIMARY KEY,
-X  abbr TEXT NOT NULL,
-X  iso3 TEXT NOT NULL REFERENCES Language(iso3),
-X  scope TEXT NOT NULL CHECK (scope IN('B', 'N')),
-X  versionPriority INT NOT NULL,
-X  name TEXT NULL,
-X  englishName TEXT NOT NULL,
-X  localizedName TEXT NULL,
-X  textBucket TEXT NOT NULL,
-X  textId TEXT NOT NULL,
-X  keyTemplate TEXT NOT NULL,
-X  audioBucket TEXT NULL,
-X  otDamId TEXT NULL,
-X  ntDamId TEXT NULL,
-X  iso1 TEXT NULL,
-X  script TEXT NULL,
-X  country TEXT NULL REFERENCES Country(code));
-XCREATE INDEX bible_iso1_idx on Bible(iso1, script);
-
-XCREATE TABLE Credential (
-X  name TEXT PRIMARY KEY,
-X  access_key TEXT NOT NULL,
-X  secret_key TEXT NOT NULL);
-
-CREATE TABLE JesusFilm (
-  country TEXT NOT NULL,
-  iso3 TEXT NOT NULL,
-  languageId TEXT NOT NULL,
-  population INT NOT NULL,
-  PRIMARY KEY(country, iso3, languageId));
-
-XCREATE TABLE Language (
-X  iso1 TEXT NOT NULL,
-X  script TEXT NOT NULL,
-X  name TEXT NOT NULL,
-X  PRIMARY KEY (iso1, script));
-
-XCREATE TABLE Owner (
-X  ownerCode TEXT PRIMARY KEY NOT NULL,
-X  englishName TEXT NOT NULL,
-X  localOwnerName TEXT NOT NULL,
-X  ownerURL TEXT NOT NULL);
-
-CREATE TABLE Region (
-  countryCode TEXT NOT NULL PRIMARY KEY,
-  continentCode TEXT NOT NULL CHECK (continentCode IN('AF','EU','AS','NA','SA','OC','AN')),
-  geoschemeCode TEXT NOT NULL CHECK (geoschemeCode IN(
-		'AF-EAS','AF-MID','AF-NOR','AF-SOU','AF-WES',
-		'SA-CAR','SA-CEN','SA-SOU','NA-NOR',
-		'AS-CEN','AS-EAS','AS-SOU','AS-SEA','AS-WES',
-		'EU-EAS','EU-NOR','EU-SOU','EU-WES',
-		'OC-AUS','OC-MEL','OC-MIC','OC-POL','AN-ANT')),
-  awsRegion TEXT NOT NULL REFERENCES AWSRegion(awsRegion),
-  countryName TEXT NOT NULL);
-CREATE INDEX Region_awsRegion_index ON Region(awsRegion);
-
-CREATE TABLE Video (
-  languageId TEXT NOT NULL,
-  mediaId TEXT NOT NULL,
-  mediaSource TEXT NOT NULL,
-  title TEXT NOT NULL,
-  lengthMS INT NOT NULL,
-  HLS_URL TEXT NOT NULL,
-  description TEXT NULL,
-  PRIMARY KEY (languageId, mediaId)); 
-
-XCREATE TABLE VideoSeq (
-X  mediaId TEXT PRIMARY KEY, 
-X  sequence INT NOT NULL); 
-
-====== Release 2.0 ====
-
-CREATE TABLE Audio(
-  damId TEXT NOT NULL PRIMARY KEY,
-  dbpLanguageCode TEXT NOT NULL,
-  dbpVersionCode TEXT NOT NULL,
-  collectionCode TEXT NOT NULL,
-  mediaType TEXT NOT NULL);
-
-AudioBook same as 2.1
-AudioChapter same as 2.1
-
-CREATE TABLE AudioVersion(
-  ssVersionCode TEXT NOT NULL PRIMARY KEY,
-  dbpLanguageCode TEXT NOT NULL,
-  dbpVersionCode TEXT NOT NULL);
-
-CREATE TABLE Country (
-  countryCode TEXT NOT NULL PRIMARY KEY,
-  primLanguage TEXT NOT NULL,
-  englishName TEXT NOT NULL,
-  localCountryName TEXT NOT NULL);
-
-CREATE TABLE CountryVersion (
-  countryCode TEXT REFERENCES Country(countryCode),
-  versionCode TEXT REFERENCES Version(versionCode),
-PRIMARY KEY(countryCode, versionCode));
-CREATE INDEX CountryVersion_versionCode_index ON CountryVersion(versionCode); 
-
-CREATE TABLE DefaultVersion (
-  langCode TEXT NOT NULL PRIMARY KEY,
-  filename TEXT NOT NULL REFERENCES Version(filename));
-CREATE INDEX DefaultVersion_filename_index ON DefaultVersion(filename); 
-
-CREATE TABLE Identity(
-  versionCode TEXT NOT NULL PRIMARY KEY,
-  filename TEXT NOT NULL, bibleVersion TEXT NOT NULL,
-  datetime TEXT NOT NULL,
-  appVersion TEXT NOT NULL,
-  publisher TEXT NOT NULL);
-
-CREATE TABLE InstalledVersion (
-  versionCode NOT NULL PRIMARY KEY REFERENCES Version(versionCode),
-  startDate NOT NULL,
-  endDate NULL);
-
-CREATE TABLE JesusFilm (
-  countryCode TEXT NOT NULL,
-  silCode TEXT NOT NULL,
-  languageId TEXT NOT NULL,
-  langCode TEXT NOT NULL,
-  langName TEXT NOT NULL,
-  population INT NOT NULL,
-  PRIMARY KEY(countryCode, silCode, languageId));
-
-CREATE TABLE Language (
-  silCode TEXT PRIMARY KEY NOT NULL,
-  langCode TEXT NOT NULL,
-  direction TEXT NOT NULL CHECK(direction IN('ltr', 'rtl')),
-  englishName TEXT NOT NULL,
-  localLanguageName TEXT NOT NULL
-);
-
-Owner same as 2.1
-
-CREATE TABLE Region (
-  countryCode TEXT NOT NULL PRIMARY KEY,
-  continentCode TEXT NOT NULL CHECK (continentCode IN('AF','EU','AS','NA','SA','OC','AN')),
-  geoschemeCode TEXT NOT NULL CHECK (geoschemeCode IN(
-		'AF-EAS','AF-MID','AF-NOR','AF-SOU','AF-WES',
-		'SA-CAR','SA-CEN','SA-SOU','NA-NOR',
-		'AS-CEN','AS-EAS','AS-SOU','AS-SEA','AS-WES',
-		'EU-EAS','EU-NOR','EU-SOU','EU-WES',
-		'OC-AUS','OC-MEL','OC-MIC','OC-POL','AN-ANT')),
-  awsRegion TEXT NOT NULL REFERENCES AWSRegion(awsRegion),
-  countryName TEXT NOT NULL);
-CREATE INDEX Region_awsRegion_index ON Region(awsRegion);
-
-CREATE TABLE Translation (
-  source TEXT NOT NULL,
-  target TEXT NOT NULL,
-  translated TEXT NOT NULL,
-PRIMARY KEY(target, source)); -- select where target=? is primary query
-
-CREATE TABLE Version (
-  versionCode TEXT NOT NULL PRIMARY KEY,
-  silCode TEXT NOT NULL REFERENCES Language(silCode),
-  ownerCode TEXT NOT NULL REFERENCES Owner(ownerCode),
-  versionAbbr TEXT NOT NULL,
-  localVersionName TEXT NOT NULL,
-  scope TEXT NOT NULL CHECK (scope IN('BIBLE','BIBLE_NT','BIBLE_PNT')),
-  filename TEXT UNIQUE,
-  hasHistory TEXT CHECK (hasHistory IN('T','F')),
-  isQaActive TEXT CHECK (isQaActive IN('T','F')),
-  versionDate TEXT NOT NULL,
-  copyright TEXT NULL,
-  introduction TEXT NULL);
-CREATE INDEX Version_silCode_index ON Version(silCode);
-CREATE INDEX Version_ownerCode_index ON Version(ownerCode);
-
-CREATE TABLE Video (
-  languageId TEXT NOT NULL,
-  mediaId TEXT NOT NULL,
-  silCode TEXT NOT NULL,
-  langCode TEXT NOT NULL,
-  title TEXT NOT NULL,
-  lengthMS INT NOT NULL,
-  HLS_URL TEXT NOT NULL,
-  MP4_1080 TEXT NULL, -- deprecated remove at next revision (GNG 6/2017)
-  MP4_720 TEXT NULL, -- deprecated  remove at next revision
-  MP4_540 TEXT NULL, -- deprecated remove at next revision
-  MP4_360 TEXT NULL, -- deprecated remove at next revision
-  longDescription TEXT NULL,
-  PRIMARY KEY (languageId, mediaId));
-CREATE INDEX Video_langCode ON Video (langCode);
-
-
------ Bible Schema ----
-
-CREATE TABLE chapters(
-  reference text not null primary key, 
-  xml text not null, 
-  html text not null);
-
-CREATE TABLE charset(
-  hex text not null,
-  char text not null,
-  count int not null);
-
-CREATE TABLE concordance(
-  word text primary key not null,
-  refCount integer not null,
-  refList text not null,
-  refPosition text null,
-  refList2 text null);
-
-CREATE TABLE identity(
-	versionCode TEXT NOT NULL PRIMARY KEY,
-	filename TEXT NOT NULL,
-	bibleVersion TEXT NOT NULL,
-	datetime TEXT NOT NULL,
-	appVersion TEXT NOT NULL,
-	publisher TEXT NOT NULL);
-
-CREATE TABLE styleIndex( -- used in validation only
-  style text not null,
-  usage text not null,
-  book text not null,
-  chapter integer null,
-  verse integer null);
-
-CREATE TABLE styleUse( -- used for validation, I think
-  style text not null, 
-  usage text not null, 
-  primary key(style, usage));
-
-CREATE TABLE tableContents(
-  code text primary key not null, 
-  heading text not null, title text not null, 
-  name text not null, 
-  abbrev text not null, 
-  lastChapter integer not null, 
-  priorBook text null, 
-  nextBook text null, 
-  chapterRowId integer not null);
-
-CREATE TABLE verses(
-  reference text not null primary key, 
-  xml text not null, 
-  html text not null);

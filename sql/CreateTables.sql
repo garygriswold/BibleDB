@@ -3,7 +3,6 @@ PRAGMA foreign_keys = ON;
 DROP TABLE IF EXISTS regions;
 CREATE TABLE regions (
   country_id TEXT NOT NULL PRIMARY KEY,
-  country_name TEXT NOT NULL,
   continent_id TEXT NOT NULL CHECK (continent_id IN('AF','EU','AS','NA','SA','OC','AN')),
   geoscheme_id TEXT NOT NULL CHECK (geoscheme_id IN(
 		'AF-EAS','AF-MID','AF-NOR','AF-SOU','AF-WES',
@@ -13,7 +12,99 @@ CREATE TABLE regions (
 		'OC-AUS','OC-MEL','OC-MIC','OC-POL','AN-ANT')),
   aws_region TEXT NOT NULL CHECK (aws_region IN (
     'ap-northeast-1', 'ap-southeast-1', 'ap-southeast-2',
-    'eu-west-1', 'us-east-1')));
+    'eu-west-1', 'us-east-1')),
+  country_name TEXT NOT NULL);
+
+-- Continent Code
+-- AF|Africa
+-- EU|Europe
+-- AS|Asia
+-- NA|North America
+-- SA|South America
+-- OC|Oceana
+-- AN|Antartica
+
+-- United Nations geoschema
+-- AF-EAS|Eastern Africa
+-- AF-MID|Middle Africa
+-- AF-NOR|Northern Africa
+-- AF-SOU|Southern Africa
+-- AF-WES|Western Africa
+-- SA-CAR|Caribbean
+-- SA-CEN|Central America
+-- SA-SOU|South America
+-- NA-NOR|North America
+-- AS-CEN|Central Asia
+-- AS-EAS|Eastern Asia
+-- AS-SOU|Southern Asia
+-- AS-SEA|South-Eastern Asia
+-- AS-WES|Western Asia
+-- EU-EAS|Eastern Europe
+-- EU-NOR|Northern Europe
+-- EU-SOU|Southern Europe
+-- EU-WES|Western Europe
+-- OC-AUS|Australia and New Zealeand
+-- OC-MEL|Melanesia
+-- OC-MIC|Micronesia
+-- OC-POL|Polynesia
+
+-- Rules for bucket assignment:
+-- 1) AF -> eu-west-1
+-- 2) EU -> eu-west-1
+-- 3) OC -> ap-southeast-2
+-- 4) AN -> ap-southeast-2
+-- 5) NA -> us-east-1
+-- 6) SA -> us-east-1
+-- 7) AS-WES -> eu-west-1
+-- 8) AS-SOU -> ap-southeast-1
+-- 9) AS-SEA -> ap-southeast-1
+-- 10) AS-CEN -> ap-northeast-1
+-- 11) AS-EAS -> ap-northeast-1
+-- Continent Code
+-- AF|Africa
+-- EU|Europe
+-- AS|Asia
+-- NA|North America
+-- SA|South America
+-- OC|Oceana
+-- AN|Antartica
+
+-- United Nations geoschema
+-- AF-EAS|Eastern Africa
+-- AF-MID|Middle Africa
+-- AF-NOR|Northern Africa
+-- AF-SOU|Southern Africa
+-- AF-WES|Western Africa
+-- SA-CAR|Caribbean
+-- SA-CEN|Central America
+-- SA-SOU|South America
+-- NA-NOR|North America
+-- AS-CEN|Central Asia
+-- AS-EAS|Eastern Asia
+-- AS-SOU|Southern Asia
+-- AS-SEA|South-Eastern Asia
+-- AS-WES|Western Asia
+-- EU-EAS|Eastern Europe
+-- EU-NOR|Northern Europe
+-- EU-SOU|Southern Europe
+-- EU-WES|Western Europe
+-- OC-AUS|Australia and New Zealeand
+-- OC-MEL|Melanesia
+-- OC-MIC|Micronesia
+-- OC-POL|Polynesia
+
+-- Rules for bucket assignment:
+-- 1) AF -> eu-west-1
+-- 2) EU -> eu-west-1
+-- 3) OC -> ap-southeast-2
+-- 4) AN -> ap-southeast-2
+-- 5) NA -> us-east-1
+-- 6) SA -> us-east-1
+-- 7) AS-WES -> eu-west-1
+-- 8) AS-SOU -> ap-southeast-1
+-- 9) AS-SEA -> ap-southeast-1
+-- 10) AS-CEN -> ap-northeast-1
+-- 11) AS-EAS -> ap-northeast-1);
 
 DROP TABLE IF EXISTS credentials;
 CREATE TABLE credentials ( -- For in-app use only??

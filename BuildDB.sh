@@ -2,6 +2,12 @@
 
 rm Versions.db
 
+sqlite3 Versions.db < sql/CreateTables.sql
+
+sh scripts/TypeTables.sh
+
+exit
+
 # Use to get current listing of dbp-prod
 # python py/ListBucket.py
 

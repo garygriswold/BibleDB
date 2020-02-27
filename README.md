@@ -8,6 +8,7 @@ data
 
 py
 	LanguagesTable.py
+	LocalesTable.py
 
 scripts
 	TypeTables.sh

@@ -120,15 +120,6 @@ CREATE TABLE languages (
   iso1 TEXT NULL,
   english_name TEXT NOT NULL);
 
--- When the first 3 chars of a bible_id is not a valid language code, it should be found here.
--- This table does not need to exist in final database
--- It could be a lookup table in a program instead
-DROP TABLE IF EXISTS language_corrections;
-CREATE TABLE language_corrections (
-  fcbh_iso3 TEXT NOT NULL PRIMARY KEY,
-  iso3 TEXT NOT NULL,
-  FOREIGN KEY (iso3) REFERENCES languages(iso3));
-
 -- This table exists as a table of allowed locales in the APP os, and
 -- is a constraint on this data in bibles
 DROP TABLE IF EXISTS locales;
@@ -170,6 +161,15 @@ CREATE TABLE bible_owners ( -- I think my only source for this is DBP API
   copyright_msg TEXT NOT NULL); -- what about the text:, audio:, video: copyright message
   -- could we have a message without preceeding copyright symbols. so that we prepend
   -- copyright date
+
+-- When the first 3 chars of a bible_id is not a valid language code, it should be found here.
+-- This table does not need to exist in final database
+-- It could be a lookup table in a program instead
+DROP TABLE IF EXISTS language_corrections;
+CREATE TABLE language_corrections (
+  fcbh_iso3 TEXT NOT NULL PRIMARY KEY,
+  iso3 TEXT NOT NULL,
+  FOREIGN KEY (iso3) REFERENCES languages(iso3));
 
 DROP TABLE IF EXISTS bible_sets;
 CREATE TABLE bible_sets (

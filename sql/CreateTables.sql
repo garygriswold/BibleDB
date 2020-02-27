@@ -116,6 +116,8 @@ CREATE TABLE credentials ( -- For in-app use only??
 DROP TABLE IF EXISTS languages;
 CREATE TABLE languages ( 
   iso3 TEXT NOT NULL PRIMARY KEY,
+  macro TEXT NULL,
+  iso1 TEXT NULL,
   english_name TEXT NOT NULL);
 
 -- When the first 3 chars of a bible_id is not a valid language code, it should be found here.

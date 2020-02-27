@@ -7,7 +7,7 @@ data
 	Region.txt
 
 py
-	?
+	LanguagesTable.py
 
 scripts
 	TypeTables.sh

@@ -9,4 +9,7 @@ END_SQL1
 # Populate Table credentials
 sqlite3 Versions.db < sql/Credentials.sql
 
+# Populate Table languages
+python3 py/LanguagesTable.py
+
 

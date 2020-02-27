@@ -127,11 +127,10 @@ CREATE TABLE locales (
   iso TEXT NOT NULL, -- this can be a 2 char or 3 char iso
   script TEXT NULL, -- This should contain the valid script codes for each iso1
   country_id TEXT NULL,
-  -- I should include other variants that are produced by Apple or Android
+  variant TEXT NULL,
   direction TEXT NOT NULL CHECK (direction IN ('ltr', 'rtl')), -- This is associated with script code
   english_name TEXT NOT NULL,
-    -- there could be a locale as PRIMARY KEY, but the problem of _ vs - makes this a bad idea
-  PRIMARY KEY (iso, script, country_id));
+  PRIMARY KEY (iso, country_id, script));
 
 DROP TABLE IF EXISTS numerals;
 CREATE TABLE numerals (

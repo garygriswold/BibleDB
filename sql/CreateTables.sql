@@ -147,7 +147,8 @@ CREATE TABLE numerals (
 -- ???? What is the source of the country data for bibles ?? I think that is incorrect
 
 DROP TABLE IF EXISTS books;
-CREATE TABLE books( -- This is needed as an integrity constraint
+CREATE TABLE books ( -- This is needed as an integrity constraint
+  sequence TEXT NOT NULL,
   book_id TEXT NOT NULL PRIMARY KEY,
   english_name
 );

@@ -7,6 +7,7 @@ data
 	AppleLang.txt - keep only for historical reasons
 	AppleLang2020.txt
 	Region.txt
+	USFMBookCodes.txt
 
 py
 	LanguagesTable.py

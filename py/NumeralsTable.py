@@ -22,10 +22,10 @@ for file in files:
 		try:
 			info = json.loads(data)
 			numbers = info["numbers"]
-			number9 = numbers[9]
-			name = unicodedata.name(number9)
+			number8 = numbers[8]
+			name = unicodedata.name(number8)
 			#print(file, name)
-			name = name.replace("DIGIT NINE", "").strip()
+			name = name.replace("DIGIT EIGHT", "").strip()
 			if len(name) == 0:
 				name = "western-arabic"
 			elif name == "ARABIC-INDIC":
@@ -40,14 +40,14 @@ for file in files:
 			#numberMap[name] = bibles
 			#print(file, number9, unicodedata.name(number9), name)
 		except Exception as err:
-			print("Could not parse", err)
+			print("Numerals Table json parse error:", file, err)
 
 		input.close()
 
 values = []
 for name, numbers in numberMap.items():
-	print(name, numbers)
-	print(",".join(numbers))
+	#print(name, numbers)
+	#print(",".join(numbers))
 	values.append((name, ",".join(numbers)))
 
 sql = "INSERT INTO numerals (numeral_id, numbers) VALUES (?, ?)"

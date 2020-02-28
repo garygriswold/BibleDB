@@ -18,4 +18,11 @@ python3 py/LocalesTable.py
 # Populate Table numerals
 python3 py/NumeralsTable.py
 
+# Populate Table books
+sqlite3 Versions.db <<END_SQL2
+.separator '|'
+.import data/USFMBookCodes.txt books
+END_SQL2
+
+
 

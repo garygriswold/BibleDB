@@ -15,4 +15,7 @@ python3 py/LanguagesTable.py
 # Populate Table locales
 python3 py/LocalesTable.py
 
+# Populate Table numerals
+python3 py/NumeralsTable.py
+
 

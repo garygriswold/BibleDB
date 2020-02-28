@@ -134,7 +134,7 @@ CREATE TABLE locales (
 
 DROP TABLE IF EXISTS numerals;
 CREATE TABLE numerals (
-  numerals_id TEXT NOT NULL,
+  numeral_id TEXT NOT NULL,
   numbers TEXT NOT NULL -- numbers are stored as text in a comma delimited array
   -- unicode_zero -- possibly, this would work, but maybe not after 9 
 );

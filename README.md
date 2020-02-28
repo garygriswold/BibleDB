@@ -11,6 +11,7 @@ data
 py
 	LanguagesTable.py
 	LocalesTable.py
+	NumeralsTable.py
 
 scripts
 	TypeTables.sh

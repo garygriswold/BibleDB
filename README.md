@@ -10,11 +10,14 @@ data
 	USFMBookCodes.txt
 
 py
+	DownloadInfo.py
 	LanguagesTable.py
+	ListBucket.py
 	LocalesTable.py
 	NumeralsTable.py
 
 scripts
+	FetchData.sh
 	TypeTables.sh
 
 sql

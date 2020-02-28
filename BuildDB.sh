@@ -6,6 +6,8 @@ sqlite3 Versions.db < sql/CreateTables.sql
 
 sh scripts/TypeTables.sh
 
+sh scripts/FetchData.sh
+
 exit
 
 # Use to get current listing of dbp-prod

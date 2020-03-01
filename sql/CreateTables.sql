@@ -171,16 +171,100 @@ CREATE TABLE language_corrections (
   iso3 TEXT NOT NULL,
   FOREIGN KEY (iso3) REFERENCES languages(iso3));
 
-DROP TABLE IF EXISTS bible_sets;
-CREATE TABLE bible_sets (
-  bible_set_id TEXT NOT NULL PRIMARY KEY, -- (fcbh bible_id)
+DROP TABLE IF EXISTS bibles;
+CREATE TABLE bibles (
+  bible_id TEXT NOT NULL PRIMARY KEY, -- (fcbh bible_id)
   iso3 TEXT NOT NULL, -- I think iso3 and version code are how I associate items in a set
   version_code TEXT NOT NULL, -- (e.g. KJV)
   version_name TEXT NOT NULL, -- from info.json
   english_name TEXT NOT NULL, -- from info.json
   localized_name TEXT NULL, -- from google translate
-  version_priority INT NOT NULL DEFAULT 0, -- (affects position in version list, manually set)
+  version_priority INT NOT NULL DEFAULT 0, -- affects position in version list, manually set
   FOREIGN KEY (iso3) REFERENCES languages (iso3));
+
+DROP TABLE IF EXISTS bible_filesets;
+CREATE TABLE bible_filesets (
+  fileset_id TEXT NOT NULL PRIMARY KEY,
+  bible_id TEXT NOT NULL,
+  iso TEXT NOT NULL,
+  -- type_code TEXT NOT NULL CHECK (type_code IN('audio', 'drama', 'video', 'text')),
+  size_code TEXT NOT NULL, -- NT,OT, NTOT, NTP, etc.
+  bucket TEXT NOT NULL,
+  owner_id TEXT NOT NULL, -- source unknown
+  copyright_year INT NOT NULL, 
+  filename_template TEXT NOT NULL,
+  FOREIGN KEY (iso) REFERENCES locales (iso),
+  FOREIGN KEY (bible_id) REFERENCES bibles (bible_id)
+  FOREIGN KEY (owner_id) REFERENCES bible_owners (owner_id));
+
+DROP TABLE IF EXISTS bible_fileset_countries;
+CREATE TABLE bible_fileset_countries (
+  fileset_id TEXT NOT NULL,
+  country_id TEXT NOT NULL,
+  PRIMARY KEY (fileset_id, country_id),
+  FOREIGN KEY (fileset_id) REFERENCES bible_filesets (fileset_id),
+  FOREIGN KEY (country_id) REFERENCES locales (country_id));
+
+DROP TABLE IF EXISTS text_filesets;
+CREATE TABLE text_filesets (
+  fileset_id TEXT NOT NULL PRIMARY KEY, -- this allows multiple texts per bible,
+  script TEXT NULL, -- 
+  numerals_id TEXT NULL, -- get this from info.json, should there be an index, and this a foreign key.
+  font TEXT NOT NULL, -- info.json
+  FOREIGN KEY (fileset_id) REFERENCES bible_filesets (fileset_id),
+  FOREIGN KEY (numerals_id) REFERENCES numerals (numerals_id));
+
+DROP TABLE IF EXISTS audio_filesets;
+CREATE TABLE audio_filesets (
+  fileset_id NOT NULL PRIMARY KEY,
+  audio_type TEXT NOT NULL CHECK (audio_type IN ('drama', 'nondrama')),
+  bitrate INT NOT NULL CHECK (bitrate IN (16, 32, 64, 128)),
+  FOREIGN KEY (fileset_id) REFERENCES bible_filesets (fileset_id));
+
+DROP TABLE IF EXISTS video_filesets;
+CREATE TABLE video_filesets (
+  fileset_id TEXT NOT NULL PRIMARY KEY,
+  title TEXT NOT NULL,
+  lengthMS INT NOT NULL,
+  HLS_URL TEXT NOT NULL,
+  description TEXT NULL, -- could this be in bibles
+  FOREIGN KEY (fileset_id) REFERENCES bible_filesets (fileset_id));
+
+DROP TABLE IF EXISTS text_bible_books;
+CREATE TABLE text_bible_books (
+  fileset_id TEXT NOT NULL,
+  book_id TEXT NOT NULL,
+  sequence INT NOT NULL,
+  localized_name TEXT NOT NULL, -- The bookname used in table of contents
+  num_chapters INT NOT NULL,
+  PRIMARY KEY (fileset_id, book_id),
+  FOREIGN KEY (fileset_id) REFERENCES text_bible_filesets (fileset_id),
+  FOREIGN KEY (book_id) REFERENCES books (book_id));
+
+DROP TABLE IF EXISTS audio_bible_books;
+CREATE TABLE audio_bible_books (
+  fileset_id TEXT NOT NULL,
+  book_id TEXT NOT NULL,
+  sequence INT NOT NULL,
+  s3_name TEXT NOT NULL, -- The bookname used in S3 files
+  num_chapters INT NOT NULL,
+  PRIMARY KEY (fileset_id, book_id),
+  FOREIGN KEY (fileset_id) REFERENCES audio_bible_filesets (fileset_id),
+  FOREIGN KEY (book_id) REFERENCES books (book_id));
+
+-- duration would need to be stored for each audio file, identified by fileset_id, book_id, 
+
+
+-- DROP TABLE IF EXISTS bible_sets;
+-- CREATE TABLE bible_sets (
+--   bible_set_id TEXT NOT NULL PRIMARY KEY, -- (fcbh bible_id)
+-- XA  iso3 TEXT NOT NULL, -- I think iso3 and version code are how I associate items in a set
+-- XA  version_code TEXT NOT NULL, -- (e.g. KJV)
+-- XA  version_name TEXT NOT NULL, -- from info.json
+-- XA  english_name TEXT NOT NULL, -- from info.json
+-- XA  localized_name TEXT NULL, -- from google translate
+-- XA  version_priority INT NOT NULL DEFAULT 0, -- affects position in version list, manually set
+-- XA  FOREIGN KEY (iso3) REFERENCES languages (iso3));
 
 -- The locale table is searched in three steps. iso-script-country, iso-script, iso
 -- Or, should is also try iso-country
@@ -190,63 +274,64 @@ CREATE TABLE bible_sets (
 
 -- If, I do this, I need to make certain that video is in the right set.
 
-DROP TABLE IF EXISTS bibles;
-CREATE TABLE bibles( -- set_id -- or call this bible
-  bible_id TEXT NOT NULL PRIMARY KEY, -- (fcbh fileset_id)
-  bible_set_id TEXT NOT NULL,
-  type_code TEXT NOT NULL CHECK (type_code IN('audio', 'drama', 'video', 'text')),
-  size_code TEXT NOT NULL, -- NT,OT, NTOT, NTP, etc.
-  bucket TEXT NOT NULL,
-  iso TEXT NOT NULL,
-  script TEXT NULL, -- only required for text
-  numerals_id TEXT NULL, -- get this from info.json, should there be an index, and this a foreign key.
-  font TEXT NOT NULL, -- info.json
-  owner_id TEXT NOT NULL, -- source unknown
-  copyright_year INT NOT NULL, 
-  filename_template TEXT NOT NULL,
-  FOREIGN KEY (bible_set_id) REFERENCES bible_sets (bible_set_id),
-  -- can there be a foreign key to locale.  Would it be useful or correct without country?
-  FOREIGN KEY (numerals_id) REFERENCES numerals (numerals_id),
-  FOREIGN KEY (owner_id) REFERENCES bible_owners (owner_id)
-);
+-- DROP TABLE IF EXISTS bibles;
+-- CREATE TABLE bibles( -- set_id -- or call this bible
+--   bible_id TEXT NOT NULL PRIMARY KEY, -- (fcbh fileset_id)
+--   bible_set_id TEXT NOT NULL,
+-- XE  type_code TEXT NOT NULL CHECK (type_code IN('audio', 'drama', 'video', 'text')),
+-- XE  size_code TEXT NOT NULL, -- NT,OT, NTOT, NTP, etc.
+-- XE  bucket TEXT NOT NULL,
+-- A  iso TEXT NOT NULL,
+-- XT  script TEXT NULL, -- only required for text
+-- XT  numerals_id TEXT NULL, -- get this from info.json, should there be an index, and this a foreign key.
+-- XT  font TEXT NOT NULL, -- info.json
+-- XE  owner_id TEXT NOT NULL, -- source unknown
+-- XE  copyright_year INT NOT NULL, 
+-- XE  filename_template TEXT NOT NULL,
+-- XE  FOREIGN KEY (bible_set_id) REFERENCES bible_sets (bible_set_id),
+--   -- can there be a foreign key to locale.  Would it be useful or correct without country?
+-- X  FOREIGN KEY (numerals_id) REFERENCES numerals (numerals_id),
+-- X  FOREIGN KEY (owner_id) REFERENCES bible_owners (owner_id)
+-- );
 
-DROP TABLE IF EXISTS bible_countries;
+-- DROP TABLE IF EXISTS bible_countries;
 -- This table is used to select specific bibles, esp
 -- audio bibles, when there are differnt versions for different countries
-CREATE TABLE bible_countries (
-  bible_id TEXT NOT NULL,
-  country_id TEXT NOT NULL,
-  PRIMARY KEY (bible_id, country_id),
-  FOREIGN KEY (bible_id) REFERENCES bibles (bible_id),
-  FOREIGN KEY (country_id) REFERENCES regions (country_id)
-);
-
-DROP TABLE IF EXISTS bible_videos;
-CREATE TABLE bible_videos ( -- these columns could be in bibles table
-  bible_id TEXT NOT NULL PRIMARY KEY,
-  title TEXT NOT NULL,
-  lengthMS INT NOT NULL,
-  HLS_URL TEXT NOT NULL,
-  description TEXT NULL -- could this be in bibles
-);
+-- CREATE TABLE bible_countries (
+-- XE  bible_id TEXT NOT NULL,
+-- XE  country_id TEXT NOT NULL,
+-- X  PRIMARY KEY (bible_id, country_id),
+-- X  FOREIGN KEY (bible_id) REFERENCES bibles (bible_id),
+-- X  FOREIGN KEY (country_id) REFERENCES regions (country_id)
+-- );
 
 -- This table is being repeated for each bible in a set, book_name, book_abbrev, book_heading
 -- and possibly num_chapters are redundant
 -- It would suffice to have a table associated with the bible_set, and then have
 -- a reduced table that contained which books were in a set
-DROP TABLE IF EXISTS bible_books;
-CREATE TABLE bible_books(
-  bible_id TEXT NOT NULL,
-  book_id TEXT NOT NULL,
-  book_order INT NOT NULL,
-  book_name TEXT NOT NULL,
-  book_abbrev TEXT NOT NULL, -- I cannot get this from meta-data, but I can from bible
-  book_heading TEXT NOT NULL,-- I cannot get this from meta-data, but I can from bible
-  num_chapters INT NOT NULL,
-  PRIMARY KEY (bible_id, book_id),
-  FOREIGN KEY (bible_id) REFERENCES bibles (bible_id),
-  FOREIGN KEY (book_id) REFERENCES books (book_id)
-);
+-- DROP TABLE IF EXISTS bible_books;
+-- CREATE TABLE bible_books(
+-- X  bible_id TEXT NOT NULL,
+-- XE  book_id TEXT NOT NULL,
+-- XE  book_order INT NOT NULL,
+-- XT  book_name TEXT NOT NULL,
+-- X-  book_abbrev TEXT NOT NULL, -- I cannot get this from meta-data, but I can from bible
+-- X-  book_heading TEXT NOT NULL,-- I cannot get this from meta-data, but I can from bible
+-- XE  num_chapters INT NOT NULL,
+-- X  PRIMARY KEY (bible_id, book_id),
+-- X  FOREIGN KEY (bible_id) REFERENCES bibles (bible_id),
+-- X  FOREIGN KEY (book_id) REFERENCES books (book_id)
+-- );
+
+-- DROP TABLE IF EXISTS bible_videos;
+-- CREATE TABLE bible_videos ( -- these columns could be in bibles table
+-- X  bible_id TEXT NOT NULL PRIMARY KEY,
+-- XV  title TEXT NOT NULL,
+-- XV  lengthMS INT NOT NULL,
+-- XV  HLS_URL TEXT NOT NULL,
+-- XV  description TEXT NULL -- could this be in bibles
+-- );
+
 -- It would be nice to associate text, and audio, and video closely
 -- Would it help to do that by having the bibles share a bible_books table.
 -- I am not sure it would matter, the App code would request Text by book_id/chapter
@@ -254,12 +339,12 @@ CREATE TABLE bible_books(
 
 DROP TABLE IF EXISTS bible_timestamps;
 CREATE TABLE bible_timestamps(
-  bible_id TEXT NOT NULL,
+  fileset_id TEXT NOT NULL,
   book_id TEXT NOT NULL,
   chapter INT NOT NULL,
   verse_positions TEXT NOT NULL,-- this is not normalized, but this is more efficient.
-  PRIMARY KEY (bible_id, book_id, chapter),
-  FOREIGN KEY (bible_id, book_id) REFERENCES bible_set_books (bible_id, book_id)
+  PRIMARY KEY (fileset_id, book_id, chapter),
+  FOREIGN KEY (fileset_id, book_id) REFERENCES audio_bible_books (fileset_id, book_id)
 );
 
 -- Use logical keys, because the database will always be recreated, not updated.

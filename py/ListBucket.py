@@ -8,6 +8,7 @@ import sys
 import io
 import os
 import boto3
+import datetime
 
 DIRECTORY = "/Volumes/FCBH/bucket_data/"
 
@@ -36,11 +37,11 @@ while hasMore:
 	for item in contents:
 		key = item['Key']
 		size = item['Size']
-		if (size > 0):
-			try:
-				out.write(key.strip() + "\n")
-			except Exception as err:
-				print("Could not write key", str(err))
+		datetime = item['LastModified']
+		try:
+			out.write("%s\t%s\t%s\n" % (key.strip(), size, datetime))
+		except Exception as err:
+			print("Could not write key", str(err))
 
 	if hasMore:
 		request['ContinuationToken'] = response['NextContinuationToken']
@@ -48,4 +49,3 @@ while hasMore:
 out.close()
 
 os.rename(tempFilename, finalFilename)
-

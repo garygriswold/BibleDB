@@ -124,13 +124,13 @@ CREATE TABLE languages (
 -- is a constraint on this data in bibles
 DROP TABLE IF EXISTS locales;
 CREATE TABLE locales (
+  locale TEXT NOT NULL PRIMARY KEY,
   iso TEXT NOT NULL, -- this can be a 2 char or 3 char iso
   script TEXT NULL, -- This should contain the valid script codes for each iso1
   country_id TEXT NULL,
   variant TEXT NULL,
   direction TEXT NOT NULL CHECK (direction IN ('ltr', 'rtl')), -- This is associated with script code
-  english_name TEXT NOT NULL,
-  PRIMARY KEY (iso, country_id, script));
+  english_name TEXT NOT NULL);
 
 DROP TABLE IF EXISTS numerals;
 CREATE TABLE numerals (
@@ -186,24 +186,22 @@ DROP TABLE IF EXISTS bible_filesets;
 CREATE TABLE bible_filesets (
   fileset_id TEXT NOT NULL PRIMARY KEY,
   bible_id TEXT NOT NULL,
-  iso TEXT NOT NULL,
   -- type_code TEXT NOT NULL CHECK (type_code IN('audio', 'drama', 'video', 'text')),
   size_code TEXT NOT NULL, -- NT,OT, NTOT, NTP, etc.
   bucket TEXT NOT NULL,
   owner_id TEXT NOT NULL, -- source unknown
   copyright_year INT NOT NULL, 
   filename_template TEXT NOT NULL,
-  FOREIGN KEY (iso) REFERENCES locales (iso),
   FOREIGN KEY (bible_id) REFERENCES bibles (bible_id)
   FOREIGN KEY (owner_id) REFERENCES bible_owners (owner_id));
 
-DROP TABLE IF EXISTS bible_fileset_countries;
-CREATE TABLE bible_fileset_countries (
+DROP TABLE IF EXISTS bible_fileset_locales;
+CREATE TABLE bible_fileset_locales (
+  locale TEXT NOT NULL,
   fileset_id TEXT NOT NULL,
-  country_id TEXT NOT NULL,
-  PRIMARY KEY (fileset_id, country_id),
+  PRIMARY KEY (locale, fileset_id),
   FOREIGN KEY (fileset_id) REFERENCES bible_filesets (fileset_id),
-  FOREIGN KEY (country_id) REFERENCES locales (country_id));
+  FOREIGN KEY (locale) REFERENCES locales (locale));
 
 DROP TABLE IF EXISTS text_filesets;
 CREATE TABLE text_filesets (

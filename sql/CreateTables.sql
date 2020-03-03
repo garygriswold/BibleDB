@@ -139,6 +139,12 @@ CREATE TABLE numerals (
   -- unicode_zero -- possibly, this would work, but maybe not after 9 
 );
 
+DROP TABLE IF EXISTS scripts;
+CREATE TABLE scripts (
+  script TEXT NOT NULL,
+  script_name TEXT NOT NULL PRIMARY KEY);
+CREATE INDEX script_code_idx ON scripts(script):
+
 -- When we received a users locale we could attempt to match on all three if present.
 -- If, not present, we could drop country code and match again, and then drop script
 -- and match again.  If all matches fail we have no match.

@@ -4,31 +4,49 @@
 #
 import io
 import os
+import sys
 import json
 import csv
+import unicodedata
+import sqlite3
 
 ACCEPTED_DIR = "/Volumes/FCBH/files/validate/accepted/"
 INFO_JSON_DIR = "/Volumes/FCBH/info_json/"
+DATABASE = "Versions.db"
+AUDIO_BUCKET = "dbp-prod"
+VIDEO_BUCKET = "dbp-vid"
 
 class BibleTables:
 
 	def __init__(self):
-		# open database
-		insertBibleSets = []
-		insertBibles = []
-		insertBibleCountries = []
-		insertBibleBooks = []
+		self.db = sqlite3.connect(DATABASE)
+		#self.localeSet # is set of identifier
+		self.insertBibles = []
+		self.insertFilesets = []
+		self.insertFilesetLocales = []
+		self.insertBibleLocales = []
+		self.insertBibleBooks = []
 
 
 	def process(self):
-		bibleSetMap = self.getBibleSetMap()
-		for bibleSetId in bibleSetMap.keys():
-			bibles = bibleSetMap[bibleSetId]
-			for bibleId in bibles:
-				#print(bibleSetId, bibleId)
-				if len(bibleId) < 10:
-					infoMap = self.readInfoJson(bibleSetId, bibleId)
-					#print(infoMap)
+		bibleMap = self.getBibleMap()
+		for bibleId in sorted(bibleMap.keys()):
+			infoMap = None
+			filesetIds = bibleMap[bibleId]
+			for filesetId in filesetIds:
+				if len(filesetId) < 10:
+					infoMap = self.readInfoJson(bibleId, filesetId)
+					if infoMap != None:
+						self.insertBiblesTable(bibleId, infoMap)
+			for filesetId in filesetIds:
+				print("after for", bibleId, filesetId)
+				if infoMap != None:
+					self.insertBibleFilesetsTable(bibleId, filesetId, infoMap)
+					self.insertBibleFilesetLocalesTable(bibleId, filesetId, infoMap)
+
+					print("before script", bibleId, filesetId)
+					self.getScriptCode(infoMap)
+
 		# for each bible, open info.json, to get required data
 		# print errors for any differences
 		# after processing list of bibles, store bibleset fields
@@ -43,65 +61,120 @@ class BibleTables:
 		for file in files:
 			if file.startswith("text") and file.endswith(".csv"):
 				file = file.split(".")[0]
-				(typeCode, bibleSetId, bibleId) = file.split("_")
-				#print(file, typeCode, bibleSetId, bibleId)
-				if resultMap.get(bibleSetId) != None:
-					hasBible = resultMap.get(bibleSetId)
-					print("ERROR: duplicate text from bibleSetId %s has %s and %s" % (bibleSetId, hasBible, bibleId))
+				(typeCode, bibleId, filesetId) = file.split("_")
+				#print(file, typeCode, bibleId, filesetId)
+				if resultMap.get(bibleId) != None:
+					hasBible = resultMap.get(bibleId)
+					print("ERROR: duplicate text from bibleId %s has %s and %s" % (bibleId, hasBible, filesetId))
 					sys.exit()
 				else:
-					resultMap[bibleSetId] = bibleId
-				#bibles = resultMap.get(bibleSetId, [])
-				#bibles.append(bibleId)
-				#resultMap[bibleSetId] = bibles 
+					resultMap[bibleId] = filesetId
 		return resultMap
 
 
-	def getBibleSetMap(self):
+	def getBibleMap(self):
 		resultMap = {}
 		files = os.listdir(ACCEPTED_DIR)
 		for file in files:
 			if not file.startswith(".") and file.endswith(".csv"):
 				file = file.split(".")[0]
-				(typeCode, bibleSetId, bibleId) = file.split("_")
+				(typeCode, bibleId, filesetId) = file.split("_")
 				#print(file, typeCode, bibleSetId, bibleId)
-				bibles = resultMap.get(bibleSetId, [])
-				bibles.append(bibleId)
-				resultMap[bibleSetId] = bibles 
+				bibles = resultMap.get(bibleId, [])
+				bibles.append(filesetId)
+				resultMap[bibleId] = bibles 
 		return resultMap
 
 
-	def readInfoJson(self, bibleSetId, bibleId):
-		bible = {}
-		filename = "%stext:%s:%s:info.json" % (INFO_JSON_DIR, bibleSetId, bibleId)
+	def readInfoJson(self, bibleId, filesetId):
+		info = None
+		filename = "%stext:%s:%s:info.json" % (INFO_JSON_DIR, bibleId, filesetId)
 		if os.path.isfile(filename):
 			fp = io.open(filename, mode="r", encoding="utf-8")
 			data = fp.read()
 			try:
 				info = json.loads(data)
-				#print(info)
-				bible[bibleSetId] = info
 			except Exception as err:
-				print("Json Error in %s:%s:info.json " % (bibleSetId, bibleId), err)
-				bible[bibleSetId] = "Parse Error"
-
+				print("ERROR: Json Error in %s:%s:info.json " % (bibleId, filesetId), err)
 			fp.close()
 		else:
-			print("NOT FOUND,", bibleSetId, bibleId)
-			bible[bibleSetId] = "Not Found"
+			print("ERROR: info.json NOT FOUND,", bibleId, filesetId)
+		return info
 
+	def insertBiblesTable(self, bibleId, infoJson):
+		row = {}
+		row["bible_id"] = bibleId
+		row["iso3"] = infoJson["lang"].lower()
+		row["version_code"] = bibleId[3:]
+		row["version_name"] = infoJson["name"]
+		row["english_name"] = infoJson["nameEnglish"]
+		self.insertBibles.append(row)
+
+
+	def insertBibleFilesetsTable(self, bibleId, filesetId, infoJson):
+		row = {}
+		row["fileset_id"] = filesetId
+		row["bible_id"] = bibleId
+		row["size_code"] = "TO BE DONE" # must open file
+		if filesetId[8:10] == "VD":
+			row["bucket"] = VIDEO_BUCKET
+		else:
+			row["bucket"] = AUDIO_BUCKET
+		row["owner_id"] = 0 # TO BE DONE
+		row["copyright_year"] = "" # TO BE DONE
+		row["filename_template"] = "" # TO BE DONE, must open file, or do manually
+		self.insertFilesets.append(row)
+
+	def insertBibleFilesetLocalesTable(self, bibleId, filesetId, infoJson):
+		row = {}
+		row["fileset_id"] = filesetId
+		#print(bibleId, filesetId)
+		iso3 = infoJson["lang"].lower()
+		# lookup by iso
+		script = self.getScriptCode(infoJson)
+		# if script not null, lookup by iso script
+		country = infoJson["countryCode"]
+		if country != None:
+			print("Country", country)
+		countries = infoJson["countries"]
+		if countries != None:
+			print("Countries", countries)
+		allCountries = infoJson["allcountries"]
+		if allCountries != None:
+			print("All Countries", allCountries)
+		# for each country
+		# lookup iso by iso, country
+		# if script is not null lookup by iso, script, country
+
+		#id
 		#name is localName
-		#englishName is same
+		#nameEnglish is same or 
 		#dir is direction
 		#lang = iso
 		#fontClass
 		#script is script
+		#audioDirectory
 		#numbers
 		#countryCode
 		#countries ? array
 		#allCountries ? array
 		#divisionNames chapters in localnames
+		#divisions
+		#sections
 
+
+	def getScriptCode(self, infoJson):
+		result = None
+		#scriptCount = {}
+		bookNames = infoJson["divisionNames"]
+		if bookNames != None and len(bookNames) > 0:
+			bookName = bookNames[0]
+			bookChar = bookName[0]
+			name = unicodedata.name(bookChar)
+			#if ()
+			value = ord(bookChar)
+			print("script", name)
+		return "Latn"
 
 
 if __name__ == "__main__":
@@ -114,7 +187,6 @@ CREATE TABLE language_corrections (
   iso3 TEXT NOT NULL,
   FOREIGN KEY (iso3) REFERENCES languages(iso3));
 
-DROP TABLE IF EXISTS bibles;
 CREATE TABLE bibles (
   bible_id TEXT NOT NULL PRIMARY KEY, -- (fcbh bible_id)
   iso3 TEXT NOT NULL, -- I think iso3 and version code are how I associate items in a set
@@ -125,7 +197,6 @@ CREATE TABLE bibles (
   version_priority INT NOT NULL DEFAULT 0, -- affects position in version list, manually set
   FOREIGN KEY (iso3) REFERENCES languages (iso3));
 
-DROP TABLE IF EXISTS bible_filesets;
 CREATE TABLE bible_filesets (
   fileset_id TEXT NOT NULL PRIMARY KEY,
   bible_id TEXT NOT NULL,

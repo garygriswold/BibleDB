@@ -20,14 +20,14 @@ class SqliteUtility:
 			self.conn = None
 
 
-#	def execute(self, statement, values):
-#		cursor = self.conn.cursor()
-#		try :
-#			cursor.execute(statement, values)
-#			self.conn.commit()
-#			cursor.close()
-#		except Exception as err:
-#			self.error(cursor, statement, err)
+	def execute(self, statement, values):
+		cursor = self.conn.cursor()
+		try :
+			cursor.execute(statement, values)
+			self.conn.commit()
+			cursor.close()
+		except Exception as err:
+			self.error(cursor, statement, err)
 
 
 #	def executeInsert(self, statement, values):
@@ -43,14 +43,14 @@ class SqliteUtility:
 #			return None
 
 
-#	def executeBatch(self, statement, valuesList):
-#		cursor = self.conn.cursor()
-#		try:
-#			cursor.executemany(statement, valuesList)
-#			self.conn.commit()
-#			cursor.close()
-#		except Exception as err:
-#			self.error(cursor, statement, err)
+	def executeBatch(self, statement, valuesList):
+		cursor = self.conn.cursor()
+		try:
+			cursor.executemany(statement, valuesList)
+			self.conn.commit()
+			cursor.close()
+		except Exception as err:
+			self.error(cursor, statement, err)
 
 
 #	def executeTransaction(self, statements):

@@ -8,7 +8,8 @@ import sys
 import json
 import csv
 import unicodedata
-import sqlite3
+from SqliteUtility import *
+#import sqlite3
 
 ACCEPTED_DIR = "/Volumes/FCBH/files/validate/accepted/"
 INFO_JSON_DIR = "/Volumes/FCBH/info_json/"
@@ -19,8 +20,11 @@ VIDEO_BUCKET = "dbp-vid"
 class BibleTables:
 
 	def __init__(self):
-		self.db = sqlite3.connect(DATABASE)
-		#self.localeSet # is set of identifier
+		self.db = SqliteUtility()
+		self.scriptMap = self.db.selectMap("SELECT script_name, script FROM scripts", ())
+		self.iso3Set = self.db.selectSet("SELECT iso3 FROM languages", ())
+		self.macroMap = self.db.selectMap("SELECT iso3, macro FROM languages", ())
+		self.iso1Map = self.db.selectMap("SELECT iso3, iso1 FROM languages", ())
 		self.insertBibles = []
 		self.insertFilesets = []
 		self.insertFilesetLocales = []
@@ -44,8 +48,8 @@ class BibleTables:
 					self.insertBibleFilesetsTable(bibleId, filesetId, infoMap)
 					self.insertBibleFilesetLocalesTable(bibleId, filesetId, infoMap)
 
-					print("before script", bibleId, filesetId)
-					self.getScriptCode(infoMap)
+					#print("before script", bibleId, filesetId)
+					#self.getScriptCode(infoMap)
 
 		# for each bible, open info.json, to get required data
 		# print errors for any differences
@@ -128,20 +132,39 @@ class BibleTables:
 	def insertBibleFilesetLocalesTable(self, bibleId, filesetId, infoJson):
 		row = {}
 		row["fileset_id"] = filesetId
-		#print(bibleId, filesetId)
 		iso3 = infoJson["lang"].lower()
-		# lookup by iso
 		script = self.getScriptCode(infoJson)
-		# if script not null, lookup by iso script
 		country = infoJson["countryCode"]
+		if country == "":
+			country = None
+		print(bibleId, filesetId, iso3, script, country)
+
+		if iso3 in self.iso3Set:
+			# Some of these inserted iso3 codes will not be in locale, check how many
+			self.appendInserts(filesetId, iso3, script, country)
+		macroLang = self.macroMap.get(iso3)
+		if macroLang != None:
+			print("Insert macro", macroLang)
+			self.appendInserts(filesetId, macroLang, script, country)
+		iso1Lang = self.iso1Map.get(iso3)
+		if iso1Lang != None:
+			print("Insert iso1", iso1Lang)
+			sys.exit()
+			self.appendInserts(filesetId, iso1Lang, script, country)
+
+
+	def appendInserts(self, filesetId, lang, script, country):
+		self.insertFilesetLocales.append({"fileset_id": filesetId, "locale": lang})
 		if country != None:
-			print("Country", country)
-		countries = infoJson["countries"]
-		if countries != None:
-			print("Countries", countries)
-		allCountries = infoJson["allcountries"]
-		if allCountries != None:
-			print("All Countries", allCountries)
+			locale = lang + "_" + country
+			self.insertFilesetLocales.append({"fileset_id": filesetId, "locale": locale})
+		if script != None:
+			locale = lang + "_" + script
+			self.insertFilesetLocales.append({"fileset_id": filesetId, "locale": locale})
+		if script != None and country != None:
+			locale = lang + "_" + script + "_" + country
+			self.insertFilesetLocales.append({"fileset_id": filesetId, "locale": locale})		
+
 		# for each country
 		# lookup iso by iso, country
 		# if script is not null lookup by iso, script, country
@@ -156,25 +179,28 @@ class BibleTables:
 		#audioDirectory
 		#numbers
 		#countryCode
-		#countries ? array
-		#allCountries ? array
 		#divisionNames chapters in localnames
 		#divisions
 		#sections
 
 
 	def getScriptCode(self, infoJson):
-		result = None
-		#scriptCount = {}
 		bookNames = infoJson["divisionNames"]
-		if bookNames != None and len(bookNames) > 0:
-			bookName = bookNames[0]
-			bookChar = bookName[0]
-			name = unicodedata.name(bookChar)
-			#if ()
-			value = ord(bookChar)
-			print("script", name)
-		return "Latn"
+		if bookNames != None:
+			for bookName in bookNames:
+				for bookChar in bookName:
+					name = unicodedata.name(bookChar)
+					if name != None:
+						parts = name.split(" ")
+						if parts[0] == "TAI" and len(parts) > 1:
+							firstPart = parts[0] + " " + parts[1]
+						else:
+							firstPart = parts[0]
+						scriptCode = self.scriptMap.get(firstPart)
+						if scriptCode != None:
+							print(scriptCode)
+							return scriptCode
+		return None
 
 
 if __name__ == "__main__":

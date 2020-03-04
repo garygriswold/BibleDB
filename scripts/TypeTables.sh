@@ -24,10 +24,9 @@ sqlite3 Versions.db <<END_SQL2
 .import data/USFMBookCodes.txt books
 END_SQL2
 
+# Populate Table scripts
 sqlite3 Versions.db <<END_SQL3
 .separator '|'
 .import data/ScriptCodes.txt scripts
 END_SQL3
-
-
 

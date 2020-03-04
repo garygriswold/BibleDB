@@ -7,14 +7,18 @@ data
 	AppleLang.txt - keep only for historical reasons
 	AppleLang2020.txt
 	Region.txt
+	ScriptCodes.txt
 	USFMBookCodes.txt
 
 py
+	BibleTables.py
 	DownloadInfo.py
 	LanguagesTable.py
 	ListBucket.py
 	LocalesTable.py
 	NumeralsTable.py
+	SqliteUtility.py
+	TestUnicode.py
 
 scripts
 	FetchData.sh
@@ -24,6 +28,7 @@ sql
 	CreateTables.sql
 	Credentials.sql
 
+.gitignore
 BuildDB.sh
 README.md
 

@@ -8,23 +8,11 @@ sh scripts/TypeTables.sh
 
 sh scripts/FetchData.sh
 
+# Run the Validate program to produce the
+# cd ...
+# python3 ...
+
 exit
-
-# Use to get current listing of dbp-prod
-# python py/ListBucket.py
-
-# Use to download current info.json files
-# python py/DownloadInfo.py
-
-# Sample code for download
-# python py/DownloadBible.py
-
-# Create Credential Table
-sqlite Versions.db < sql/Credentials.sql
-
-# Create Language Table
-python py/LanguageTable.py
-sqlite Versions.db < sql/language.sql
 
 # Create Bible Table and Load manually maintained ShortSands Bibles
 sqlite Versions.db < sql/BibleTable.sql

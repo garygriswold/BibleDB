@@ -15,7 +15,7 @@ client = session.client('s3')
 
 input = io.open(source, mode="r", encoding="utf-8")
 for line in input:
-	line = line.strip()
+	line = line.split("\t")[0]
 	if line.endswith(searchFile):
 		filename = target + line.replace("/", ":")
 		try:

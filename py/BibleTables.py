@@ -26,6 +26,7 @@ class BibleTables:
 		self.iso3Set = self.db.selectSet("SELECT iso3 FROM languages", ())
 		self.macroMap = self.db.selectMap("SELECT iso3, macro FROM languages", ())
 		self.iso1Map = self.db.selectMap("SELECT iso3, iso1 FROM languages", ())
+		self.localeSet = self.db.selectSet("SELECT distinct locale FROM locales", ())
 		self.bibles = []
 		self.bibleFilesets = []
 		self.bibleFilesetLocales = []
@@ -41,7 +42,18 @@ class BibleTables:
 		for rec in bibleList:
 			info = self.readInfoJson(rec["bible_id"], rec["fileset_id"])
 			self.getFilesetData(rec, info)
-			print(rec)
+			rec["script"] = self.getScriptCode(info)
+			rec["numerals"] = self.getNumberCode(info)
+			if rec.get("script") == None or len(rec["script"]) < 4:
+				print("ERROR: NO SCRIPT")
+			if rec.get("country") == None or len(rec["country"]) < 2:
+				print("ERROR: NO COUNTRY")
+			if rec.get("iso3") == None or len(rec["iso3"]) < 3:
+				print("ERROR: NO LANG")
+			rec["locales"] = self.matchBiblesToLocales(rec)
+			#print(rec)
+			#if len(rec["locales"]) > 0:
+			#	print(rec)
 #			#print("bible", bibleId)
 #			infoMaps = []
 #			filesets = bibleMap[bibleId]
@@ -72,62 +84,9 @@ class BibleTables:
 #						print("ERROR: Unknown fileset type %s" % (filesetId))
 #						self.insertVideoFilesets(bibleId, filesetId, infoMap)
 #
-#	def processTest1(self): # organize by bibleId/filesetId
-#		resultMap = {}
-#		files1 = os.listdir(ACCEPTED_DIR)
-#		files2 = os.listdir(REJECTED_DIR)
-#		files = files1 + files2
-#		for file in files:
-#			if not file.startswith(".") and file.endswith(".csv"):
-#				file = file.split(".")[0]
-#				(typeCode, bibleId, filesetId) = file.split("_")
-#				key = bibleId + "/" + filesetId[:6]
-#				bibles = resultMap.get(key, [])
-#				bibles.append((typeCode, bibleId, filesetId))
-#				resultMap[key] = bibles 
-#		#return resultMap
-#		#print(resultMap)
-#		for key in sorted(resultMap.keys()):
-#			print(key)
-#			infoMaps = []
-#			for (typeCode, bibleId, filesetId) in resultMap[key]:
-#				print("\t", typeCode, bibleId, filesetId)
-#				if typeCode == "text":
-#					info = self.readInfoJson(bibleId, filesetId)
-#					if info != None:
-#						infoMaps.append(info)
-#			if len(infoMaps) != 1:
-#				print("ERROR %d for %s %s  %s" % (len(infoMaps), key, bibleId, filesetId))
-#			
-#
-#	def processTest2(self):
-#		resultMap = {}
-#		files1 = os.listdir(ACCEPTED_DIR)
-#		files2 = os.listdir(REJECTED_DIR)
-#		files = files1 + files2
-#		for file in files:
-#			if not file.startswith(".") and file.endswith(".csv"):
-#				file = file.split(".")[0]
-#				(typeCode, bibleId, filesetId) = file.split("_")
-#				key = filesetId[:6]
-#				bibles = resultMap.get(key, [])
-#				bibles.append((typeCode, bibleId, filesetId))
-#				resultMap[key] = bibles 
-#		#return resultMap
-#		#print(resultMap)
-#		for key in sorted(resultMap.keys()):
-#			print(key)
-#			infoMaps = []
-#			for (typeCode, bibleId, filesetId) in resultMap[key]:
-#				print("\t", typeCode, bibleId, filesetId)
-#				if typeCode == "text":
-#					info = self.readInfoJson(bibleId, filesetId)
-#					if info != None:
-#						infoMaps.append(info)
-#			if len(infoMaps) != 1:
-#				print("ERROR %d for %s %s  %s" % (len(infoMaps), key, bibleId, filesetId))
 
-	## create hashMap of bibleId and list of (filesetId, typeCode)
+
+	## create bible list of (typeCode, bibleId, filesetId from cvs files)
 	def getBibleList(self, selectSet):
 		results = []
 		files1 = os.listdir(ACCEPTED_DIR)
@@ -146,19 +105,7 @@ class BibleTables:
 		return results
 
 
-#	## remove bibleId's that have no text files
-#	def pruneBibleMap(self, bibleMap):
-#		for bibleId in sorted(bibleMap.keys()):
-#			filesets = bibleMap[bibleId]
-#			hasText = False
-#			for (filesetId, typeCode) in filesets:
-#				if typeCode == "text":
-#					hasText = True
-#			if not hasText:
-#				del bibleMap[bibleId]
-#		return bibleMap
-
-
+    ## read and parse a info.json file for a bibleId, filesetId
 	def readInfoJson(self, bibleId, filesetId):
 		info = None
 		filename = "%stext:%s:%s:info.json" % (INFO_JSON_DIR, bibleId, filesetId)
@@ -175,20 +122,119 @@ class BibleTables:
 		return info
 
 
+    # extract fileset data from info.json data
 	def getFilesetData(self, rec, info):
 		if info != None:
-			rec["iso"] = info["lang"].lower()
+			iso3 = info["lang"].lower()
 			rec["name_local"] = info["name"]
 			rec["name"] = info["nameEnglish"]
 			rec["abbreviation"] = rec["fileset_id"][3:]
-			rec["abbreviation_local"] = rec["abbreviation"]
+			rec["country"] = info["countryCode"] if info["countryCode"] != '' else None
 		else:
-			rec["iso"] = rec["fileset_id"][:3].lower()
+			iso3 = rec["fileset_id"][:3].lower()
+			rec["name_local"] = None
+			rec["name"] = None
+			rec["abbreviation"] = None
+			rec["country"] = None
 		if rec["fileset_id"] in {"GUDBSC", "KORKRV", "MDAWBT"}:
-			rec["iso"] = rec["fileset_id"][:3].lower()
-		if rec["fileset_id"][:3].lower() != rec["iso"]:
-			if rec["bible_id"][:3].lower() != rec["iso"]:
-				print("WARN: iso %s and name %s not the same in bible %s" % (rec["iso"], rec["fileset_id"], rec["bible_id"]))
+			iso3 = rec["fileset_id"][:3].lower()
+		if rec["fileset_id"][:3].lower() != iso3:
+			if rec["bible_id"][:3].lower() != iso3:
+				print("WARN: iso %s and name %s are not the same in %s/%s" % (iso3, rec["fileset_id"][:3], rec["bible_id"], rec["fileset_id"]))
+		corrections = {
+		"ACCNNT/ACCNNT": "acr",
+		"AVRIBT/AVRIBT": "gor",
+		"DEUL12/GERL12": "deu",
+		"DTPAKK/KZJAKK": "dtp",
+		"ELLELL/GRKSFT": "ell",
+		"KANWTC/ERVWTC": "kan",
+		"KINSIX/RUAICG": "kin",
+		"KMRKLA/KM1KLA": "kmr",
+		#"QUJPCM/QUJPCM": "?",
+		"SDMGFA/SDMGFA": "gef",
+		"TURBLI/TRKWTC": "tur",
+		"TURBST/TRKBST": "tur",
+		"TZESBM/TZESBM": "tzo",
+		"TZHBSM/TZBSBM": "tzh",
+		"TZOCHM/TZCSBM": "tzo",
+		"YUEUNV/YUHUNV": "yue",
+		"ZLMTMV/MLYBSM": "zsm",
+		"ZLMTMV/ZLMBSM": "zsm",
+		"AZEBSAC/AZ1BSA": "azj",
+		"SDMSGV/SDMSGV": "gef"}
+		change = corrections.get(rec["bible_id"] + "/" + rec["fileset_id"])
+		if change != None:
+			iso3 = change
+		if iso3 == None or iso3 not in self.iso3Set:
+			print("WARN: iso %s is unknown for %s/%s" % (iso3, rec["bible_id"], rec["fileset_id"]))
+		rec["iso3"] = iso3
+
+
+	## extract script code from book name text in info.json
+	def getScriptCode(self, info):
+		if info != None:
+			bookNames = info["divisionNames"]
+			if bookNames != None:
+				for bookName in bookNames:
+					for bookChar in bookName:
+						name = unicodedata.name(bookChar)
+						if name != None:
+							parts = name.split(" ")
+							if parts[0] == "TAI" and len(parts) > 1:
+								firstPart = parts[0] + " " + parts[1]
+							else:
+								firstPart = parts[0]
+							scriptCode = self.scriptMap.get(firstPart)
+							return scriptCode
+		return None
+
+
+	## extract numerals code from numbers in info.json
+	def getNumberCode(self, info):
+		if info != None:
+			numbers = info["numbers"]
+			for number in numbers:
+				for digit in number:
+					name = unicodedata.name(digit)
+					if name != None or name == "":
+						return "western-arabic"
+					elif name.startswith("ARABIC-INDIC"):
+						return "eastern-arabic"
+					elif name.startswith("EXTENDED ARABIC-INDIC"):
+						return "extended eastern-arabic"
+					else:
+						return name.lower()
+		return None
+
+
+	def matchBiblesToLocales(self, rec):
+		iso3 = rec["iso3"]
+		script = rec["script"]
+		country = rec["country"]
+		perms = []
+		perms.append((iso3,))
+		perms.append((iso3, country))
+		perms.append((iso3, script))
+		perms.append((iso3, script, country))
+		macro = self.macroMap.get(iso3)
+		perms.append((macro,))
+		perms.append((macro, country))
+		perms.append((macro, script))
+		perms.append((macro, script, country))
+		iso1 = self.iso1Map.get(iso3)
+		perms.append((iso1,))
+		perms.append((iso1, country))
+		perms.append((iso1, script))
+		perms.append((iso1, script, country))
+		locales = []
+		for permutation in perms:
+			if all(permutation):
+				locale = "_".join(permutation)
+				if locale in self.localeSet:
+					locales.append(locale)
+		if len(locales) > 0:
+			print("LANG:", rec["bible_id"], rec["fileset_id"], rec["iso3"], rec.get("script"), rec.get("country"), locales)
+		return locales
 
 
 	def insertBibles(self, bibleId, infoMaps):
@@ -339,54 +385,43 @@ class BibleTables:
 				self.audioBibleBooks.append((filesetId, bookId, index + 1, bookName, chapt))
 
 
-		#id
-		#name is localName
-		#nameEnglish is same or 
-		#dir is direction
-		#lang = iso
-		#fontClass
-		#script is script
-		#audioDirectory
-		#numbers
-		#countryCode
-		#divisionNames chapters in localnames
-		#divisions
-		#sections
+	#temp
+	#dbp_bible_id
+	#iso3
+	#version_code
+	#version_name
+	#english_name
+	#dbp_fileset_id
+	#type_code
+	#size_code
+	#bucket - not needed, always dbp-prod
+	#owner_id (if I can get it)
+	#copyright_year (if I can get it
+	#script
+	#numerals_id
+	#font
 
+	#DBL Names
 
-	def getScriptCode(self, infoJson):
-		bookNames = infoJson["divisionNames"]
-		if bookNames != None:
-			for bookName in bookNames:
-				for bookChar in bookName:
-					name = unicodedata.name(bookChar)
-					if name != None:
-						parts = name.split(" ")
-						if parts[0] == "TAI" and len(parts) > 1:
-							firstPart = parts[0] + " " + parts[1]
-						else:
-							firstPart = parts[0]
-						scriptCode = self.scriptMap.get(firstPart)
-						if scriptCode != None:
-							print(scriptCode)
-							return scriptCode
-		return None
+	#name
+	#nameLocal
+	#abbreviation
+	#abbreviationLocal
+	#scope
+	#description
+	#dateCompleted
+	#systemid_gbc (dbl_id_gbc)
+	#systemid_csetid (dbl_id_csetid)
+	#systemid_fullname dbl_id_fullname)
+	#systemid_name (dbl_id_name)
+	#rightsholder (uid)
+	#contributor (uid)
+	#iso
+	#script
+	#numerals
+	#country
 
-
-	def getNumberCode(self, infoJson):
-		numbers = infoJson["numbers"]
-		for number in numbers:
-			for digit in number:
-				name = unicodedata.name(digit)
-				if name != None or name == "":
-					return "western-arabic"
-				elif name.startswith("ARABIC-INDIC"):
-					return "eastern-arabic"
-				elif name.startswith("EXTENDED ARABIC-INDIC"):
-					return "extended eastern-arabic"
-				else:
-					return name.lower()
-		return None
+	#book (code, seq, long, short, abbr)
 
 
 	def getBookNamesChapters(self, typeCode, bibleId, filesetId):

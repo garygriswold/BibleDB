@@ -8,7 +8,6 @@ import sys
 import json
 import csv
 import unicodedata
-#from operator import attrgetter
 import operator
 from SqliteUtility import *
 
@@ -38,21 +37,23 @@ class BibleTables:
 
 
 	def process(self):
-		bibleMap = self.getBibleMap()
-		bibleMap = self.pruneBibleMap(bibleMap)
-		for bibleId in sorted(bibleMap.keys()):
-			print("bible", bibleId)
-			infoMaps = []
-			filesets = bibleMap[bibleId]
-			for (filesetId, typeCode) in filesets:
-				#print("fileset", typeCode, filesetId)
-				if len(filesetId) < 10:
-					#print(typeCode, bibleId, filesetId)
-					infoMap = self.readInfoJson(bibleId, filesetId)
-					if infoMap != None:
-						infoMaps.append(infoMap)
-			#print("call insertBibles", bibleId)
-			self.insertBibles(bibleId, infoMaps)
+		bibleList = self.getBibleList({"text"})
+		for rec in bibleList:
+			info = self.readInfoJson(rec["bible_id"], rec["fileset_id"])
+			self.getFilesetData(rec, info)
+			print(rec)
+#			#print("bible", bibleId)
+#			infoMaps = []
+#			filesets = bibleMap[bibleId]
+#			for (filesetId, typeCode) in filesets:
+#				#print("fileset", typeCode, filesetId)
+#				if len(filesetId) < 10:
+#					#print(typeCode, bibleId, filesetId)
+#					infoMap = self.readInfoJson(bibleId, filesetId)
+#					if infoMap != None:
+#						infoMaps.append(infoMap)
+#			#print("call insertBibles", bibleId)
+#			self.insertBibles(bibleId, infoMaps)
 # temp comment out
 #			for filesetId in filesetIds:
 #				print("after for", bibleId, filesetId)
@@ -70,11 +71,65 @@ class BibleTables:
 #					elif filesetId[8:10] != "VA":
 #						print("ERROR: Unknown fileset type %s" % (filesetId))
 #						self.insertVideoFilesets(bibleId, filesetId, infoMap)
-
+#
+#	def processTest1(self): # organize by bibleId/filesetId
+#		resultMap = {}
+#		files1 = os.listdir(ACCEPTED_DIR)
+#		files2 = os.listdir(REJECTED_DIR)
+#		files = files1 + files2
+#		for file in files:
+#			if not file.startswith(".") and file.endswith(".csv"):
+#				file = file.split(".")[0]
+#				(typeCode, bibleId, filesetId) = file.split("_")
+#				key = bibleId + "/" + filesetId[:6]
+#				bibles = resultMap.get(key, [])
+#				bibles.append((typeCode, bibleId, filesetId))
+#				resultMap[key] = bibles 
+#		#return resultMap
+#		#print(resultMap)
+#		for key in sorted(resultMap.keys()):
+#			print(key)
+#			infoMaps = []
+#			for (typeCode, bibleId, filesetId) in resultMap[key]:
+#				print("\t", typeCode, bibleId, filesetId)
+#				if typeCode == "text":
+#					info = self.readInfoJson(bibleId, filesetId)
+#					if info != None:
+#						infoMaps.append(info)
+#			if len(infoMaps) != 1:
+#				print("ERROR %d for %s %s  %s" % (len(infoMaps), key, bibleId, filesetId))
+#			
+#
+#	def processTest2(self):
+#		resultMap = {}
+#		files1 = os.listdir(ACCEPTED_DIR)
+#		files2 = os.listdir(REJECTED_DIR)
+#		files = files1 + files2
+#		for file in files:
+#			if not file.startswith(".") and file.endswith(".csv"):
+#				file = file.split(".")[0]
+#				(typeCode, bibleId, filesetId) = file.split("_")
+#				key = filesetId[:6]
+#				bibles = resultMap.get(key, [])
+#				bibles.append((typeCode, bibleId, filesetId))
+#				resultMap[key] = bibles 
+#		#return resultMap
+#		#print(resultMap)
+#		for key in sorted(resultMap.keys()):
+#			print(key)
+#			infoMaps = []
+#			for (typeCode, bibleId, filesetId) in resultMap[key]:
+#				print("\t", typeCode, bibleId, filesetId)
+#				if typeCode == "text":
+#					info = self.readInfoJson(bibleId, filesetId)
+#					if info != None:
+#						infoMaps.append(info)
+#			if len(infoMaps) != 1:
+#				print("ERROR %d for %s %s  %s" % (len(infoMaps), key, bibleId, filesetId))
 
 	## create hashMap of bibleId and list of (filesetId, typeCode)
-	def getBibleMap(self):
-		resultMap = {}
+	def getBibleList(self, selectSet):
+		results = []
 		files1 = os.listdir(ACCEPTED_DIR)
 		files2 = os.listdir(REJECTED_DIR)
 		files = files1 + files2
@@ -82,24 +137,26 @@ class BibleTables:
 			if not file.startswith(".") and file.endswith(".csv"):
 				file = file.split(".")[0]
 				(typeCode, bibleId, filesetId) = file.split("_")
-				#print(file, typeCode, bibleSetId, bibleId)
-				bibles = resultMap.get(bibleId, [])
-				bibles.append((filesetId, typeCode))
-				resultMap[bibleId] = bibles 
-		return resultMap
+				if typeCode in selectSet:
+					record = {}
+					record["type_code"] = typeCode
+					record["bible_id"] = bibleId
+					record["fileset_id"] = filesetId
+					results.append(record)
+		return results
 
 
-	## remove bibleId's that have no text files
-	def pruneBibleMap(self, bibleMap):
-		for bibleId in sorted(bibleMap.keys()):
-			filesets = bibleMap[bibleId]
-			hasText = False
-			for (filesetId, typeCode) in filesets:
-				if typeCode == "text":
-					hasText = True
-			if not hasText:
-				del bibleMap[bibleId]
-		return bibleMap
+#	## remove bibleId's that have no text files
+#	def pruneBibleMap(self, bibleMap):
+#		for bibleId in sorted(bibleMap.keys()):
+#			filesets = bibleMap[bibleId]
+#			hasText = False
+#			for (filesetId, typeCode) in filesets:
+#				if typeCode == "text":
+#					hasText = True
+#			if not hasText:
+#				del bibleMap[bibleId]
+#		return bibleMap
 
 
 	def readInfoJson(self, bibleId, filesetId):
@@ -116,6 +173,22 @@ class BibleTables:
 		else:
 			print("ERROR: info.json NOT FOUND,", bibleId, filesetId)
 		return info
+
+
+	def getFilesetData(self, rec, info):
+		if info != None:
+			rec["iso"] = info["lang"].lower()
+			rec["name_local"] = info["name"]
+			rec["name"] = info["nameEnglish"]
+			rec["abbreviation"] = rec["fileset_id"][3:]
+			rec["abbreviation_local"] = rec["abbreviation"]
+		else:
+			rec["iso"] = rec["fileset_id"][:3].lower()
+		if rec["fileset_id"] in {"GUDBSC", "KORKRV", "MDAWBT"}:
+			rec["iso"] = rec["fileset_id"][:3].lower()
+		if rec["fileset_id"][:3].lower() != rec["iso"]:
+			if rec["bible_id"][:3].lower() != rec["iso"]:
+				print("WARN: iso %s and name %s not the same in bible %s" % (rec["iso"], rec["fileset_id"], rec["bible_id"]))
 
 
 	def insertBibles(self, bibleId, infoMaps):
@@ -143,6 +216,7 @@ class BibleTables:
 		if item != None:
 			count = hashMap.get(item, 0)
 			hashMap[item] = count + 1
+
 
 	def getBest(self, name, hashMap):
 		upper = 0
@@ -378,6 +452,15 @@ if __name__ == "__main__":
 	tables.process()
 	tables.unloadDB()
 	tables.loadDB()
+
+"""
+manual language corrections:
+WARN: iso grt and name GUDBSC not the same in bible GUDBSCI  gud
+WARN: iso kkn and name KORKRV not the same in bible KORKRV  kor
+WARN: iso mad and name MDAWBT not the same in bible MDAWBT  mda
+WARN: iso mad and name MDAWBT not the same in bible MDAWBT  mdc
+"""
+"GUDBSC", "KORKRV", "MDAWBT", 
 
 """
 CREATE TABLE language_corrections (

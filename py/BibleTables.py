@@ -27,6 +27,13 @@ class BibleTables:
 		self.macroMap = self.db.selectMap("SELECT iso3, macro FROM languages", ())
 		self.iso1Map = self.db.selectMap("SELECT iso3, iso1 FROM languages", ())
 		self.localeSet = self.db.selectSet("SELECT distinct locale FROM locales", ())
+		self.OTBookSet = {'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT',
+			'1SA', '2SA', '1KI', '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB',
+			'PSA', 'PRO', 'ECC', 'SNG', 'ISA', 'JER', 'LAM', 'EZK', 'DAN', 'HOS',
+			'JOL', 'AMO', 'OBA', 'JON', 'MIC', 'NAM', 'HAB', 'ZEP', 'HAG', 'ZEC', 'MAL'}
+		self.NTBookSet = {'MAT', 'MRK', 'LUK', 'JHN', 'ACT', 'ROM', '1CO', '2CO',
+			'GAL', 'EPH', 'PHP', 'COL', '1TH', '2TH', '1TI', '2TI', 'TIT', 'PHM',
+			'HEB', 'JAS', '1PE', '2PE', '1JN', '2JN', '3JN', 'JUD', 'REV'}
 		self.bibles = []
 		self.bibleFilesets = []
 		self.bibleFilesetLocales = []
@@ -44,13 +51,17 @@ class BibleTables:
 			self.getFilesetData(rec, info)
 			rec["script"] = self.getScriptCode(info)
 			rec["numerals"] = self.getNumberCode(info)
-			if rec.get("script") == None or len(rec["script"]) < 4:
-				print("ERROR: NO SCRIPT")
-			if rec.get("country") == None or len(rec["country"]) < 2:
-				print("ERROR: NO COUNTRY")
-			if rec.get("iso3") == None or len(rec["iso3"]) < 3:
-				print("ERROR: NO LANG")
+			#if rec.get("script") == None or len(rec["script"]) < 4:
+			#	print("ERROR: NO SCRIPT")
+			#if rec.get("country") == None or len(rec["country"]) < 2:
+			#	print("ERROR: NO COUNTRY")
+			#if rec.get("iso3") == None or len(rec["iso3"]) < 3:
+			#	print("ERROR: NO LANG")
 			rec["locales"] = self.matchBiblesToLocales(rec)
+			if len(rec["locales"]) > 0:
+				rec["scope"] = self.getScopeByCSVFile(rec["filename"])
+		reducedList = self.pruneList(bibleList)
+		self.mapOnUniqueKey(reducedList)
 			#print(rec)
 			#if len(rec["locales"]) > 0:
 			#	print(rec)
@@ -91,13 +102,15 @@ class BibleTables:
 		results = []
 		files1 = os.listdir(ACCEPTED_DIR)
 		files2 = os.listdir(REJECTED_DIR)
-		files = files1 + files2
+		#files = files1 + files2
+		files = files1 # ONLY ACCEPTED ARE BEING USED. Is this OK?
 		for file in files:
 			if not file.startswith(".") and file.endswith(".csv"):
-				file = file.split(".")[0]
-				(typeCode, bibleId, filesetId) = file.split("_")
+				filename = file.split(".")[0]
+				(typeCode, bibleId, filesetId) = filename.split("_")
 				if typeCode in selectSet:
 					record = {}
+					record["filename"] = file
 					record["type_code"] = typeCode
 					record["bible_id"] = bibleId
 					record["fileset_id"] = filesetId
@@ -124,17 +137,16 @@ class BibleTables:
 
     # extract fileset data from info.json data
 	def getFilesetData(self, rec, info):
+		rec["abbreviation"] = rec["fileset_id"][3:]
 		if info != None:
 			iso3 = info["lang"].lower()
 			rec["name_local"] = info["name"]
 			rec["name"] = info["nameEnglish"]
-			rec["abbreviation"] = rec["fileset_id"][3:]
 			rec["country"] = info["countryCode"] if info["countryCode"] != '' else None
 		else:
 			iso3 = rec["fileset_id"][:3].lower()
 			rec["name_local"] = None
 			rec["name"] = None
-			rec["abbreviation"] = None
 			rec["country"] = None
 		if rec["fileset_id"] in {"GUDBSC", "KORKRV", "MDAWBT"}:
 			iso3 = rec["fileset_id"][:3].lower()
@@ -232,9 +244,86 @@ class BibleTables:
 				locale = "_".join(permutation)
 				if locale in self.localeSet:
 					locales.append(locale)
-		if len(locales) > 0:
-			print("LANG:", rec["bible_id"], rec["fileset_id"], rec["iso3"], rec.get("script"), rec.get("country"), locales)
 		return locales
+
+
+	## compute size code for each 
+	def getScopeByCSVFile(self, filename):
+		bookIdSet = set()
+		with open(ACCEPTED_DIR + filename, newline='\n') as csvfile:
+			reader = csv.DictReader(csvfile)
+			for row in reader:
+				bookIdSet.add(row["book_id"])
+		return self.getScope(bookIdSet)
+
+
+	def getScope(self, bookIdSet):
+		otBooks = bookIdSet.intersection(self.OTBookSet)
+		ntBooks = bookIdSet.intersection(self.NTBookSet)
+		hasNT = len(ntBooks)
+		hasOT = len(otBooks)
+		if hasNT >= 27:
+			if hasOT >= 39:
+				return "NTOT"#"C"
+			elif hasOT > 0:
+				return "NTOTP"
+			else:
+				return "NT"
+
+		elif hasNT > 0:
+			if hasOT >= 39:
+				return "OTNTP"
+			elif hasOT > 0:
+				return "NTPOTP"
+			else:
+				return "NTP"
+
+		else:
+			if hasOT >= 39:
+				return "OT"
+			elif hasOT > 0:
+				return "OTP"
+			else:
+				return "P"
+
+
+	## prune list of Bibles based upon multiple criteria
+	def pruneList(self, records):
+		results = []
+		for rec in records:
+			locales = rec.get("locales")
+			if locales != None and len(locales) > 0:
+				results.append(rec)
+				if rec["scope"] not in {"NTOT","NTOTP","NT","OTNTP","OT"}:
+					print("\nSCOPE: DROP ?", rec)
+		return results		
+
+
+	def mapOnUniqueKey(self, records):
+		results1 = {}
+		results2 = {}
+		results3 = {}
+		for rec in records:
+			print(rec)
+			print("LANG:", rec["bible_id"], rec["fileset_id"], rec["iso3"], rec.get("script"), rec.get("country"), rec["locales"])
+			records1 = results1.get(rec["bible_id"], [])
+			if len(records1) > 0:
+				print("\nWARN: bible_id DUP", rec, records1)
+			records1.append(rec)
+			results1[rec["bible_id"]] = records1
+			if len(rec["fileset_id"]) != 6:
+				print("\nERROR: filesetid len not 6", rec)
+			records2 = results2.get(rec["fileset_id"], [])
+			if len(records2) > 0:
+				print("\nWARN: fileset_id DUP", rec, records2)
+			records2.append(rec)
+			results2[rec["fileset_id"]] = records2
+			key = rec["iso3"] + "/" + rec["abbreviation"]
+			records3 = results3.get(key, [])
+			if len(records3) > 0:
+				print("\nWARN: iso/abbev DUP", rec, records2)
+			records3.append(rec)
+			results3[key] = records3
 
 
 	def insertBibles(self, bibleId, infoMaps):

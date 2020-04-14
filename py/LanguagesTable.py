@@ -59,7 +59,7 @@ for line in input3:
 		values.append((iso3, macro, iso1, name))
 input3.close()
 
-sql = "INSERT INTO languages (iso3, macro, iso1, english_name) VALUES (?, ?, ?, ?)"
+sql = "INSERT INTO Languages (iso3, macro, iso1, name) VALUES (?, ?, ?, ?)"
 conn = sqlite3.connect("Versions.db")
 cursor = conn.cursor()
 cursor.executemany(sql, values)

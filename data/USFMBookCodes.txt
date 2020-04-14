@@ -1,116 +1,116 @@
-00|FRT|Front Matter
-01|GEN|Genesis
-02|EXO|Exodus
-03|LEV|Leviticus
-04|NUM|Numbers
-05|DEU|Deuteronomy
-06|JOS|Joshua
-07|JDG|Judges
-08|RUT|Ruth
-09|1SA|1 Samuel
-10|2SA|2 Samuel
-11|1KI|1 Kings
-12|2KI|2 Kings
-13|1CH|1 Chronicles
-14|2CH|2 Chronicles
-15|EZR|Ezra
-16|NEH|Nehemiah
-17|EST|Esther (Hebrew)
-18|JOB|Job
-19|PSA|Psalms
-20|PRO|Proverbs
-21|ECC|Ecclesiastes
-22|SNG|Song of Songs
-23|ISA|Isaiah
-24|JER|Jeremiah
-25|LAM|Lamentations
-26|EZK|Ezekiel
-27|DAN|Daniel (Hebrew)
-28|HOS|Hosea
-29|JOL|Joel
-30|AMO|Amos
-31|OBA|Obadiah
-32|JON|Jonah
-33|MIC|Micah
-34|NAM|Nahum
-35|HAB|Habakkuk
-36|ZEP|Zephaniah
-37|HAG|Haggai
-38|ZEC|Zechariah
-39|MAL|Malachi
-41|MAT|Matthew
-42|MRK|Mark
-43|LUK|Luke
-44|JHN|John
-45|ACT|Acts
-46|ROM|Romans
-47|1CO|1 Corinthians
-48|2CO|2 Corinthians
-49|GAL|Galatians
-50|EPH|Ephesians
-51|PHP|Philippians
-52|COL|Colossians
-53|1TH|1 Thessalonians
-54|2TH|2 Thessalonians
-55|1TI|1 Timothy
-56|2TI|2 Timothy
-57|TIT|Titus
-58|PHM|Philemon
-59|HEB|Hebrews
-60|JAS|James
-61|1PE|1 Peter
-62|2PE|2 Peter
-63|1JN|1 John
-64|2JN|2 John
-65|3JN|3 John
-66|JUD|Jude
-67|REV|Revelation
-68|TOB|Tobit
-69|JDT|Judith
-70|ESG|Esther Greek
-71|WIS|Wisdom of Solomon
-72|SIR|Sirach
-73|BAR|Baruch
-74|LJE|Letter of Jeremiah
-75|S3Y|Song of the 3 Young Men
-76|SUS|Susanna
-77|BEL|Bel and the Dragon
-78|1MA|1 Maccabees 
-79|2MA|2 Maccabees
-80|3MA|3 Maccabees
-81|4MA|4 Maccabees
-82|1ES|1 Esdras (Greek)
-83|2ES|2 Esdras (Latin)
-84|MAN|Prayer of Manasseh
-85|PS2|Psalm 151
-86|ODA|Odae/Odes
-87|PSS|Psalms of Solomon
-A4|EZA|Ezra Apocalypse
-A5|5EZ|5 Ezra
-A6|6EZ|6 Ezra
-B2|DAG|Daniel Greek
-B3|PS3|Psalms 152-155
-B4|2BA|2 Baruch (Apocalypse)
-B5|LBA|Letter of Baruch
-B6|JUB|Jubilees
-B7|ENO|Enoch
-B8|1MQ|1 Meqabyan/Mekabis
-B9|2MQ|2 Meqabyan/Mekabis
-C0|3MQ|3 Meqabyan/Mekabis
-C1|REP|Reproof
-C2|4BA|4 Baruch
-C3|LAO|Letter to the Laodiceans
-X0|INT|Introductions
-X1|BAK|Back Matter
-X2|CNC|Concordance
-X3|GLO|Glossary
-X4|TDX|Topical Index
-X5|NDX|Names Index
-X6|OTH|Other
-XA|XXA|
-XB|XXB|
-XC|XXC|
-XD|XXD|
-XE|XXE|
-XF|XXF|
-XF|XXG|
+FRT|00|Front Matter
+GEN|01|Genesis
+EXO|02|Exodus
+LEV|03|Leviticus
+NUM|04|Numbers
+DEU|05|Deuteronomy
+JOS|06|Joshua
+JDG|07|Judges
+RUT|08|Ruth
+1SA|09|1 Samuel
+2SA|10|2 Samuel
+1KI|11|1 Kings
+2KI|12|2 Kings
+1CH|13|1 Chronicles
+2CH|14|2 Chronicles
+EZR|15|Ezra
+NEH|16|Nehemiah
+EST|17|Esther (Hebrew)
+JOB|18|Job
+PSA|19|Psalms
+PRO|20|Proverbs
+ECC|21|Ecclesiastes
+SNG|22|Song of Songs
+ISA|23|Isaiah
+JER|24|Jeremiah
+LAM|25|Lamentations
+EZK|26|Ezekiel
+DAN|27|Daniel (Hebrew)
+HOS|28|Hosea
+JOL|29|Joel
+AMO|30|Amos
+OBA|31|Obadiah
+JON|32|Jonah
+MIC|33|Micah
+NAM|34|Nahum
+HAB|35|Habakkuk
+ZEP|36|Zephaniah
+HAG|37|Haggai
+ZEC|38|Zechariah
+MAL|39|Malachi
+MAT|41|Matthew
+MRK|42|Mark
+LUK|43|Luke
+JHN|44|John
+ACT|45|Acts
+ROM|46|Romans
+1CO|47|1 Corinthians
+2CO|48|2 Corinthians
+GAL|49|Galatians
+EPH|50|Ephesians
+PHP|51|Philippians
+COL|52|Colossians
+1TH|53|1 Thessalonians
+2TH|54|2 Thessalonians
+1TI|55|1 Timothy
+2TI|56|2 Timothy
+TIT|57|Titus
+PHM|58|Philemon
+HEB|59|Hebrews
+JAS|60|James
+1PE|61|1 Peter
+2PE|62|2 Peter
+1JN|63|1 John
+2JN|64|2 John
+3JN|65|3 John
+JUD|66|Jude
+REV|67|Revelation
+TOB|68|Tobit
+JDT|69|Judith
+ESG|70|Esther Greek
+WIS|71|Wisdom of Solomon
+SIR|72|Sirach
+BAR|73|Baruch
+LJE|74|Letter of Jeremiah
+S3Y|75|Song of the 3 Young Men
+SUS|76|Susanna
+BEL|77|Bel and the Dragon
+1MA|78|1 Maccabees 
+2MA|79|2 Maccabees
+3MA|80|3 Maccabees
+4MA|81|4 Maccabees
+1ES|82|1 Esdras (Greek)
+2ES|83|2 Esdras (Latin)
+MAN|84|Prayer of Manasseh
+PS2|85|Psalm 151
+ODA|86|Odae/Odes
+PSS|87|Psalms of Solomon
+EZA|A4|Ezra Apocalypse
+5EZ|A5|5 Ezra
+6EZ|A6|6 Ezra
+DAG|B2|Daniel Greek
+PS3|B3|Psalms 152-155
+2BA|B4|2 Baruch (Apocalypse)
+LBA|B5|Letter of Baruch
+JUB|B6|Jubilees
+ENO|B7|Enoch
+1MQ|B8|1 Meqabyan/Mekabis
+2MQ|B9|2 Meqabyan/Mekabis
+3MQ|C0|3 Meqabyan/Mekabis
+REP|C1|Reproof
+4BA|C2|4 Baruch
+LAO|C3|Letter to the Laodiceans
+INT|X0|Introductions
+BAK|X1|Back Matter
+CNC|X2|Concordance
+GLO|X3|Glossary
+TDX|X4|Topical Index
+NDX|X5|Names Index
+OTH|X6|Other
+XXA|XA|Extra A
+XXB|XB|Extra B
+XXC|XC|Extra C
+XXD|XD|Extra D
+XXE|XE|Extra E
+XXF|XF|Extra F
+XXG|XG|Extra G

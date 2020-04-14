@@ -50,7 +50,7 @@ for name, numbers in numberMap.items():
 	#print(",".join(numbers))
 	values.append((name, ",".join(numbers)))
 
-sql = "INSERT INTO numerals (numeral_id, numbers) VALUES (?, ?)"
+sql = "INSERT INTO Numerals (name, numbers) VALUES (?, ?)"
 conn = sqlite3.connect("Versions.db")
 cursor = conn.cursor()
 cursor.executemany(sql, values)

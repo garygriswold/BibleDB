@@ -45,11 +45,12 @@ for line in input3:
 	else:
 		direction = "ltr"
 	#print("%s,%s,%s" % (lang, script, name))
-	values.append((locale, lang, script, country, variant, direction, name))
+	#values.append((locale, lang, script, country, variant, direction, name))
+	values.append((locale, name))
 
 input3.close()
 
-sql = "INSERT INTO locales (locale, iso, script, country_id, variant, direction, english_name) VALUES (?, ?, ?, ?, ?, ?, ?)"
+sql = "INSERT INTO Locales (identifier, name) VALUES (?, ?)"
 conn = sqlite3.connect("Versions.db")
 cursor = conn.cursor()
 cursor.executemany(sql, values)

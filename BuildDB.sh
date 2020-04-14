@@ -8,6 +8,10 @@ sh scripts/TypeTables.sh
 
 sh scripts/FetchData.sh
 
+cd ../../FCBH/dbp-elt
+time python3 load/Validate.py test bucketlists
+
+
 # Run the Validate program to produce the
 # cd ...
 # python3 ...

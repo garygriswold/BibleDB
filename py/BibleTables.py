@@ -47,6 +47,8 @@ class BibleTables:
 	def process(self):
 		bibleList = self.getBibleList({"text"})
 		for rec in bibleList:
+			if len(rec["fileset_id"]) != 6:
+				print("ERROR0", rec["fileset_id"])
 			info = self.readInfoJson(rec["bible_id"], rec["fileset_id"])
 			self.getFilesetData(rec, info)
 			rec["script"] = self.getScriptCode(info)
@@ -62,6 +64,35 @@ class BibleTables:
 				rec["scope"] = self.getScopeByCSVFile(rec["filename"])
 		reducedList = self.pruneList(bibleList)
 		self.mapOnUniqueKey(reducedList)
+
+
+		mediaList = self.getBibleList({"audio", "video"})
+		for rec in mediaList:
+			rec["scope"] = self.getScopeByCSVFile(rec["filename"])
+		mediaMap5 = self.getFilesetPrefixMap(mediaList, 5)
+		mediaMap6 = self.getFilesetPrefixMap(mediaList, 6)
+		mediaMap7 = self.getFilesetPrefixMap(mediaList, 7)
+		mediaMapAll = self.getFilesetPrefixMap(mediaList, 20)
+
+		groupMap = {}
+		for rec in reducedList:
+			filesetId = rec["fileset_id"]
+			if len(filesetId) == 5:
+				groupRecs = mediaMap5.get(filesetId)
+			elif len(filesetId) == 7:
+				groupRecs = mediaMap7.get(filesetId)
+			else:
+				groupRecs = mediaMap6.get(filesetId)
+			if groupRecs != None:
+				groupMap[filesetId] = groupRecs
+				print("ERROR99: bible has %d media %s/%s" % (len(groupRecs), rec["bible_id"], filesetId), groupRecs)
+			else:
+				print("ERROR99: bible has no media %s/%s" % (rec["bible_id"], filesetId))
+
+
+		#mediaMap = 
+		#for item in mediaList:
+		#	print(item)
 			#print(rec)
 			#if len(rec["locales"]) > 0:
 			#	print(rec)
@@ -321,9 +352,19 @@ class BibleTables:
 			key = rec["iso3"] + "/" + rec["abbreviation"]
 			records3 = results3.get(key, [])
 			if len(records3) > 0:
-				print("\nWARN: iso/abbev DUP", rec, records2)
+				print("\nWARN: iso/abbrev DUP", rec, records2)
 			records3.append(rec)
 			results3[key] = records3
+
+
+	def getFilesetPrefixMap(self, records, keyLength):
+		result = {}
+		for rec in records:
+			prefix = rec["fileset_id"][:keyLength]
+			recs2 = result.get(prefix, [])
+			recs2.append(rec)
+			result[prefix] = recs2
+		return result
 
 
 	def insertBibles(self, bibleId, infoMaps):

@@ -87,6 +87,8 @@ class BibleTables:
 			else:
 				print("ERROR99: bible has no media %s/%s" % (rec["bible_id"], filesetId))
 
+		self.getPermissionsData(groupMap)
+
 
 	## create bible list of (typeCode, bibleId, filesetId from cvs files)
 	def getBibleList(self, selectSet):
@@ -325,6 +327,31 @@ class BibleTables:
 			recs2.append(rec)
 			result[prefix] = recs2
 		return result
+
+
+	def getPermissionsData(self, groupMap):
+		permissionsMap = {"APIDevText": "allowTextAPI",
+						"APIDevAudio": "allowAudioAPI",
+						"APIDevVideo": "allowVideoAPI",
+						"MobileText": "allowTextAPP",
+						"DBPMobile": "allowAudioAPP",
+						"MobileVideo": "allowVideoAPP"}
+		for filesetId, records in groupMap.items():
+			for rec in records:
+				permissionSet = set()
+				lptsResults = self.lptsReader.getFilesetRecords(filesetId)
+				if lptsResults == None or len(lptsResults) == 0:
+					print("ERROR99 %s has no LPTS Record" % (rec["fileset_id"]))
+				elif len(lptsResults) > 1:
+					print("ERROR98 %s has %d LPTS Records" % (rec["fileset_id"], len(lptsResults)))
+				if lptsResults != None:
+					for status, lptsRecord in lptsResults:
+						if status in {"Live", "live"}:
+							for lptsPermiss in permissionsMap.keys():
+								if lptsRecord.record.get(lptsPermiss) == "-1":
+									permissionSet.add(permissionsMap[lptsPermiss])
+				rec["permissions"] = permissionSet
+				print("LPTS ", filesetId, permissionSet)
 
 ###
 ### deprecated code follows

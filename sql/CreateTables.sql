@@ -275,8 +275,14 @@ CREATE TABLE BibleTimestamps(
 DROP TABLE IF EXISTS FcbhPermissions;
 CREATE TABLE FcbhPermissions(
   filesetId TEXT NOT NULL PRIMARY KEY,
-  allowTextApp INT NOT NULL,
-  allowAudioApp INT NOT NULL,
-  allowVideoApp INT NOT NULL);
+  allowTextAPI INT NOT NULL,
+  allowAudioAPI INT NOT NULL,
+  allowVideoAPI INT NOT NULL,
+  allowTextAPP INT NOT NULL,
+  allowAudioAPP INT NOT NULL,
+  allowVideoAPP INT NOT NULL);
+
+
+
  
 

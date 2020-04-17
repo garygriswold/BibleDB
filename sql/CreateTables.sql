@@ -135,9 +135,8 @@ CREATE TABLE Locales (
 DROP TABLE IF EXISTS Numerals;
 CREATE TABLE Numerals (
   name TEXT NOT NULL,
-  numbers TEXT NOT NULL -- numbers are stored as text in a comma delimited array
+  numbers TEXT NOT NULL); -- numbers are stored as text in a comma delimited array
   -- unicode_zero -- possibly, this would work, but maybe not after 9 
-);
 
 DROP TABLE IF EXISTS Scripts;
 CREATE TABLE Scripts (
@@ -158,8 +157,7 @@ DROP TABLE IF EXISTS Books;
 CREATE TABLE Books ( -- This is needed as an integrity constraint
   usfm3 TEXT NOT NULL PRIMARY KEY,
   sequenceNum INT NOT NULL,
-  name TEXT NOT NULL
-);
+  name TEXT NOT NULL);
 
 DROP TABLE IF EXISTS Agencies;
 CREATE TABLE Agencies ( -- I think my only source for this is DBP API
@@ -187,7 +185,7 @@ CREATE TABLE Versions (
 
 DROP TABLE IF EXISTS Bibles;
 CREATE TABLE Bibles (
-  systemId TEXT NOT NULL PRIMARY KEY, -- use fileset_id for now
+  systemId TEXT NOT NULL PRIMARY KEY, -- use fileset_id for now or GUID
   iso3 TEXT NOT NULL,
   abbreviation TEXT NOT NULL,
   typeCode TEXT NOT NULL, -- type_code IN('audio', 'drama', 'video', 'text')
@@ -270,8 +268,7 @@ CREATE TABLE BibleTimestamps(
   chapter INT NOT NULL,
   versePositions TEXT NOT NULL,-- this is not normalized, but this is more efficient.
   PRIMARY KEY (systemId, book, chapter),
-  FOREIGN KEY (systemId, book) REFERENCES BibleBooks (systemId, book)
-);
+  FOREIGN KEY (systemId, book) REFERENCES BibleBooks (systemId, book));
 
 -- Use logical keys, because the database will always be recreated, not updated.
 

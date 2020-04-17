@@ -13,9 +13,11 @@ data
 
 py
 	BibleTables.py
+	Config.py
 	DownloadInfo.py
 	LanguagesTable.py
 	ListBucket.py
+	LPTSExtractReader.py
 	LocalesTable.py
 	NumeralsTable.py
 	SqliteUtility.py

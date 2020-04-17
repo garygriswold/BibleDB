@@ -6,13 +6,12 @@
 import os
 import sys
 import sqlite3
-
-DATABASE = "Versions.db"
+from Config import *
 
 class SqliteUtility:
 
-	def __init__(self):
-		self.conn = sqlite3.connect(DATABASE)
+	def __init__(self, config):
+		self.conn = sqlite3.connect(config.VERSIONS_DATABASE)
 
 	def close(self):
 		if self.conn != None:

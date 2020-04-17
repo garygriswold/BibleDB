@@ -9,24 +9,22 @@ import json
 import csv
 import unicodedata
 import operator
+from Config import *
 from SqliteUtility import *
+from LPTSExtractReader import *
 
-
-ACCEPTED_DIR = "/Volumes/FCBH/files/validate/accepted/"
-REJECTED_DIR = "/Volumes/FCBH/files/validate/quarantine/"
-INFO_JSON_DIR = "/Volumes/FCBH/info_json/"
-AUDIO_BUCKET = "dbp-prod"
-VIDEO_BUCKET = "dbp-vid"
 
 class BibleTables:
 
-	def __init__(self):
-		self.db = SqliteUtility()
-		self.scriptMap = self.db.selectMap("SELECT script_name, script FROM scripts", ())
-		self.iso3Set = self.db.selectSet("SELECT iso3 FROM languages", ())
-		self.macroMap = self.db.selectMap("SELECT iso3, macro FROM languages", ())
-		self.iso1Map = self.db.selectMap("SELECT iso3, iso1 FROM languages", ())
-		self.localeSet = self.db.selectSet("SELECT distinct locale FROM locales", ())
+	def __init__(self, config):
+		self.config = config
+		self.lptsReader = LPTSExtractReader(config)
+		self.db = SqliteUtility(config)
+		self.scriptMap = self.db.selectMap("SELECT name, iso FROM Scripts", ())
+		self.iso3Set = self.db.selectSet("SELECT iso3 FROM Languages", ())
+		self.macroMap = self.db.selectMap("SELECT iso3, macro FROM Languages", ())
+		self.iso1Map = self.db.selectMap("SELECT iso3, iso1 FROM Languages", ())
+		self.localeSet = self.db.selectSet("SELECT distinct identifier FROM Locales", ())
 		self.OTBookSet = {'GEN', 'EXO', 'LEV', 'NUM', 'DEU', 'JOS', 'JDG', 'RUT',
 			'1SA', '2SA', '1KI', '2KI', '1CH', '2CH', 'EZR', 'NEH', 'EST', 'JOB',
 			'PSA', 'PRO', 'ECC', 'SNG', 'ISA', 'JER', 'LAM', 'EZK', 'DAN', 'HOS',
@@ -90,49 +88,11 @@ class BibleTables:
 				print("ERROR99: bible has no media %s/%s" % (rec["bible_id"], filesetId))
 
 
-		#mediaMap = 
-		#for item in mediaList:
-		#	print(item)
-			#print(rec)
-			#if len(rec["locales"]) > 0:
-			#	print(rec)
-#			#print("bible", bibleId)
-#			infoMaps = []
-#			filesets = bibleMap[bibleId]
-#			for (filesetId, typeCode) in filesets:
-#				#print("fileset", typeCode, filesetId)
-#				if len(filesetId) < 10:
-#					#print(typeCode, bibleId, filesetId)
-#					infoMap = self.readInfoJson(bibleId, filesetId)
-#					if infoMap != None:
-#						infoMaps.append(infoMap)
-#			#print("call insertBibles", bibleId)
-#			self.insertBibles(bibleId, infoMaps)
-# temp comment out
-#			for filesetId in filesetIds:
-#				print("after for", bibleId, filesetId)
-#				infoMap = self.readInfoJson(bibleId, filesetId)
-#				if infoMap != None:
-#					self.insertFilesets(bibleId, filesetId, infoMap)
-#					script = self.getScriptCode(infoMap)
-#					self.insertFilesetLocales(bibleId, filesetId, script, infoMap)
-#					if len(filesetId) < 10:
-#						self.insertTextFilesets(bibleId, filesetId, script, infoMap)
-#						self.insertTextBibleBooks(bibleId, filesetId, infoMap)
-#					elif filesetId[8:10] == "DA":
-#						self.insertAudioFilesets(bibleId, filesetId, infoMap)
-#						self.insertAudioBibleBooks(bibleId, filesetId, infoMap)
-#					elif filesetId[8:10] != "VA":
-#						print("ERROR: Unknown fileset type %s" % (filesetId))
-#						self.insertVideoFilesets(bibleId, filesetId, infoMap)
-#
-
-
 	## create bible list of (typeCode, bibleId, filesetId from cvs files)
 	def getBibleList(self, selectSet):
 		results = []
-		files1 = os.listdir(ACCEPTED_DIR)
-		files2 = os.listdir(REJECTED_DIR)
+		files1 = os.listdir(self.config.DIRECTORY_ACCEPTED)
+		files2 = os.listdir(self.config.DIRECTORY_QUARANTINE)
 		#files = files1 + files2
 		files = files1 # ONLY ACCEPTED ARE BEING USED. Is this OK?
 		for file in files:
@@ -152,7 +112,7 @@ class BibleTables:
     ## read and parse a info.json file for a bibleId, filesetId
 	def readInfoJson(self, bibleId, filesetId):
 		info = None
-		filename = "%stext:%s:%s:info.json" % (INFO_JSON_DIR, bibleId, filesetId)
+		filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_INFO_JSON, bibleId, filesetId)
 		if os.path.isfile(filename):
 			fp = io.open(filename, mode="r", encoding="utf-8")
 			data = fp.read()
@@ -281,7 +241,7 @@ class BibleTables:
 	## compute size code for each 
 	def getScopeByCSVFile(self, filename):
 		bookIdSet = set()
-		with open(ACCEPTED_DIR + filename, newline='\n') as csvfile:
+		with open(self.config.DIRECTORY_ACCEPTED + filename, newline='\n') as csvfile:
 			reader = csv.DictReader(csvfile)
 			for row in reader:
 				bookIdSet.add(row["book_id"])
@@ -366,6 +326,9 @@ class BibleTables:
 			result[prefix] = recs2
 		return result
 
+###
+### deprecated code follows
+###
 
 	def insertBibles(self, bibleId, infoMaps):
 		versionCode = bibleId[3:]
@@ -415,9 +378,9 @@ class BibleTables:
 	def insertFilesets(self, bibleId, filesetId, infoJson):
 		sizeCode = "To be done"
 		if filesetId[8:10] == "VD":
-			bucket = VIDEO_BUCKET
+			bucket = self.config.S3_DBP_VIDEO_BUCKET
 		else:
-			bucket = AUDIO_BUCKET
+			bucket = self.config.S3_DBP_BUCKET
 		ownerId = 0 # TO BE DONE
 		copyrightYear = "" # TO BE DONE
 		filenameTemplate = "" # TO BE DONE, must open file, or do manually
@@ -515,45 +478,6 @@ class BibleTables:
 				self.audioBibleBooks.append((filesetId, bookId, index + 1, bookName, chapt))
 
 
-	#temp
-	#dbp_bible_id
-	#iso3
-	#version_code
-	#version_name
-	#english_name
-	#dbp_fileset_id
-	#type_code
-	#size_code
-	#bucket - not needed, always dbp-prod
-	#owner_id (if I can get it)
-	#copyright_year (if I can get it
-	#script
-	#numerals_id
-	#font
-
-	#DBL Names
-
-	#name
-	#nameLocal
-	#abbreviation
-	#abbreviationLocal
-	#scope
-	#description
-	#dateCompleted
-	#systemid_gbc (dbl_id_gbc)
-	#systemid_csetid (dbl_id_csetid)
-	#systemid_fullname dbl_id_fullname)
-	#systemid_name (dbl_id_name)
-	#rightsholder (uid)
-	#contributor (uid)
-	#iso
-	#script
-	#numerals
-	#country
-
-	#book (code, seq, long, short, abbr)
-
-
 	def getBookNamesChapters(self, typeCode, bibleId, filesetId):
 		filename = "%s%s_%s_%s.csv" % (ACCEPTED_DIR, typeCode, bibleId, filesetId)
 		bookChapMap = {}
@@ -613,10 +537,11 @@ class BibleTables:
 
 
 if __name__ == "__main__":
-	tables = BibleTables()
+	config = Config()
+	tables = BibleTables(config)
 	tables.process()
-	tables.unloadDB()
-	tables.loadDB()
+	#tables.unloadDB()
+	#tables.loadDB()
 
 """
 manual language corrections:

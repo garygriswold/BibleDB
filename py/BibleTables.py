@@ -1,6 +1,8 @@
 # BibleTables.py
 #
 # This program loads bible_sets, bibles, and bible_books
+# It does comparison of bible filesets in LPTS, dbp-prod, and DBP
+# 
 #
 import io
 import os
@@ -12,6 +14,31 @@ import operator
 from Config import *
 from SqliteUtility import *
 from LPTSExtractReader import *
+from LookupTables import *
+
+class Bible:
+
+	def __init__(self, source, name, typeCode, bibleId, filesetId):
+		self.source = source # LPTS | S3 | DBP
+		self.name = name
+		self.typeCode = typeCode # text | audio | video
+		self.bibleId = bibleId
+		self.filesetId = filesetId
+		self.key = "%s/%s/%s" % (typeCode, bibleId, filesetId)
+		self.iso3 = None
+		self.script = None
+		self.country = None
+		self.allowApp = False
+		self.allowAPI = False
+		self.locales = []
+		#self.scope = None
+
+	def toString(self):
+		allow = "app " if self.allowApp else ""
+		allow += "api" if self.allowAPI else ""
+		locales = "locales: %s" % (",".join(self.locales))
+		return "%s, src=%s, iso3:%s, script:%s, country:%s, allow:%s, %s" % (self.key, self.source, self.iso3, self.script, self.country, allow, locales)
+
 
 
 class BibleTables:
@@ -43,73 +70,269 @@ class BibleTables:
 
 
 	def process(self):
-		bibleList = self.getBibleList({"text"})
-		for rec in bibleList:
-			if len(rec["fileset_id"]) != 6:
-				print("ERROR0", rec["fileset_id"])
-			info = self.readInfoJson(rec["bible_id"], rec["fileset_id"])
-			self.getFilesetData(rec, info)
-			rec["script"] = self.getScriptCode(info)
-			rec["numerals"] = self.getNumberCode(info)
-			#if rec.get("script") == None or len(rec["script"]) < 4:
-			#	print("ERROR: NO SCRIPT")
-			#if rec.get("country") == None or len(rec["country"]) < 2:
-			#	print("ERROR: NO COUNTRY")
-			#if rec.get("iso3") == None or len(rec["iso3"]) < 3:
-			#	print("ERROR: NO LANG")
-			rec["locales"] = self.matchBiblesToLocales(rec)
-			if len(rec["locales"]) > 0:
-				rec["scope"] = self.getScopeByCSVFile(rec["filename"])
-		reducedList = self.pruneList(bibleList)
-		self.mapOnUniqueKey(reducedList)
+		lptsMap = self.getLPTSMap()
+		print("LPTS %d" % (len(lptsMap.keys())))
+
+		s3Map = self.getS3Map(True) # incude rejected 
+		print("S3 %d" % (len(s3Map.keys())))
+
+		inS3SetNotLPTS = set(s3Map.keys()).difference(lptsMap.keys())
+		print("IN S3 NOT LPTS %d" % (len(inS3SetNotLPTS)))
+		for key in sorted(inS3SetNotLPTS):
+			print("ERROR_11 IN S3 NOT LPTS %s" % (key))
+
+		inLPTSNotS3 = set(lptsMap.keys()).difference(s3Map.keys())
+		print("IN LPTS NOT S3 %s" % (len(inLPTSNotS3)))
+		for key in sorted(inLPTSNotS3):
+			print("ERROR_12 IN LPTS NOT s3 %s" % (key))
+
+		inLptsAndS3Set = set(lptsMap.keys()).intersection(s3Map.keys())
+		print("IN LPTS AND S3 %d" % (len(inLptsAndS3Set)))
+
+		permittedMap = self.selectWithPermission(inLptsAndS3Set, lptsMap)
+		print("IN LPTS WITH PERMISSION AND S3 %d" % (len(permittedMap.keys())))	
+
+		withLocaleMap = self.selectWithLocale(permittedMap)
+		print("IN LPTS WITH PERMISSION AND S3 AND LOCALE %d" % (len(withLocaleMap.keys())))	
+
+		for item in withLocaleMap.values():
+			print(item.toString())
+
+		bibleGroupMap = self.groupByBibleId(withLocaleMap)
+		print("IN BibleId MAP %d" % (len(bibleGroupMap.keys())))
+
+		hasTextGroupMap = self.removeNonText(bibleGroupMap)
+		print("IN BibleId MAP with TEXT %d" % (len(hasTextGroupMap.keys())))
 
 
-		mediaList = self.getBibleList({"audio", "video"})
-		for rec in mediaList:
-			rec["scope"] = self.getScopeByCSVFile(rec["filename"])
-		mediaMap5 = self.getFilesetPrefixMap(mediaList, 5)
-		mediaMap6 = self.getFilesetPrefixMap(mediaList, 6)
-		mediaMap7 = self.getFilesetPrefixMap(mediaList, 7)
-		mediaMapAll = self.getFilesetPrefixMap(mediaList, 20)
-
-		groupMap = {}
-		for rec in reducedList:
-			filesetId = rec["fileset_id"]
-			if len(filesetId) == 5:
-				groupRecs = mediaMap5.get(filesetId)
-			elif len(filesetId) == 7:
-				groupRecs = mediaMap7.get(filesetId)
-			else:
-				groupRecs = mediaMap6.get(filesetId)
-			if groupRecs != None:
-				groupMap[filesetId] = groupRecs
-				print("ERROR99: bible has %d media %s/%s" % (len(groupRecs), rec["bible_id"], filesetId), groupRecs)
-			else:
-				print("ERROR99: bible has no media %s/%s" % (rec["bible_id"], filesetId))
-
-		self.getPermissionsData(groupMap)
+	def displaySet(self, keySet):
+		for key in sorted(keySet):
+			print(key)
 
 
-	## create bible list of (typeCode, bibleId, filesetId from cvs files)
-	def getBibleList(self, selectSet):
-		results = []
+	def getLPTSMap(self):
+		results = {}
+		bibleMap = self.lptsReader.bibleIdMap
+		for bibleId, lptsRecords in bibleMap.items():
+			for (index, lptsRec) in lptsRecords:
+				stockNum = lptsRec.Reg_StockNumber()
+				for typeCode in {"text", "audio", "video"}:
+					damIds = lptsRec.DamIds(typeCode, index)
+					for damId in damIds:
+						bible = Bible("LPTS", stockNum, typeCode, bibleId, damId)
+						bible.iso3 = lptsRec.ISO()
+						scriptName = lptsRec.Orthography(index)
+						bible.script = LookupTables.scriptCode(scriptName)
+						bible.country = lptsRec.Country() # convert to iso2
+						if typeCode == "text":
+							bible.allowAPI = (lptsRec.APIDevText() == "-1")
+							bible.allowApp = (lptsRec.MobileText() == "-1")
+						elif typeCode == "audio":
+							bible.allowAPI = (lptsRec.APIDevAudio() == "-1")
+							bible.allowApp = (lptsRec.DBPMobile() == "-1")
+						elif typeCode == "video":
+							bible.allowAPI = (lptsRec.APIDevVideo() == "-1")
+							bible.allowApp = (lptsRec.MobileVideo() == "-1")
+						if results.get(bible.key) != None:
+							print("ERROR_01 Duplicate Key in LPTS %s" % (bible.key))
+						else:
+							results[bible.key] = bible
+		return results
+
+
+	def getS3Map(self, includeRejected):
+		results = {}
 		files1 = os.listdir(self.config.DIRECTORY_ACCEPTED)
 		files2 = os.listdir(self.config.DIRECTORY_QUARANTINE)
-		#files = files1 + files2
-		files = files1 # ONLY ACCEPTED ARE BEING USED. Is this OK?
+		files = files1 + files2 if includeRejected else files1
 		for file in files:
 			if not file.startswith(".") and file.endswith(".csv"):
 				filename = file.split(".")[0]
 				(typeCode, bibleId, filesetId) = filename.split("_")
-				if typeCode in selectSet:
-					record = {}
-					record["filename"] = file
-					record["type_code"] = typeCode
-					record["bible_id"] = bibleId
-					record["fileset_id"] = filesetId
-					results.append(record)
+				if not filesetId.endswith("16"):
+					bible = Bible("s3", filename, typeCode, bibleId, filesetId)
+					if results.get(bible.key) != None:
+						print("ERROR_02 Duplicate Key in bucket %s" % (bible.key))
+					else:
+						results[bible.key] = bible
 		return results
 
+
+	def selectWithPermission(self, bibleSubset, bibleMap):
+		results = {}
+		for key in bibleSubset:
+			bible = bibleMap[key]
+			if bible.allowApp or bible.allowAPI:
+				results[key] = bible
+		return results
+
+
+	def selectWithLocale(self, bibleMap):
+		results = {}
+		for key, bible in bibleMap.items():
+			perms = []
+			perms.append((bible.iso3,))
+			perms.append((bible.iso3, bible.country))
+			perms.append((bible.iso3, bible.script))
+			perms.append((bible.iso3, bible.script, bible.country))
+			macro = self.macroMap.get(bible.iso3)
+			perms.append((macro,))
+			perms.append((macro, bible.country))
+			perms.append((macro, bible.script))
+			perms.append((macro, bible.script, bible.country))
+			iso1 = self.iso1Map.get(bible.iso3)
+			perms.append((iso1,))
+			perms.append((iso1, bible.country))
+			perms.append((iso1, bible.script))
+			perms.append((iso1, bible.script, bible.country))
+			locales = []
+			for permutation in perms:
+				if all(permutation):
+					locale = "_".join(permutation)
+					if locale in self.localeSet:
+						locales.append(locale)
+			if len(locales) > 0:
+				bible.locales = locales
+				results[key] = bible
+		return results
+
+
+	def groupByBibleId(self, bibleMap):
+		results = {}
+		for bible in bibleMap.values():
+			bibles = results.get(bible.bibleId, [])
+			bibles.append(bible)
+			results[bible.bibleId] = bibles
+		return results
+
+
+	def removeNonText(self, bibleIdMap):
+		results = {}
+		for bibleId, bibles in bibleIdMap.items():
+			hasText = False
+			for bible in bibles:
+				if bible.typeCode == "text":
+					hasText = True
+			if hasText:
+				results[bibleId] = bibles
+		return results
+
+
+	##
+	## Deprecated
+	##
+
+
+#	def process1(self):
+#		bibleList = self.getBibleList({"text"})
+#		for rec in bibleList:
+#			if len(rec["fileset_id"]) != 6:
+#				print("ERROR0", rec["fileset_id"])
+#			info = self.readInfoJson(rec["bible_id"], rec["fileset_id"])
+#			self.getFilesetData(rec, info)
+#			rec["script"] = self.getScriptCode(info)
+#			rec["numerals"] = self.getNumberCode(info)
+#			rec["locales"] = self.matchBiblesToLocales(rec)
+#			if len(rec["locales"]) > 0:
+#				rec["scope"] = self.getScopeByCSVFile(rec["filename"])
+#		reducedList = self.pruneList(bibleList)
+#		self.testUniqueKeys(reducedList)
+#
+#		self.getPermissionsData2(reducedList)
+#
+#		mediaList = self.getBibleList({"audio", "video"})
+#		for rec in mediaList:
+#			rec["scope"] = self.getScopeByCSVFile(rec["filename"])
+#		mediaMap5 = self.getFilesetPrefixMap(mediaList, 5)
+#		mediaMap6 = self.getFilesetPrefixMap(mediaList, 6)
+#		mediaMap7 = self.getFilesetPrefixMap(mediaList, 7)
+#		mediaMapAll = self.getFilesetPrefixMap(mediaList, 20)
+#
+#		groupMap = {}
+#		for rec in reducedList:
+#			filesetId = rec["fileset_id"]
+#			if len(filesetId) == 5:
+#				groupRecs = mediaMap5.get(filesetId)
+#			elif len(filesetId) == 7:
+#				groupRecs = mediaMap7.get(filesetId)
+#			else:
+#				groupRecs = mediaMap6.get(filesetId)
+#			if groupRecs != None:
+#				groupMap[filesetId] = groupRecs
+#				print("ERROR89: bible has %d media %s/%s" % (len(groupRecs), rec["bible_id"], filesetId), groupRecs)
+#			else:
+#				print("ERROR89: bible has no media %s/%s" % (rec["bible_id"], filesetId))
+#
+#		#self.getPermissionsData(groupMap)
+#		self.insertVersions(groupMap)
+#
+#
+#	def process2(self):
+#		permissionsMap = {"APIDevText": "allowTextAPI",
+#				"APIDevAudio": "allowAudioAPI",
+#				"APIDevVideo": "allowVideoAPI",
+#				"MobileText": "allowTextAPP",
+#				"DBPMobile": "allowAudioAPP",
+#				"MobileVideo": "allowVideoAPP"}
+#		bibleList = []
+#		permittedList = []
+#		bibleMap = self.lptsReader.bibleIdMap
+#		for bibleId, lptsRecords in bibleMap.items():
+#			for (index, lptsRec) in lptsRecords:
+#				stockNum = lptsRec.Reg_StockNumber()
+#				#print(bibleId, index, stockNum)
+#				#for typeCode in {"text", "audio", "video"}:
+#				for typeCode in {"text"}:
+#					damIds = lptsRec.DamIds(typeCode, index)
+#					for damId in damIds:
+#						rec = {}
+#						rec["bible_id"] = bibleId
+#						rec["fileset_id"] = damId
+#						rec["typeCode"] = typeCode
+#						#print(bibleId, damId, stockNum)
+#
+#						rec["iso3"] = lptsRec.ISO()
+#						scriptName = lptsRec.Orthography(index)
+#						rec["script"] = LookupTables.scriptCode(scriptName)
+#						rec["country"] = lptsRec.Country()
+#						rec["locales"] = self.matchBiblesToLocales(rec)
+#						rec["scope"] = "NTOT" ## Dummy value
+#						bibleList.append(rec)
+#
+#						permissionSet = set()
+#						for lptsPermiss in permissionsMap.keys():
+#							if lptsRec.record.get(lptsPermiss) == "-1":
+#								permissionSet.add(permissionsMap[lptsPermiss])
+#						rec["permissions"] = permissionSet
+#						if len(permissionSet) > 0:
+#							permittedList.append(rec)
+#		reduced1List = self.pruneList(bibleList)
+#		reduced2List = self.pruneList(permittedList)
+#		for rec in reduced2List:
+#			print(rec)
+#		print("TOTAL %d  PERMITTED %d  LOCALE %d  PERMITTED+LOCALE %d"
+#			% (len(bibleList), len(permittedList), len(reduced1List), len(reduced2List)))
+#
+#
+#	## create bible list of (typeCode, bibleId, filesetId from cvs files)
+#	def getBibleList(self, selectSet):
+#		results = []
+#		files1 = os.listdir(self.config.DIRECTORY_ACCEPTED)
+#		files2 = os.listdir(self.config.DIRECTORY_QUARANTINE)
+#		#files = files1 + files2
+#		files = files1 # ONLY ACCEPTED ARE BEING USED. Is this OK?
+#		for file in files:
+#			if not file.startswith(".") and file.endswith(".csv"):
+#				filename = file.split(".")[0]
+#				(typeCode, bibleId, filesetId) = filename.split("_")
+#				if typeCode in selectSet:
+#					record = {}
+#					record["filename"] = file
+#					record["typeCode"] = typeCode
+#					record["bible_id"] = bibleId
+#					record["fileset_id"] = filesetId
+#					results.append(record)
+#		return results
 
     ## read and parse a info.json file for a bibleId, filesetId
 	def readInfoJson(self, bibleId, filesetId):
@@ -133,12 +356,12 @@ class BibleTables:
 		rec["abbreviation"] = rec["fileset_id"][3:]
 		if info != None:
 			iso3 = info["lang"].lower()
-			rec["name_local"] = info["name"]
+			rec["nameLocal"] = info["name"]
 			rec["name"] = info["nameEnglish"]
 			rec["country"] = info["countryCode"] if info["countryCode"] != '' else None
 		else:
 			iso3 = rec["fileset_id"][:3].lower()
-			rec["name_local"] = None
+			rec["nameLocal"] = None
 			rec["name"] = None
 			rec["country"] = None
 		if rec["fileset_id"] in {"GUDBSC", "KORKRV", "MDAWBT"}:
@@ -212,32 +435,32 @@ class BibleTables:
 		return None
 
 
-	def matchBiblesToLocales(self, rec):
-		iso3 = rec["iso3"]
-		script = rec["script"]
-		country = rec["country"]
-		perms = []
-		perms.append((iso3,))
-		perms.append((iso3, country))
-		perms.append((iso3, script))
-		perms.append((iso3, script, country))
-		macro = self.macroMap.get(iso3)
-		perms.append((macro,))
-		perms.append((macro, country))
-		perms.append((macro, script))
-		perms.append((macro, script, country))
-		iso1 = self.iso1Map.get(iso3)
-		perms.append((iso1,))
-		perms.append((iso1, country))
-		perms.append((iso1, script))
-		perms.append((iso1, script, country))
-		locales = []
-		for permutation in perms:
-			if all(permutation):
-				locale = "_".join(permutation)
-				if locale in self.localeSet:
-					locales.append(locale)
-		return locales
+#	def matchBiblesToLocales(self, rec):
+#		iso3 = rec["iso3"]
+#		script = rec["script"]
+#		country = rec["country"]
+#		perms = []
+#		perms.append((iso3,))
+#		perms.append((iso3, country))
+#		perms.append((iso3, script))
+#		perms.append((iso3, script, country))
+#		macro = self.macroMap.get(iso3)
+#		perms.append((macro,))
+#		perms.append((macro, country))
+#		perms.append((macro, script))
+#		perms.append((macro, script, country))
+#		iso1 = self.iso1Map.get(iso3)
+#		perms.append((iso1,))
+#		perms.append((iso1, country))
+#		perms.append((iso1, script))
+#		perms.append((iso1, script, country))
+#		locales = []
+#		for permutation in perms:
+#			if all(permutation):
+#				locale = "_".join(permutation)
+#				if locale in self.localeSet:
+#					locales.append(locale)
+#		return locales
 
 
 	## compute size code for each 
@@ -280,19 +503,19 @@ class BibleTables:
 				return "P"
 
 
-	## prune list of Bibles based upon multiple criteria
-	def pruneList(self, records):
-		results = []
-		for rec in records:
-			locales = rec.get("locales")
-			if locales != None and len(locales) > 0:
-				results.append(rec)
-				if rec["scope"] not in {"NTOT","NTOTP","NT","OTNTP","OT"}:
-					print("\nSCOPE: DROP ?", rec)
-		return results		
+#	## prune list of Bibles based upon multiple criteria
+#	def pruneList(self, records):
+#		results = []
+#		for rec in records:
+#			locales = rec.get("locales")
+#			if locales != None and len(locales) > 0:
+#				results.append(rec)
+#				if rec["scope"] not in {"NTOT","NTOTP","NT","OTNTP","OT"}:
+#					print("\nSCOPE: DROP ?", rec)
+#		return results		
+#
 
-
-	def mapOnUniqueKey(self, records):
+	def testUniqueKeys(self, records):
 		results1 = {}
 		results2 = {}
 		results3 = {}
@@ -319,88 +542,139 @@ class BibleTables:
 			results3[key] = records3
 
 
-	def getFilesetPrefixMap(self, records, keyLength):
-		result = {}
-		for rec in records:
-			prefix = rec["fileset_id"][:keyLength]
-			recs2 = result.get(prefix, [])
-			recs2.append(rec)
-			result[prefix] = recs2
-		return result
+#	def getFilesetPrefixMap(self, records, keyLength):
+#		result = {}
+#		for rec in records:
+#			prefix = rec["fileset_id"][:keyLength]
+#			recs2 = result.get(prefix, [])
+#			recs2.append(rec)
+#			result[prefix] = recs2
+#		return result
+#
+#
+#	def getPermissionsData(self, groupMap):
+#		permissionsMap = {"APIDevText": "allowTextAPI",
+#						"APIDevAudio": "allowAudioAPI",
+#						"APIDevVideo": "allowVideoAPI",
+#						"MobileText": "allowTextAPP",
+#						"DBPMobile": "allowAudioAPP",
+#						"MobileVideo": "allowVideoAPP"}
+#		for filesetId, records in groupMap.items():
+#			for rec in records:
+#				permissionSet = set()
+#				lptsResults = self.lptsReader.getFilesetRecords(filesetId)
+#				if lptsResults == None or len(lptsResults) == 0:
+#					print("ERROR99 %s has no LPTS Record" % (rec["fileset_id"]))
+#				elif len(lptsResults) > 1:
+#					print("ERROR98 %s has %d LPTS Records" % (rec["fileset_id"], len(lptsResults)))
+#				if lptsResults != None:
+#					for status, lptsRecord in lptsResults:
+#						if status in {"Live", "live"}:
+#							for lptsPermiss in permissionsMap.keys():
+#								if lptsRecord.record.get(lptsPermiss) == "-1":
+#									permissionSet.add(permissionsMap[lptsPermiss])
+#				rec["permissions"] = permissionSet
+#				print("LPTS ", filesetId, permissionSet)
+#
+#
+#	def getPermissionsData2(self, records):
+#		permissionsMap = {"APIDevText": "allowTextAPI",
+#						"APIDevAudio": "allowAudioAPI",
+#						"APIDevVideo": "allowVideoAPI",
+#						"MobileText": "allowTextAPP",
+#						"DBPMobile": "allowAudioAPP",
+#						"MobileVideo": "allowVideoAPP"}
+#		permissionCount = 0
+#		for rec in records:
+#			permissionSet = set()
+#			filesetId = rec["fileset_id"]
+#			lptsResults = self.lptsReader.getFilesetRecords(filesetId)
+#			if lptsResults == None or len(lptsResults) == 0:
+#				print("ERROR99 %s has no LPTS Record" % (filesetId))
+#			elif len(lptsResults) > 1:
+#				print("ERROR98 %s has %d LPTS Records" % (filesetId, len(lptsResults)))
+#			if lptsResults != None:
+#				for status, lptsRecord in lptsResults:
+#					if status not in {"Live", "live"}:
+#						for lptsPermiss in permissionsMap.keys():
+#							if lptsRecord.record.get(lptsPermiss) == "-1":
+#								permissionSet.add(permissionsMap[lptsPermiss])
+#			rec["permissions"] = permissionSet
+#			if len(permissionSet) > 0:
+#				permissionCount += 1
+#				print("ERROR95 %s has permissions" % (filesetId))
+#			else:
+#				print("ERROR97 %s has no permission" % (filesetId))
+#			print("LPTS ", filesetId, permissionSet)
+#		print("PERMISSION %d TOTAL RECS %d" % (permissionCount, len(records)))
+
+	def insertVersions(self, biblesMap):
+		values = []
+		for biblesMapKey, bibles in biblesMap.items():
+			isoSet = set()
+			abbrevSet = set()
+			nameSet = set()
+			nameLocalSet = set()
+			for rec in bibles:
+				if rec["typeCode"] == "text":
+					print(rec)
+					sys.exit()
+					isoSet.add(rec["iso3"])
+					abbrevSet.add(rec["abbreviation"])
+					nameSet.add(rec["name"])
+					nameLocalSet.add(rec["nameLocal"])
+			iso3 = ",".join(isoSet)
+			abbreviation = ",".join(abbrevSet)
+			nameSet = ",".join(nameSet)
+			nameLocalSet = ",".join(nameLocalSet)
+			values.append((iso3, abbreviation, nameSet, nameLocalSet))
+		self.insert("versions", ("iso3","abbreviation","name", "nameLocal"), values)
+		#versionCode = bibleId[3:]
+		#iso3s = {}
+		#versionNames = {}
+		#englishNames = {}
+		#for info in infoMaps:
+		#	self.addOne(iso3s, info["lang"].lower())
+		#	self.addOne(versionNames, info["name"])
+		#	self.addOne(englishNames, info["nameEnglish"])
+		#iso3 = self.getBest("iso3", iso3s)
+		#versionName = self.getBest("versionName", versionNames)
+		#englishName = self.getBest("englishName", englishNames)
+		#values = (bibleId, iso3, versionCode, versionName, englishName)
+		#duplicate = self.uniqueBibleCheck.get(bibleId)
+		#if duplicate != None:
+		#	print("Duplicate %s and %s" % (",".join(duplicate), ",".join(values)))
+		#else:
+		#	self.uniqueBibleCheck[bibleId] = values
+		#	self.bibles.append(values)	
 
 
-	def getPermissionsData(self, groupMap):
-		permissionsMap = {"APIDevText": "allowTextAPI",
-						"APIDevAudio": "allowAudioAPI",
-						"APIDevVideo": "allowVideoAPI",
-						"MobileText": "allowTextAPP",
-						"DBPMobile": "allowAudioAPP",
-						"MobileVideo": "allowVideoAPP"}
-		for filesetId, records in groupMap.items():
-			for rec in records:
-				permissionSet = set()
-				lptsResults = self.lptsReader.getFilesetRecords(filesetId)
-				if lptsResults == None or len(lptsResults) == 0:
-					print("ERROR99 %s has no LPTS Record" % (rec["fileset_id"]))
-				elif len(lptsResults) > 1:
-					print("ERROR98 %s has %d LPTS Records" % (rec["fileset_id"], len(lptsResults)))
-				if lptsResults != None:
-					for status, lptsRecord in lptsResults:
-						if status in {"Live", "live"}:
-							for lptsPermiss in permissionsMap.keys():
-								if lptsRecord.record.get(lptsPermiss) == "-1":
-									permissionSet.add(permissionsMap[lptsPermiss])
-				rec["permissions"] = permissionSet
-				print("LPTS ", filesetId, permissionSet)
-
-###
-### deprecated code follows
-###
-
-	def insertBibles(self, bibleId, infoMaps):
-		versionCode = bibleId[3:]
-		iso3s = {}
-		versionNames = {}
-		englishNames = {}
-		for info in infoMaps:
-			self.addOne(iso3s, info["lang"].lower())
-			self.addOne(versionNames, info["name"])
-			self.addOne(englishNames, info["nameEnglish"])
-		iso3 = self.getBest("iso3", iso3s)
-		versionName = self.getBest("versionName", versionNames)
-		englishName = self.getBest("englishName", englishNames)
-		values = (bibleId, iso3, versionCode, versionName, englishName)
-		duplicate = self.uniqueBibleCheck.get(bibleId)
-		if duplicate != None:
-			print("Duplicate %s and %s" % (",".join(duplicate), ",".join(values)))
-		else:
-			self.uniqueBibleCheck[bibleId] = values
-			self.bibles.append(values)	
+	#def addOne(self, hashMap, item):
+	#	if item != None:
+	#		count = hashMap.get(item, 0)
+	#		hashMap[item] = count + 1
 
 
-	def addOne(self, hashMap, item):
-		if item != None:
-			count = hashMap.get(item, 0)
-			hashMap[item] = count + 1
-
-
-	def getBest(self, name, hashMap):
-		upper = 0
-		best = None
-		for (value, count) in hashMap.items():
-			if count > upper:
-				upper = count
-				best = value
-		if len(hashMap.keys()) > 1:
-			print("map", hashMap)
-			print("best", best)
-		return best
+	#def getBest(self, name, hashMap):
+	#	upper = 0
+	#	best = None
+	#	for (value, count) in hashMap.items():
+	#		if count > upper:
+	#			upper = count
+	#			best = value
+	#	if len(hashMap.keys()) > 1:
+	#		print("map", hashMap)
+	#		print("best", best)
+	#	return best
 		#print(name, hashMap)
 		#desc = sorted(hashMap.items(), key=operator.itemgetter(1))
 		#print(name, desc)
 		#return ("ds")
 		#return desc.keys()[0]
 
+###
+### deprecated code follows
+###
 
 	def insertFilesets(self, bibleId, filesetId, infoJson):
 		sizeCode = "To be done"
@@ -534,8 +808,9 @@ class BibleTables:
 
 	def unloadDB(self):
 		print("unloadDB")
-		tables = ["bibles","bible_filesets","bible_fileset_locales","text_filesets",
-			"audio_filesets","text_bible_books","audio_bible_books"]
+		tables = ["versions"]
+		#tables = ["bibles","bible_filesets","bible_fileset_locales","text_filesets",
+		#	"audio_filesets","text_bible_books","audio_bible_books"]
 		tables.reverse()
 		for table in tables:
 			self.db.execute("DELETE FROM %s" % (table), ())
@@ -543,8 +818,8 @@ class BibleTables:
 
 	def loadDB(self):
 		print("loadDB")
-		self.insert("bibles", ("bible_id","iso3","version_code","version_name",
-			"english_name"), self.bibles)
+		#self.insert("bibles", ("bible_id","iso3","version_code","version_name",
+		#	"english_name"), self.bibles)
 		self.insert("bible_filesets", ("fileset_id","bible_id","size_code", 
 			"bucket","owner_id","copyright_year","filename_template"), self.bibleFilesets)
 		self.insert("bible_fileset_locales", ("locale","fileset_id"), self.bibleFilesetLocales)
@@ -566,100 +841,8 @@ class BibleTables:
 if __name__ == "__main__":
 	config = Config()
 	tables = BibleTables(config)
-	tables.process()
 	#tables.unloadDB()
-	#tables.loadDB()
+	tables.process()
 
-"""
-manual language corrections:
-WARN: iso grt and name GUDBSC not the same in bible GUDBSCI  gud
-WARN: iso kkn and name KORKRV not the same in bible KORKRV  kor
-WARN: iso mad and name MDAWBT not the same in bible MDAWBT  mda
-WARN: iso mad and name MDAWBT not the same in bible MDAWBT  mdc
-"""
-"GUDBSC", "KORKRV", "MDAWBT", 
 
-"""
-CREATE TABLE language_corrections (
-  fcbh_iso3 TEXT NOT NULL PRIMARY KEY,
-  iso3 TEXT NOT NULL,
-  FOREIGN KEY (iso3) REFERENCES languages(iso3));
-
-CREATE TABLE bibles (
-  bible_id TEXT NOT NULL PRIMARY KEY, -- (fcbh bible_id)
-  iso3 TEXT NOT NULL, -- I think iso3 and version code are how I associate items in a set
-  version_code TEXT NOT NULL, -- (e.g. KJV)
-  version_name TEXT NOT NULL, -- from info.json
-  english_name TEXT NOT NULL, -- from info.json
-  localized_name TEXT NULL, -- from google translate
-  version_priority INT NOT NULL DEFAULT 0, -- affects position in version list, manually set
-  FOREIGN KEY (iso3) REFERENCES languages (iso3));
-
-CREATE TABLE bible_filesets (
-  fileset_id TEXT NOT NULL PRIMARY KEY,
-  bible_id TEXT NOT NULL,
-  -- type_code TEXT NOT NULL CHECK (type_code IN('audio', 'drama', 'video', 'text')),
-  size_code TEXT NOT NULL, -- NT,OT, NTOT, NTP, etc.
-  bucket TEXT NOT NULL,
-  owner_id TEXT NOT NULL, -- source unknown
-  copyright_year INT NOT NULL, 
-  filename_template TEXT NOT NULL,
-  FOREIGN KEY (bible_id) REFERENCES bibles (bible_id)
-  FOREIGN KEY (owner_id) REFERENCES bible_owners (owner_id));
-
-DROP TABLE IF EXISTS bible_fileset_locales;
-CREATE TABLE bible_fileset_locales (
-  locale TEXT NOT NULL,
-  fileset_id TEXT NOT NULL,
-  PRIMARY KEY (locale, fileset_id),
-  FOREIGN KEY (fileset_id) REFERENCES bible_filesets (fileset_id),
-  FOREIGN KEY (locale) REFERENCES locales (locale));
-
-DROP TABLE IF EXISTS text_filesets;
-CREATE TABLE text_filesets (
-  fileset_id TEXT NOT NULL PRIMARY KEY, -- this allows multiple texts per bible,
-  script TEXT NULL, -- 
-  numerals_id TEXT NULL, -- get this from info.json, should there be an index, and this a foreign key.
-  font TEXT NOT NULL, -- info.json
-  FOREIGN KEY (fileset_id) REFERENCES bible_filesets (fileset_id),
-  FOREIGN KEY (numerals_id) REFERENCES numerals (numerals_id));
-
-DROP TABLE IF EXISTS audio_filesets;
-CREATE TABLE audio_filesets (
-  fileset_id NOT NULL PRIMARY KEY,
-  audio_type TEXT NOT NULL CHECK (audio_type IN ('drama', 'nondrama')),
-  bitrate INT NOT NULL CHECK (bitrate IN (16, 32, 64, 128)),
-  FOREIGN KEY (fileset_id) REFERENCES bible_filesets (fileset_id));
-
-DROP TABLE IF EXISTS video_filesets;
-CREATE TABLE video_filesets (
-  fileset_id TEXT NOT NULL PRIMARY KEY,
-  title TEXT NOT NULL,
-  lengthMS INT NOT NULL,
-  HLS_URL TEXT NOT NULL,
-  description TEXT NULL, -- could this be in bibles
-  FOREIGN KEY (fileset_id) REFERENCES bible_filesets (fileset_id));
-
-DROP TABLE IF EXISTS text_bible_books;
-CREATE TABLE text_bible_books (
-  fileset_id TEXT NOT NULL,
-  book_id TEXT NOT NULL,
-  sequence INT NOT NULL,
-  localized_name TEXT NOT NULL, -- The bookname used in table of contents
-  num_chapters INT NOT NULL,
-  PRIMARY KEY (fileset_id, book_id),
-  FOREIGN KEY (fileset_id) REFERENCES text_bible_filesets (fileset_id),
-  FOREIGN KEY (book_id) REFERENCES books (book_id));
-
-DROP TABLE IF EXISTS audio_bible_books;
-CREATE TABLE audio_bible_books (
-  fileset_id TEXT NOT NULL,
-  book_id TEXT NOT NULL,
-  sequence INT NOT NULL,
-  s3_name TEXT NOT NULL, -- The bookname used in S3 files
-  num_chapters INT NOT NULL,
-  PRIMARY KEY (fileset_id, book_id),
-  FOREIGN KEY (fileset_id) REFERENCES audio_bible_filesets (fileset_id),
-  FOREIGN KEY (book_id) REFERENCES books (book_id));
-"""
 

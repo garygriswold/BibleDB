@@ -19,6 +19,7 @@ py
 	ListBucket.py
 	LPTSExtractReader.py
 	LocalesTable.py
+	LookupTables.py (only needed if getting script from LPTS)
 	NumeralsTable.py
 	SqliteUtility.py
 	TestUnicode.py

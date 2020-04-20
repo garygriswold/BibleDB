@@ -59,6 +59,21 @@ class BibleTables:
 		self.NTBookSet = {'MAT', 'MRK', 'LUK', 'JHN', 'ACT', 'ROM', '1CO', '2CO',
 			'GAL', 'EPH', 'PHP', 'COL', '1TH', '2TH', '1TI', '2TI', 'TIT', 'PHM',
 			'HEB', 'JAS', '1PE', '2PE', '1JN', '2JN', '3JN', 'JUD', 'REV'}
+		self.countryMap = self.db.selectMap("SELECT name, iso2 FROM Countries", ())
+		countryAdditions = {"Congo, Democratic Republic of the": "CD",
+						"Congo, Republic of the": "CG",
+						"Cote D'Ivoire": "CI",
+						"Cote d'Ivoire": "CI",
+						"Korea, North": "KP",
+						"Korea, South": "KR",
+						"Laos": "LA",
+						"Micronesia, Federated States of": "FM",
+						"Netherlands Antilles": "NL",
+						"Russia": "RU",
+						"Vatican State": "VA",
+						"Vietnam": "VN",
+						"Virgin Islands, US": "VI"}
+		self.countryMap.update(countryAdditions)
 		self.bibles = []
 		self.bibleFilesets = []
 		self.bibleFilesetLocales = []
@@ -123,7 +138,9 @@ class BibleTables:
 						bible.iso3 = lptsRec.ISO()
 						scriptName = lptsRec.Orthography(index)
 						bible.script = LookupTables.scriptCode(scriptName)
-						bible.country = lptsRec.Country() # convert to iso2
+						countryName = lptsRec.Country()
+						if countryName not in {None, "Region-wide"}:
+							bible.country = self.countryMap[countryName] # fail fast
 						if typeCode == "text":
 							bible.allowAPI = (lptsRec.APIDevText() == "-1")
 							bible.allowApp = (lptsRec.MobileText() == "-1")

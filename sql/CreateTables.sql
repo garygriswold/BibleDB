@@ -173,42 +173,38 @@ CREATE TABLE Agencies ( -- I think my only source for this is DBP API
 
 DROP TABLE IF EXISTS Versions;
 CREATE TABLE Versions (
-  -- version is a possible concatenation if necessary
+  bibleId TEXT NOT NULL PRIMARY KEY,
   iso3 TEXT NOT NULL, -- I think iso3 and version code are how I associate items in a set
   abbreviation TEXT NOT NULL, -- (e.g. KJV)
+  script TEXT NULL,
+  numerals TEXT NULL,  
   name TEXT NOT NULL, -- from info.json
   nameLocal TEXT NOT NULL, -- from info.json
   nameTranslated TEXT NULL, -- from google translate
   priority INT NOT NULL DEFAULT 0, -- affects position in version list, manually set
-  PRIMARY KEY (iso3, abbreviation),
+  -- PRIMARY KEY (iso3, abbreviation),
   FOREIGN KEY (iso3) REFERENCES Languages (iso3));
 
 DROP TABLE IF EXISTS Bibles;
 CREATE TABLE Bibles (
-  systemId TEXT NOT NULL PRIMARY KEY, -- use fileset_id for now or GUID
-  iso3 TEXT NOT NULL,
-  abbreviation TEXT NOT NULL,
-  typeCode TEXT NOT NULL, -- type_code IN('audio', 'drama', 'video', 'text')
+  filesetId TEXT NOT NULL PRIMARY KEY, -- use fileset_id for now or GUID
   bibleId TEXT NOT NULL,
-  filesetId TEXT NOT NULL,
-  -- type_code TEXT NOT NULL CHECK (type_code IN('audio', 'drama', 'video', 'text')),
+  mediaType TEXT NOT NULL CHECK (mediaType IN ('audio', 'drama', 'video', 'text')),
   scope TEXT NOT NULL, -- NT,OT, NTOT, NTP, etc.
-  s3Bucket TEXT NOT NULL,
-  agency TEXT NOT NULL, -- source unknown
-  script TEXT NOT NULL,
-  numeral TEXT NOT NULL,
+  bucket TEXT NOT NULL,
   bitrate INT NULL CHECK (bitrate IN (16, 32, 64, 128)),
-  copyrightYear INT NOT NULL, 
-  filenameTemplate TEXT NOT NULL,
-  FOREIGN KEY (iso3, abbreviation) REFERENCES Versions (iso3, abbreviation)
-  FOREIGN KEY (agency) REFERENCES Agencies (uid));
+  agency TEXT NULL, -- should be NOT NULL, but source unknown
+  copyrightYear INT NULL, -- should be NOT NULL, but source unknown
+  filenameTemplate TEXT NULL, -- should be NOT NULL, but not yet available
+  FOREIGN KEY (bibleId) REFERENCES Versions (bibleId));
+  -- FOREIGN KEY (agency) REFERENCES Agencies (uid));
 
-DROP TABLE IF EXISTS BibleLocales;
-CREATE TABLE BibleLocales (
+DROP TABLE IF EXISTS VersionLocales;
+CREATE TABLE VersionLocales (
   locale TEXT NOT NULL,
-  systemId TEXT NOT NULL,
-  PRIMARY KEY (locale, systemId), -- lookup by locale is most frequent
-  FOREIGN KEY (systemId) REFERENCES Bibles (systemId),
+  bibleId TEXT NOT NULL,
+  PRIMARY KEY (locale, bibleId), -- lookup by locale is most frequent
+  FOREIGN KEY (bibleId) REFERENCES Versions (bibleId),
   FOREIGN KEY (locale) REFERENCES Locales (identifier));
 
 -- DROP TABLE IF EXISTS text_bibles;

@@ -18,27 +18,31 @@ from LookupTables import *
 
 class Bible:
 
-	def __init__(self, source, name, typeCode, bibleId, filesetId):
-		self.source = source # LPTS | S3 | DBP
-		self.name = name
+	def __init__(self, srcType, source, typeCode, bibleId, filesetId):
+		self.srcType = srcType # LPTS | S3 | DBP
+		self.source = source
 		self.typeCode = typeCode # text | audio | video
 		self.bibleId = bibleId
 		self.filesetId = filesetId
 		self.key = "%s/%s/%s" % (typeCode, bibleId, filesetId)
+		self.abbreviation = filesetId[3:]
 		self.iso3 = None
 		self.script = None
 		self.country = None
 		self.allowApp = False
 		self.allowAPI = False
 		self.locales = []
-		#self.scope = None
+		self.scope = None
+		## Text only data
+		self.name = None
+		self.nameLocal = None
+		self.numerals = None
 
 	def toString(self):
 		allow = "app " if self.allowApp else ""
 		allow += "api" if self.allowAPI else ""
 		locales = "locales: %s" % (",".join(self.locales))
-		return "%s, src=%s, iso3:%s, script:%s, country:%s, allow:%s, %s" % (self.key, self.source, self.iso3, self.script, self.country, allow, locales)
-
+		return "%s, src=%s, allow:%s, %s_%s_%s, %s" % (self.key, self.srcType, allow, self.iso3, self.script, self.country, locales)
 
 
 class BibleTables:
@@ -86,38 +90,60 @@ class BibleTables:
 
 	def process(self):
 		lptsMap = self.getLPTSMap()
-		print("LPTS %d" % (len(lptsMap.keys())))
+		print("COUNT: LPTS %d" % (len(lptsMap.keys())))
 
 		s3Map = self.getS3Map(True) # incude rejected 
-		print("S3 %d" % (len(s3Map.keys())))
+		print("COUNT: S3 %d" % (len(s3Map.keys())))
 
 		inS3SetNotLPTS = set(s3Map.keys()).difference(lptsMap.keys())
-		print("IN S3 NOT LPTS %d" % (len(inS3SetNotLPTS)))
+		print("COUNT: IN S3 NOT LPTS %d" % (len(inS3SetNotLPTS)))
 		for key in sorted(inS3SetNotLPTS):
 			print("ERROR_11 IN S3 NOT LPTS %s" % (key))
 
 		inLPTSNotS3 = set(lptsMap.keys()).difference(s3Map.keys())
-		print("IN LPTS NOT S3 %s" % (len(inLPTSNotS3)))
+		print("COUNT: IN LPTS NOT S3 %s" % (len(inLPTSNotS3)))
 		for key in sorted(inLPTSNotS3):
 			print("ERROR_12 IN LPTS NOT s3 %s" % (key))
 
 		inLptsAndS3Set = set(lptsMap.keys()).intersection(s3Map.keys())
-		print("IN LPTS AND S3 %d" % (len(inLptsAndS3Set)))
+		print("COUNT: IN LPTS IN S3 %d" % (len(inLptsAndS3Set)))
 
-		permittedMap = self.selectWithPermission(inLptsAndS3Set, lptsMap)
-		print("IN LPTS WITH PERMISSION AND S3 %d" % (len(permittedMap.keys())))	
+		inLptsAndS3Map = self.rebuildMapFromSet(inLptsAndS3Set, lptsMap)
+		print("COUNT: IN LPTS IN S3 REBUILT %d" % (len(inLptsAndS3Map.keys())))
+
+		permittedMap = {}
+		for key, bible in inLptsAndS3Map.items():
+			if bible.allowAPI or bible.allowApp:
+				permittedMap[key] = bible
+		print("COUNT: IN LPTS IN S3 WITH PERMISSION %d" % (len(permittedMap.keys())))
 
 		withLocaleMap = self.selectWithLocale(permittedMap)
-		print("IN LPTS WITH PERMISSION AND S3 AND LOCALE %d" % (len(withLocaleMap.keys())))	
+		print("COUNT: IN LPTS WITH PERMISSION IN S3 AND LOCALE %d" % (len(withLocaleMap.keys())))	
 
-		for item in withLocaleMap.values():
-			print(item.toString())
+		for key, bible in withLocaleMap.items():
+			if bible.typeCode == "text":
+				info = self.readInfoJson(bible.bibleId, bible.filesetId)
+				self.getFilesetData(bible, info)
+				scriptCode = self.getScriptCode(info)
+				if bible.script != None and bible.script != scriptCode:
+					print("ERROR_05 %s script in LPTS %s, computed %s" % (bible.key, bible.script, scriptCode))
+				if scriptCode != None and scriptCode != 'Latn': # Latn is often an error
+					bible.script = scriptCode
+				bible.numerals = self.getNumberCode(bible.script, bible.iso3)
+
+		withLocaleMap2 = self.selectWithLocale(withLocaleMap)
+		print("COUNT: IN LPTS WITH PERMISS IN S3 AND REPEAT LOCALE %d" % (len(withLocaleMap2)))
+
+		self.getScopeByCSVFile(withLocaleMap2)
+
+		for item in withLocaleMap2.values():
+			print(item.toString(), item.scope)
 
 		bibleGroupMap = self.groupByBibleId(withLocaleMap)
-		print("IN BibleId MAP %d" % (len(bibleGroupMap.keys())))
+		print("COUNT: IN BibleId MAP %d" % (len(bibleGroupMap.keys())))
 
 		hasTextGroupMap = self.removeNonText(bibleGroupMap)
-		print("IN BibleId MAP with TEXT %d" % (len(hasTextGroupMap.keys())))
+		print("COUNT: IN BibleId MAP with TEXT %d" % (len(hasTextGroupMap.keys())))
 
 
 	def displaySet(self, keySet):
@@ -175,12 +201,11 @@ class BibleTables:
 		return results
 
 
-	def selectWithPermission(self, bibleSubset, bibleMap):
+	def rebuildMapFromSet(self, bibleSubset, bibleMap):
 		results = {}
 		for key in bibleSubset:
 			bible = bibleMap[key]
-			if bible.allowApp or bible.allowAPI:
-				results[key] = bible
+			results[key] = bible
 		return results
 
 
@@ -235,122 +260,6 @@ class BibleTables:
 		return results
 
 
-	##
-	## Deprecated
-	##
-
-
-#	def process1(self):
-#		bibleList = self.getBibleList({"text"})
-#		for rec in bibleList:
-#			if len(rec["fileset_id"]) != 6:
-#				print("ERROR0", rec["fileset_id"])
-#			info = self.readInfoJson(rec["bible_id"], rec["fileset_id"])
-#			self.getFilesetData(rec, info)
-#			rec["script"] = self.getScriptCode(info)
-#			rec["numerals"] = self.getNumberCode(info)
-#			rec["locales"] = self.matchBiblesToLocales(rec)
-#			if len(rec["locales"]) > 0:
-#				rec["scope"] = self.getScopeByCSVFile(rec["filename"])
-#		reducedList = self.pruneList(bibleList)
-#		self.testUniqueKeys(reducedList)
-#
-#		self.getPermissionsData2(reducedList)
-#
-#		mediaList = self.getBibleList({"audio", "video"})
-#		for rec in mediaList:
-#			rec["scope"] = self.getScopeByCSVFile(rec["filename"])
-#		mediaMap5 = self.getFilesetPrefixMap(mediaList, 5)
-#		mediaMap6 = self.getFilesetPrefixMap(mediaList, 6)
-#		mediaMap7 = self.getFilesetPrefixMap(mediaList, 7)
-#		mediaMapAll = self.getFilesetPrefixMap(mediaList, 20)
-#
-#		groupMap = {}
-#		for rec in reducedList:
-#			filesetId = rec["fileset_id"]
-#			if len(filesetId) == 5:
-#				groupRecs = mediaMap5.get(filesetId)
-#			elif len(filesetId) == 7:
-#				groupRecs = mediaMap7.get(filesetId)
-#			else:
-#				groupRecs = mediaMap6.get(filesetId)
-#			if groupRecs != None:
-#				groupMap[filesetId] = groupRecs
-#				print("ERROR89: bible has %d media %s/%s" % (len(groupRecs), rec["bible_id"], filesetId), groupRecs)
-#			else:
-#				print("ERROR89: bible has no media %s/%s" % (rec["bible_id"], filesetId))
-#
-#		#self.getPermissionsData(groupMap)
-#		self.insertVersions(groupMap)
-#
-#
-#	def process2(self):
-#		permissionsMap = {"APIDevText": "allowTextAPI",
-#				"APIDevAudio": "allowAudioAPI",
-#				"APIDevVideo": "allowVideoAPI",
-#				"MobileText": "allowTextAPP",
-#				"DBPMobile": "allowAudioAPP",
-#				"MobileVideo": "allowVideoAPP"}
-#		bibleList = []
-#		permittedList = []
-#		bibleMap = self.lptsReader.bibleIdMap
-#		for bibleId, lptsRecords in bibleMap.items():
-#			for (index, lptsRec) in lptsRecords:
-#				stockNum = lptsRec.Reg_StockNumber()
-#				#print(bibleId, index, stockNum)
-#				#for typeCode in {"text", "audio", "video"}:
-#				for typeCode in {"text"}:
-#					damIds = lptsRec.DamIds(typeCode, index)
-#					for damId in damIds:
-#						rec = {}
-#						rec["bible_id"] = bibleId
-#						rec["fileset_id"] = damId
-#						rec["typeCode"] = typeCode
-#						#print(bibleId, damId, stockNum)
-#
-#						rec["iso3"] = lptsRec.ISO()
-#						scriptName = lptsRec.Orthography(index)
-#						rec["script"] = LookupTables.scriptCode(scriptName)
-#						rec["country"] = lptsRec.Country()
-#						rec["locales"] = self.matchBiblesToLocales(rec)
-#						rec["scope"] = "NTOT" ## Dummy value
-#						bibleList.append(rec)
-#
-#						permissionSet = set()
-#						for lptsPermiss in permissionsMap.keys():
-#							if lptsRec.record.get(lptsPermiss) == "-1":
-#								permissionSet.add(permissionsMap[lptsPermiss])
-#						rec["permissions"] = permissionSet
-#						if len(permissionSet) > 0:
-#							permittedList.append(rec)
-#		reduced1List = self.pruneList(bibleList)
-#		reduced2List = self.pruneList(permittedList)
-#		for rec in reduced2List:
-#			print(rec)
-#		print("TOTAL %d  PERMITTED %d  LOCALE %d  PERMITTED+LOCALE %d"
-#			% (len(bibleList), len(permittedList), len(reduced1List), len(reduced2List)))
-#
-#
-#	## create bible list of (typeCode, bibleId, filesetId from cvs files)
-#	def getBibleList(self, selectSet):
-#		results = []
-#		files1 = os.listdir(self.config.DIRECTORY_ACCEPTED)
-#		files2 = os.listdir(self.config.DIRECTORY_QUARANTINE)
-#		#files = files1 + files2
-#		files = files1 # ONLY ACCEPTED ARE BEING USED. Is this OK?
-#		for file in files:
-#			if not file.startswith(".") and file.endswith(".csv"):
-#				filename = file.split(".")[0]
-#				(typeCode, bibleId, filesetId) = filename.split("_")
-#				if typeCode in selectSet:
-#					record = {}
-#					record["filename"] = file
-#					record["typeCode"] = typeCode
-#					record["bible_id"] = bibleId
-#					record["fileset_id"] = filesetId
-#					results.append(record)
-#		return results
-
     ## read and parse a info.json file for a bibleId, filesetId
 	def readInfoJson(self, bibleId, filesetId):
 		info = None
@@ -369,50 +278,44 @@ class BibleTables:
 
 
     # extract fileset data from info.json data
-	def getFilesetData(self, rec, info):
-		rec["abbreviation"] = rec["fileset_id"][3:]
+	def getFilesetData(self, bible, info):
 		if info != None:
+			bible.nameLocal = info["name"]
+			bible.name = info["nameEnglish"]
+			country = info["countryCode"] if info["countryCode"] != '' else None
+			if bible.country == None:
+				bible.country = country
+			if country != None and country != bible.country:
+				print("ERROR_03 %s in LPTS %s in info.json %s" % (bible.key, bible.country, country))
 			iso3 = info["lang"].lower()
-			rec["nameLocal"] = info["name"]
-			rec["name"] = info["nameEnglish"]
-			rec["country"] = info["countryCode"] if info["countryCode"] != '' else None
-		else:
-			iso3 = rec["fileset_id"][:3].lower()
-			rec["nameLocal"] = None
-			rec["name"] = None
-			rec["country"] = None
-		if rec["fileset_id"] in {"GUDBSC", "KORKRV", "MDAWBT"}:
-			iso3 = rec["fileset_id"][:3].lower()
-		if rec["fileset_id"][:3].lower() != iso3:
-			if rec["bible_id"][:3].lower() != iso3:
-				print("WARN: iso %s and name %s are not the same in %s/%s" % (iso3, rec["fileset_id"][:3], rec["bible_id"], rec["fileset_id"]))
-		corrections = {
-		"ACCNNT/ACCNNT": "acr",
-		"AVRIBT/AVRIBT": "gor",
-		"DEUL12/GERL12": "deu",
-		"DTPAKK/KZJAKK": "dtp",
-		"ELLELL/GRKSFT": "ell",
-		"KANWTC/ERVWTC": "kan",
-		"KINSIX/RUAICG": "kin",
-		"KMRKLA/KM1KLA": "kmr",
-		#"QUJPCM/QUJPCM": "?",
-		"SDMGFA/SDMGFA": "gef",
-		"TURBLI/TRKWTC": "tur",
-		"TURBST/TRKBST": "tur",
-		"TZESBM/TZESBM": "tzo",
-		"TZHBSM/TZBSBM": "tzh",
-		"TZOCHM/TZCSBM": "tzo",
-		"YUEUNV/YUHUNV": "yue",
-		"ZLMTMV/MLYBSM": "zsm",
-		"ZLMTMV/ZLMBSM": "zsm",
-		"AZEBSAC/AZ1BSA": "azj",
-		"SDMSGV/SDMSGV": "gef"}
-		change = corrections.get(rec["bible_id"] + "/" + rec["fileset_id"])
-		if change != None:
-			iso3 = change
-		if iso3 == None or iso3 not in self.iso3Set:
-			print("WARN: iso %s is unknown for %s/%s" % (iso3, rec["bible_id"], rec["fileset_id"]))
-		rec["iso3"] = iso3
+			if iso3 != bible.iso3:
+				print("ERROR_04 %s in LPTS iso %s in info.json %s" % (bible.key, bible.iso3, iso3))
+#		corrections = {
+#		"ACCNNT/ACCNNT": "acr",
+#		"AVRIBT/AVRIBT": "gor",
+#		"DEUL12/GERL12": "deu",
+#		"DTPAKK/KZJAKK": "dtp",
+#		"ELLELL/GRKSFT": "ell",
+#		"KANWTC/ERVWTC": "kan",
+#		"KINSIX/RUAICG": "kin",
+#		"KMRKLA/KM1KLA": "kmr",
+#		"SDMGFA/SDMGFA": "gef",
+#		"TURBLI/TRKWTC": "tur",
+#		"TURBST/TRKBST": "tur",
+#		"TZESBM/TZESBM": "tzo",
+#		"TZHBSM/TZBSBM": "tzh",
+#		"TZOCHM/TZCSBM": "tzo",
+#		"YUEUNV/YUHUNV": "yue",
+#		"ZLMTMV/MLYBSM": "zsm",
+#		"ZLMTMV/ZLMBSM": "zsm",
+#		"AZEBSAC/AZ1BSA": "azj",
+#		"SDMSGV/SDMSGV": "gef"}
+#		change = corrections.get(rec["bible_id"] + "/" + rec["fileset_id"])
+#		if change != None:
+#			iso3 = change
+#		if iso3 == None or iso3 not in self.iso3Set:
+#			print("WARN: iso %s is unknown for %s/%s" % (iso3, rec["bible_id"], rec["fileset_id"]))
+#		rec["iso3"] = iso3
 
 
 	## extract script code from book name text in info.json
@@ -434,60 +337,60 @@ class BibleTables:
 		return None
 
 
-	## extract numerals code from numbers in info.json
-	def getNumberCode(self, info):
-		if info != None:
-			numbers = info["numbers"]
-			for number in numbers:
-				for digit in number:
-					name = unicodedata.name(digit)
-					if name != None or name == "":
-						return "western-arabic"
-					elif name.startswith("ARABIC-INDIC"):
-						return "eastern-arabic"
-					elif name.startswith("EXTENDED ARABIC-INDIC"):
-						return "extended eastern-arabic"
-					else:
-						return name.lower()
-		return None
-
-
-#	def matchBiblesToLocales(self, rec):
-#		iso3 = rec["iso3"]
-#		script = rec["script"]
-#		country = rec["country"]
-#		perms = []
-#		perms.append((iso3,))
-#		perms.append((iso3, country))
-#		perms.append((iso3, script))
-#		perms.append((iso3, script, country))
-#		macro = self.macroMap.get(iso3)
-#		perms.append((macro,))
-#		perms.append((macro, country))
-#		perms.append((macro, script))
-#		perms.append((macro, script, country))
-#		iso1 = self.iso1Map.get(iso3)
-#		perms.append((iso1,))
-#		perms.append((iso1, country))
-#		perms.append((iso1, script))
-#		perms.append((iso1, script, country))
-#		locales = []
-#		for permutation in perms:
-#			if all(permutation):
-#				locale = "_".join(permutation)
-#				if locale in self.localeSet:
-#					locales.append(locale)
-#		return locales
+	def getNumberCode(self, script, iso3):
+		if script == "Arab":
+			if iso3 in {"fas", "pes" }:
+				return "persian"
+			elif iso3 == "urd": 
+				return "urdu"
+			else:
+				return "eastern-arabic"
+		if script == "Deva":
+			if iso3 == "ben":
+				return "bengali"
+			elif iso3 == "kan":
+				return "kannada"
+			else:
+				return "devanagari"
+		numerals = {
+			"Gujr": "gujarati",
+			"Guru": "gurmukhi",
+			"Hani": "chinese",
+			"Khmr": "khmer",
+			"Laoo": "lao",
+			"Limb": "limbu",
+			"Mlym": "malayalam",
+			"Mymr": "burmese",
+			"Orya": "oriya",
+			"Syrc": "syriac",
+			"Taml": "tamil",
+			"Telu": "telugu",
+			"Thai": "thai"}
+		return numerals.get(script, "western-arabic")
 
 
 	## compute size code for each 
-	def getScopeByCSVFile(self, filename):
-		bookIdSet = set()
-		with open(self.config.DIRECTORY_ACCEPTED + filename, newline='\n') as csvfile:
-			reader = csv.DictReader(csvfile)
-			for row in reader:
-				bookIdSet.add(row["book_id"])
-		return self.getScope(bookIdSet)
+	def getScopeByCSVFile(self, bibleMap):
+		for bible in bibleMap.values():
+			filename = self.getCSVFilename(bible.typeCode, bible.bibleId, bible.filesetId)
+			if filename != None:
+				bookIdSet = set()
+				with open(filename, newline='\n') as csvfile:
+					reader = csv.DictReader(csvfile)
+					for row in reader:
+						bookIdSet.add(row["book_id"])
+				bible.scope = self.getScope(bookIdSet)
+
+
+	def getCSVFilename(self, typeCode, bibleId, filesetId):
+		filename = "%s_%s_%s.csv" % (typeCode, bibleId, filesetId)
+		filePath = self.config.DIRECTORY_ACCEPTED + filename
+		if os.path.isfile(filePath):
+			return filePath
+		filePath = self.config.DIRECTORY_QUARANTINE + filename
+		if os.path.isfile(filePath):
+			return filePath
+		return None
 
 
 	def getScope(self, bookIdSet):
@@ -520,18 +423,7 @@ class BibleTables:
 				return "P"
 
 
-#	## prune list of Bibles based upon multiple criteria
-#	def pruneList(self, records):
-#		results = []
-#		for rec in records:
-#			locales = rec.get("locales")
-#			if locales != None and len(locales) > 0:
-#				results.append(rec)
-#				if rec["scope"] not in {"NTOT","NTOTP","NT","OTNTP","OT"}:
-#					print("\nSCOPE: DROP ?", rec)
-#		return results		
-#
-
+	## not used, but might be useful
 	def testUniqueKeys(self, records):
 		results1 = {}
 		results2 = {}
@@ -568,62 +460,6 @@ class BibleTables:
 #			result[prefix] = recs2
 #		return result
 #
-#
-#	def getPermissionsData(self, groupMap):
-#		permissionsMap = {"APIDevText": "allowTextAPI",
-#						"APIDevAudio": "allowAudioAPI",
-#						"APIDevVideo": "allowVideoAPI",
-#						"MobileText": "allowTextAPP",
-#						"DBPMobile": "allowAudioAPP",
-#						"MobileVideo": "allowVideoAPP"}
-#		for filesetId, records in groupMap.items():
-#			for rec in records:
-#				permissionSet = set()
-#				lptsResults = self.lptsReader.getFilesetRecords(filesetId)
-#				if lptsResults == None or len(lptsResults) == 0:
-#					print("ERROR99 %s has no LPTS Record" % (rec["fileset_id"]))
-#				elif len(lptsResults) > 1:
-#					print("ERROR98 %s has %d LPTS Records" % (rec["fileset_id"], len(lptsResults)))
-#				if lptsResults != None:
-#					for status, lptsRecord in lptsResults:
-#						if status in {"Live", "live"}:
-#							for lptsPermiss in permissionsMap.keys():
-#								if lptsRecord.record.get(lptsPermiss) == "-1":
-#									permissionSet.add(permissionsMap[lptsPermiss])
-#				rec["permissions"] = permissionSet
-#				print("LPTS ", filesetId, permissionSet)
-#
-#
-#	def getPermissionsData2(self, records):
-#		permissionsMap = {"APIDevText": "allowTextAPI",
-#						"APIDevAudio": "allowAudioAPI",
-#						"APIDevVideo": "allowVideoAPI",
-#						"MobileText": "allowTextAPP",
-#						"DBPMobile": "allowAudioAPP",
-#						"MobileVideo": "allowVideoAPP"}
-#		permissionCount = 0
-#		for rec in records:
-#			permissionSet = set()
-#			filesetId = rec["fileset_id"]
-#			lptsResults = self.lptsReader.getFilesetRecords(filesetId)
-#			if lptsResults == None or len(lptsResults) == 0:
-#				print("ERROR99 %s has no LPTS Record" % (filesetId))
-#			elif len(lptsResults) > 1:
-#				print("ERROR98 %s has %d LPTS Records" % (filesetId, len(lptsResults)))
-#			if lptsResults != None:
-#				for status, lptsRecord in lptsResults:
-#					if status not in {"Live", "live"}:
-#						for lptsPermiss in permissionsMap.keys():
-#							if lptsRecord.record.get(lptsPermiss) == "-1":
-#								permissionSet.add(permissionsMap[lptsPermiss])
-#			rec["permissions"] = permissionSet
-#			if len(permissionSet) > 0:
-#				permissionCount += 1
-#				print("ERROR95 %s has permissions" % (filesetId))
-#			else:
-#				print("ERROR97 %s has no permission" % (filesetId))
-#			print("LPTS ", filesetId, permissionSet)
-#		print("PERMISSION %d TOTAL RECS %d" % (permissionCount, len(records)))
 
 	def insertVersions(self, biblesMap):
 		values = []

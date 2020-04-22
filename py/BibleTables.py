@@ -78,14 +78,6 @@ class BibleTables:
 						"Vietnam": "VN",
 						"Virgin Islands, US": "VI"}
 		self.countryMap.update(countryAdditions)
-		#self.bibles = []
-		#self.bibleFilesets = []
-		#self.bibleFilesetLocales = []
-		#self.textFilesets = []
-		#self.audioFilesets = []
-		#self.textBibleBooks = []
-		#self.audioBibleBooks = []
-		#self.uniqueBibleCheck = {}
 
 
 	def process(self):
@@ -148,6 +140,7 @@ class BibleTables:
 		self.insertVersions(hasTextGroupMap)
 		self.insertVersionLocales(hasTextGroupMap)
 		self.insertBibles(hasTextGroupMap)
+		self.insertBibleBooks(hasTextGroupMap)
 
 		### ERRROR the 16 bit rate audios are missing from the LPTS SET
 		### Do I want them?
@@ -297,32 +290,6 @@ class BibleTables:
 			iso3 = info["lang"].lower()
 			if iso3 != bible.iso3:
 				print("ERROR_04 %s in LPTS iso %s in info.json %s" % (bible.key, bible.iso3, iso3))
-#		corrections = {
-#		"ACCNNT/ACCNNT": "acr",
-#		"AVRIBT/AVRIBT": "gor",
-#		"DEUL12/GERL12": "deu",
-#		"DTPAKK/KZJAKK": "dtp",
-#		"ELLELL/GRKSFT": "ell",
-#		"KANWTC/ERVWTC": "kan",
-#		"KINSIX/RUAICG": "kin",
-#		"KMRKLA/KM1KLA": "kmr",
-#		"SDMGFA/SDMGFA": "gef",
-#		"TURBLI/TRKWTC": "tur",
-#		"TURBST/TRKBST": "tur",
-#		"TZESBM/TZESBM": "tzo",
-#		"TZHBSM/TZBSBM": "tzh",
-#		"TZOCHM/TZCSBM": "tzo",
-#		"YUEUNV/YUHUNV": "yue",
-#		"ZLMTMV/MLYBSM": "zsm",
-#		"ZLMTMV/ZLMBSM": "zsm",
-#		"AZEBSAC/AZ1BSA": "azj",
-#		"SDMSGV/SDMSGV": "gef"}
-#		change = corrections.get(rec["bible_id"] + "/" + rec["fileset_id"])
-#		if change != None:
-#			iso3 = change
-#		if iso3 == None or iso3 not in self.iso3Set:
-#			print("WARN: iso %s is unknown for %s/%s" % (iso3, rec["bible_id"], rec["fileset_id"]))
-#		rec["iso3"] = iso3
 
 
 	## extract script code from book name text in info.json
@@ -529,125 +496,68 @@ class BibleTables:
 		## skipping agency, copyrightYear, filenameTemplate
 
 
-
-
-
-#	def appendInserts(self, filesetId, lang, script, country):
-#		self.bibleFilesetLocales.append({"fileset_id": filesetId, "locale": lang})
-#		if country != None:
-#			locale = lang + "_" + country
-#			self.bibleFilesetLocales.append({"fileset_id": filesetId, "locale": locale})
-#		if script != None:
-#			locale = lang + "_" + script
-#			self.bibleFilesetLocales.append({"fileset_id": filesetId, "locale": locale})
-#		if script != None and country != None:
-#			locale = lang + "_" + script + "_" + country
-#			self.bibleFilesetLocales.append({"fileset_id": filesetId, "locale": locale})		
-#
-#
-#	def insertTextFilesets(self, bibleId, filesetId, script, infoJson):
-#		numeralsId = self.getNumberCode(infoJson)
-#		font = infoJson["fontClass"]
-#		self.textFilesets.append((filesetId, script, numeralsId, font))
-#
-#
-#	def insertAudioFilesets(self, bibleId, filesetId, infoJson):
-#		if filesetId[7:10] == "1DA":
-#			audioType = "nondrama"
-#		elif filesetId[7:10] == "2DA":
-#			audioType = "drama"
-#		else:
-#			print("ERROR: audio fileset %s has unknown type" % (filesetId))
-#			audioType = "unknown" # or None
-#		bitrate = filesetId[10:12]
-#		if bitrate == "":
-#			bitrate = "64"
-#		self.audioFilesets.append((filesetId, audioType, bitrate))
-#
-
 	def insertVideoFilesets(self, bibleId, filesetId, infoJson):
 		print("video filesets to be done")
 
 
-	def insertTextBibleBooks(self, bibleId, filesetId, infoJson):
-		bookChapMap = self.getBookNamesChapters("text", bibleId, filesetId)
-		bookIds = self.getBookSequence("text", bibleId, filesetId)
-		bookNameMap = {}
-		books = infoJson.get("divisions") 
-		names = infoJson.get("divisionNames")
-		for index in range(len(books)):
-			bookNameMap[books[index]] = names[index]
-		for index in range(len(bookIds)):
-			bookId = bookIds[index]
-			name = bookNameMap.get(index)
-			bookData = bookChapMap.get(bookId)
-			numChapters = bookData[1] if bookData != None else None
-			#numChapters = bookChapMap[bookId]
-			self.textBibleBooks.append((filesetId, bookId, index + 1, name, numChapters))
-		else:
-			print("ERROR: filesets %s/%s has no books info in info.json" % (bibleId, filesetId))
+	def insertBibleBooks(self, bibleIdMap):
+		values = []
+		self.pkeyCheck = set()
+		for bibleId in sorted(bibleIdMap.keys()):
+			for bible in bibleIdMap[bibleId]:
+				nameLocalMap = self.getLocalBookNames(bible.typeCode, bibleId, bible.filesetId)
+				filename = self.getCSVFilename(bible.typeCode, bibleId, bible.filesetId)
+				priorRow = None
+				with open(filename, newline='\n') as csvfile:
+					reader = csv.DictReader(csvfile)
+					for row in reader:
+						if priorRow != None:
+							if row["book_id"] != priorRow["book_id"]:
+								self.appendBook(values, bible, priorRow, nameLocalMap)
+								priorRow = row
+						else:
+							priorRow = row
+					self.appendBook(values, bible, priorRow, nameLocalMap)
+		self.insert("BibleBooks", ("filesetId", "book", "sequence",
+  				"nameLocal", "nameS3", "numChapters"), values)
 
 
-	def insertAudioBibleBooks(self, bibleId, filesetId, infoJson):
-		bookChapMap = self.getBookNamesChapters("audio", bibleId, filesetId)
-		books = self.getBookSequence("audio", bibleId, filesetId)
-		print(books)
-		for index in range(len(books)):
-			bookId = books[index]
-			bookData = bookChapMap.get(bookId)
-			if bookData != None:
-				(bookName, chapt) = bookData
-				self.audioBibleBooks.append((filesetId, bookId, index + 1, bookName, chapt))
+	def getLocalBookNames(self, typeCode, bibleId, filesetId):
+		result = {}
+		if typeCode == "text":
+			info = self.readInfoJson(bibleId, filesetId)
+			if info != None:
+				books = info["divisions"]
+				names = info["divisionNames"]
+				if len(books) != len(names):
+					print("ERROR_07 books and names not equal in %s/%s/%s" % (typeCode, bibleId, filesetId))
+					sys.exit()
+				for index in range(len(books)):
+					book = books[index]
+					result[book] = names[index]
+		return result
 
 
-	def getBookNamesChapters(self, typeCode, bibleId, filesetId):
-		filename = "%s%s_%s_%s.csv" % (ACCEPTED_DIR, typeCode, bibleId, filesetId)
-		bookChapMap = {}
-		with open(filename) as csv_file:
-			csv_reader = csv.reader(csv_file, delimiter=',')
-			for file in csv_reader:
-				bookName = file[3] # This is incorrect, bookname must be added to CVS
-				bookId = file[4]
-				chapt = file[5]
-				bookChapMap[bookId] = (bookName, chapt) # At end will be last chapter
-		return bookChapMap
-
-
-	def getBookSequence(self, typeCode, bibleId, filesetId):
-		filename = "%s%s_%s_%s.csv" % (ACCEPTED_DIR, typeCode, bibleId, filesetId)
-		bookSet = set()
-		bookList = []
-		with open(filename) as csv_file:
-			csv_reader = csv.reader(csv_file, delimiter=',')
-			for file in csv_reader:
-				bookId = file[4]
-				if not bookId in bookSet:
-					bookSet.add(bookId)
-					bookList.append(bookId)
-		return bookList
+	def appendBook(self, values, bible, row, nameLocalMap):
+		bookId = row["book_id"]
+		nameLocal = nameLocalMap.get(bookId)
+		value = ((bible.filesetId, bookId, row["sequence"], nameLocal, 
+			row["book_name"], row["chapter_start"]))
+		values.append(value)
+		if row["verse_start"] != "1":
+			print("ERROR_08 verse_start should be 1 in %s" % (bible.key))
+		key = bible.filesetId + "/" + bookId
+		if key in self.pkeyCheck:
+			print("ERROR_09 duplicate %s in %s" % (key, bible.bibleId))
+		self.pkeyCheck.add(key)
 
 
 	def unloadDB(self):
 		print("unloadDB")
-		tables = ["Versions", "VersionLocales", "Bibles"]
-		#tables = ["bibles","bible_filesets","bible_fileset_locales","text_filesets",
-		#	"audio_filesets","text_bible_books","audio_bible_books"]
+		tables = ["Versions", "VersionLocales", "Bibles", "BibleBooks"]
 		tables.reverse()
 		for table in tables:
 			self.db.execute("DELETE FROM %s" % (table), ())
-
-#	# deprecated
-#	def loadDB(self):
-#		print("loadDB")
-#		#self.insert("bibles", ("bible_id","iso3","version_code","version_name",
-#		#	"english_name"), self.bibles)
-#		#self.insert("bible_filesets", ("fileset_id","bible_id","size_code", 
-#		#	"bucket","owner_id","copyright_year","filename_template"), self.bibleFilesets)
-#		self.insert("bible_fileset_locales", ("locale","fileset_id"), self.bibleFilesetLocales)
-#		self.insert("text_filesets", ("fileset_id","script","numerals_id","font"), self.textFilesets)
-#		self.insert("audio_filesets", ("fileset_id","audio_type","bitrate"), self.audioFilesets)
-#		self.insert("text_bible_books", ("fileset_id","book_id","sequence","localized_name","num_chapters"), self.textBibleBooks)
-#		self.insert("audio_bible_books", ("fileset_id","book_id","sequence","s3_name","num_chapters"), self.audioBibleBooks)
 
 
 	def insert(self, table, columns, values):

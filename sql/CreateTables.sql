@@ -170,7 +170,6 @@ CREATE TABLE Agencies ( -- I think my only source for this is DBP API
   -- could we have a message without preceeding copyright symbols. so that we prepend
   -- copyright date
 
-
 DROP TABLE IF EXISTS Versions;
 CREATE TABLE Versions (
   bibleId TEXT NOT NULL PRIMARY KEY,
@@ -182,8 +181,15 @@ CREATE TABLE Versions (
   nameLocal TEXT NOT NULL, -- from info.json
   nameTranslated TEXT NULL, -- from google translate
   priority INT NOT NULL DEFAULT 0, -- affects position in version list, manually set
-  -- PRIMARY KEY (iso3, abbreviation),
   FOREIGN KEY (iso3) REFERENCES Languages (iso3));
+
+DROP TABLE IF EXISTS VersionLocales;
+CREATE TABLE VersionLocales (
+  locale TEXT NOT NULL,
+  bibleId TEXT NOT NULL,
+  PRIMARY KEY (locale, bibleId), -- lookup by locale is most frequent
+  FOREIGN KEY (bibleId) REFERENCES Versions (bibleId),
+  FOREIGN KEY (locale) REFERENCES Locales (identifier));
 
 DROP TABLE IF EXISTS Bibles;
 CREATE TABLE Bibles (
@@ -199,13 +205,11 @@ CREATE TABLE Bibles (
   FOREIGN KEY (bibleId) REFERENCES Versions (bibleId));
   -- FOREIGN KEY (agency) REFERENCES Agencies (uid));
 
-DROP TABLE IF EXISTS VersionLocales;
-CREATE TABLE VersionLocales (
-  locale TEXT NOT NULL,
-  bibleId TEXT NOT NULL,
-  PRIMARY KEY (locale, bibleId), -- lookup by locale is most frequent
-  FOREIGN KEY (bibleId) REFERENCES Versions (bibleId),
-  FOREIGN KEY (locale) REFERENCES Locales (identifier));
+-- DROP TABLE IF EXISTS FcbhPermissions;
+-- CREATE TABLE FcbhPermissions(
+--  filesetId TEXT NOT NULL PRIMARY KEY,
+--  allowAPI INT NOT NULL,
+--  allowAPP INT NOT NULL);
 
 -- DROP TABLE IF EXISTS text_bibles;
 -- CREATE TABLE text_filesets (
@@ -225,23 +229,23 @@ CREATE TABLE VersionLocales (
 
 DROP TABLE IF EXISTS VideoBibles;
 CREATE TABLE VideoBibles (
-  systemId TEXT NOT NULL PRIMARY KEY,
+  filesetId TEXT NOT NULL PRIMARY KEY,
   title TEXT NOT NULL,
   lengthMs INT NOT NULL,
   hlsUrl TEXT NOT NULL,
   description TEXT NULL, -- could this be in bibles
-  FOREIGN KEY (systemId) REFERENCES Bibles (systemId));
+  FOREIGN KEY (filesetId) REFERENCES Bibles (filesetId));
 
 DROP TABLE IF EXISTS BibleBooks;
 CREATE TABLE BibleBooks (
-  systemId TEXT NOT NULL,
+  filesetId TEXT NOT NULL,
   book TEXT NOT NULL,
   sequence INT NOT NULL,
-  nameLocal TEXT NOT NULL, -- The bookname used in table of contents
+  nameLocal TEXT NULL, -- The bookname used in table of contents
   nameS3 TEXT NULL, -- bookname in S3 files
   numChapters INT NOT NULL,
-  PRIMARY KEY (systemId, book),
-  FOREIGN KEY (systemId) REFERENCES Bibles (systemId),
+  PRIMARY KEY (filesetId, book),
+  FOREIGN KEY (filesetId) REFERENCES Bibles (filesetId),
   FOREIGN KEY (book) REFERENCES Books (usfm3));
 
 -- DROP TABLE IF EXISTS audio_bible_books;
@@ -268,15 +272,7 @@ CREATE TABLE BibleTimestamps(
 
 -- Use logical keys, because the database will always be recreated, not updated.
 
-DROP TABLE IF EXISTS FcbhPermissions;
-CREATE TABLE FcbhPermissions(
-  filesetId TEXT NOT NULL PRIMARY KEY,
-  allowTextAPI INT NOT NULL,
-  allowAudioAPI INT NOT NULL,
-  allowVideoAPI INT NOT NULL,
-  allowTextAPP INT NOT NULL,
-  allowAudioAPP INT NOT NULL,
-  allowVideoAPP INT NOT NULL);
+
 
 
 

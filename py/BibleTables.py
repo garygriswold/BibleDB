@@ -84,7 +84,7 @@ class BibleTables:
 		lptsMap = self.getLPTSMap()
 		print("COUNT: LPTS %d" % (len(lptsMap.keys())))
 
-		s3Map = self.getS3Map(True) # incude rejected 
+		s3Map = self.getS3Map(False) # exclude rejected 
 		print("COUNT: S3 %d" % (len(s3Map.keys())))
 
 		inS3SetNotLPTS = set(s3Map.keys()).difference(lptsMap.keys())

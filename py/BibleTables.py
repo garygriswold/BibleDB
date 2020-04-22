@@ -134,13 +134,16 @@ class BibleTables:
 		bibleGroupMap = self.groupByBibleId(withLocaleMap)
 		print("COUNT: IN BibleId MAP %d" % (len(bibleGroupMap.keys())))
 
-		hasTextGroupMap = self.removeNonText(bibleGroupMap)
+		hasTextGroupMap = self.removeNonText(bibleGroupMap) # remove Version w/o text
 		print("COUNT: IN BibleId MAP with TEXT %d" % (len(hasTextGroupMap.keys())))
 
-		self.insertVersions(hasTextGroupMap)
-		self.insertVersionLocales(hasTextGroupMap)
-		self.insertBibles(hasTextGroupMap)
-		self.insertBibleBooks(hasTextGroupMap)
+		dupBiblesRemovedMap = self.removeDupBibles(hasTextGroupMap)
+		print("COUNT: IN BibleId MAP with TEXT, DUPS REMOVED %d" % (len(dupBiblesRemovedMap.keys())))
+
+		self.insertVersions(dupBiblesRemovedMap)
+		self.insertVersionLocales(dupBiblesRemovedMap)
+		self.insertBibles(dupBiblesRemovedMap)
+		self.insertBibleBooks(dupBiblesRemovedMap)
 
 		### ERRROR the 16 bit rate audios are missing from the LPTS SET
 		### Do I want them?
@@ -423,6 +426,42 @@ class BibleTables:
 				print("\nWARN: iso/abbrev DUP", rec, records2)
 			records3.append(rec)
 			results3[key] = records3
+
+
+	def removeDupBibles(self, bibleIdMap):
+		results = {}
+		for bibleId in sorted(bibleIdMap.keys()):
+			textSet = set()
+			audioSet = set()
+			dramaSet = set()
+			values = []
+			for bible in bibleIdMap[bibleId]:
+				if bible.typeCode == "text":
+					textSet.add(bible)
+				elif bible.typeCode == "audio":
+					if bible.filesetId[7:8] == "1":
+						audioSet.add(bible)
+					else:
+						dramaSet.add(bible)
+				else:
+					values.append(bible)
+			self._removeDups(values, textSet)
+			self._removeDups(values, audioSet)
+			self._removeDups(values, dramaSet)
+			results[bibleId] = values
+		return results
+
+
+	def _removeDups(self, values, bibleSet):
+		hasNTOT = None
+		for bible in bibleSet:
+			if bible.scope == "NTOT":
+				hasNTOT = bible
+		if hasNTOT:
+			values.append(hasNTOT)
+		else:
+			for bible in bibleSet:
+				values.append(bible)
 
 
 	def insertVersions(self, bibleIdMap):

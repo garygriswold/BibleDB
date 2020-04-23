@@ -553,9 +553,7 @@ class BibleTables:
 						if priorRow != None:
 							if row["book_id"] != priorRow["book_id"]:
 								self.appendBook(values, bible, priorRow, nameLocalMap)
-								priorRow = row
-						else:
-							priorRow = row
+						priorRow = row
 					self.appendBook(values, bible, priorRow, nameLocalMap)
 		self.insert("BibleBooks", ("filesetId", "book", "sequence",
   				"nameLocal", "nameS3", "numChapters"), values)

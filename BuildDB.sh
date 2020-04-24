@@ -1,5 +1,10 @@
 #!/bin/sh -ve
 
+export FCBH_PROJ=$HOME/FCBH/dbp-etl/
+export BIBLE_DB_PROJ=$HOME/ShortSands/BibleDB/
+
+cd $BIBLE_DB_PROJ
+
 rm Versions.db
 
 sqlite3 Versions.db < sql/CreateTables.sql
@@ -8,30 +13,15 @@ sh scripts/TypeTables.sh
 
 sh scripts/FetchData.sh
 
-cd ../../FCBH/dbp-elt
+cd $FCBH_PROJ
 time python3 load/Validate.py test bucketlists
 
+cd $BIBLE_DB_PROJ
+time python3 py/BibleTables.py dev > bibleTables.out
 
-# Run the Validate program to produce the
-# cd ...
-# python3 ...
 
 exit
 
-# Create Bible Table and Load manually maintained ShortSands Bibles
-sqlite Versions.db < sql/BibleTable.sql
-
-# Insert FCBH Bibles into table
-python py/BibleTable.py
-sqlite Versions.db < sql/bible.sql
-
-# In Bible, update script, country
-python py/BibleUpdateInfo.py
-sqlite Versions.db < sql/bible_update.sql
-
-# In Bible, populate iso1 using SIL Language tables
-python py/BibleLanguageCode.py
-sqlite Versions.db < sql/Bible_lang.sql
 
 # Remove script when it is not needed.
 # In order that Language and Bible can match on iso1/script,

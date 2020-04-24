@@ -24,7 +24,7 @@
 #}
 
 import io
-import sqlite3
+from SqliteUtility import *
 
 
 # Read in the AppleLang.txt table
@@ -50,8 +50,9 @@ for line in input3:
 
 input3.close()
 
+config = Config()
+conn = SqliteUtility(config)
 sql = "INSERT INTO Locales (identifier, name) VALUES (?, ?)"
-conn = sqlite3.connect("Versions.db")
-cursor = conn.cursor()
-cursor.executemany(sql, values)
-conn.commit()
+conn.executeBatch(sql, values)
+conn.close()
+

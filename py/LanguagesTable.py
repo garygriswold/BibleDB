@@ -21,7 +21,7 @@
 #
 
 import io
-import sqlite3
+from SqliteUtility import *
 
 macroMap = {}
 # Read in macrolanguage table, and create table of macro codes iso : macro
@@ -59,11 +59,11 @@ for line in input3:
 		values.append((iso3, macro, iso1, name))
 input3.close()
 
+config = Config()
+conn = SqliteUtility(config)
 sql = "INSERT INTO Languages (iso3, macro, iso1, name) VALUES (?, ?, ?, ?)"
-conn = sqlite3.connect("Versions.db")
-cursor = conn.cursor()
-cursor.executemany(sql, values)
-conn.commit()
+conn.executeBatch(sql, values)
+conn.close()
 
 
 

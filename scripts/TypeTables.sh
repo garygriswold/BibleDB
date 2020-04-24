@@ -10,13 +10,13 @@ END_SQL1
 sqlite3 Versions.db < sql/Credentials.sql
 
 # Populate Table languages
-python3 py/LanguagesTable.py
+python3 py/LanguagesTable.py dev
 
 # Populate Table locales
-python3 py/LocalesTable.py
+python3 py/LocalesTable.py dev
 
 # Populate Table numerals
-python3 py/NumeralsTable.py
+python3 py/NumeralsTable.py dev
 
 # Populate Table books
 sqlite3 Versions.db <<END_SQL2

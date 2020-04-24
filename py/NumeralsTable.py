@@ -6,18 +6,19 @@
 import io
 import os
 import sys
-import sqlite3
 import json
 import unicodedata
+from Config import *
+from SqliteUtility import *
 
-DIRECTORY = "/Volumes/FCBH/info_json/"
+config = Config()
 
 numberMap = {}
-files = os.listdir(DIRECTORY)
+files = os.listdir(config.DIRECTORY_INFO_JSON)
 for file in files:
 	if not file.startswith(".") and file.endswith("info.json"):
 		#print(file)
-		input = io.open(DIRECTORY + file, mode="r", encoding="utf-8")
+		input = io.open(config.DIRECTORY_INFO_JSON + file, mode="r", encoding="utf-8")
 		data = input.read()
 		try:
 			info = json.loads(data)
@@ -50,8 +51,8 @@ for name, numbers in numberMap.items():
 	#print(",".join(numbers))
 	values.append((name, ",".join(numbers)))
 
+
+conn = SqliteUtility(config)
 sql = "INSERT INTO Numerals (name, numbers) VALUES (?, ?)"
-conn = sqlite3.connect("Versions.db")
-cursor = conn.cursor()
-cursor.executemany(sql, values)
-conn.commit()
+conn.executeBatch(sql, values)
+conn.close()

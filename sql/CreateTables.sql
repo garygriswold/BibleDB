@@ -205,28 +205,6 @@ CREATE TABLE Bibles (
   FOREIGN KEY (bibleId) REFERENCES Versions (bibleId));
   -- FOREIGN KEY (agency) REFERENCES Agencies (uid));
 
--- DROP TABLE IF EXISTS FcbhPermissions;
--- CREATE TABLE FcbhPermissions(
---  filesetId TEXT NOT NULL PRIMARY KEY,
---  allowAPI INT NOT NULL,
---  allowAPP INT NOT NULL);
-
--- DROP TABLE IF EXISTS text_bibles;
--- CREATE TABLE text_filesets (
---  systemId TEXT NOT NULL PRIMARY KEY, -- this allows multiple texts per bible,
---  script TEXT NULL, -- 
---  numeral TEXT NULL, -- get this from info.json, should there be an index, and this a foreign key.
---  font TEXT NULL, -- info.json
---  FOREIGN KEY (fileset_id) REFERENCES bible_filesets (fileset_id),
---  FOREIGN KEY (numerals_id) REFERENCES numerals (numerals_id));
-
--- DROP TABLE IF EXISTS audio_filesets;
--- CREATE TABLE audio_filesets (
---  fileset_id NOT NULL PRIMARY KEY,
---  audio_type TEXT NOT NULL CHECK (audio_type IN ('drama', 'nondrama')),
---  bitrate INT NOT NULL CHECK (bitrate IN (16, 32, 64, 128)),
---  FOREIGN KEY (fileset_id) REFERENCES bible_filesets (fileset_id));
-
 DROP TABLE IF EXISTS VideoBibles;
 CREATE TABLE VideoBibles (
   filesetId TEXT NOT NULL PRIMARY KEY,
@@ -247,17 +225,6 @@ CREATE TABLE BibleBooks (
   PRIMARY KEY (filesetId, book),
   FOREIGN KEY (filesetId) REFERENCES Bibles (filesetId),
   FOREIGN KEY (book) REFERENCES Books (usfm3));
-
--- DROP TABLE IF EXISTS audio_bible_books;
--- CREATE TABLE audio_bible_books (
---   fileset_id TEXT NOT NULL,
---  book_id TEXT NOT NULL,
---  sequence INT NOT NULL,
---  s3_name TEXT NOT NULL, -- The bookname used in S3 files
---  num_chapters INT NOT NULL,
---  PRIMARY KEY (fileset_id, book_id),
---  FOREIGN KEY (fileset_id) REFERENCES audio_bible_filesets (fileset_id),
---  FOREIGN KEY (book_id) REFERENCES books (book_id));
 
 -- duration would need to be stored for each audio file, identified by fileset_id, book_id, 
 

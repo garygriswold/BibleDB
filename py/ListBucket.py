@@ -9,17 +9,17 @@ import io
 import os
 import boto3
 import datetime
+from Config import *
 
-DIRECTORY = "/Volumes/FCBH/bucket_data/"
-
-if len(sys.argv) < 2:
-	print("Usage: python3 py/ListBucket.py  bucket_name")
+if len(sys.argv) < 3:
+	print("Usage: python3 py/ListBucket.py  config_profile  bucket_name")
 	sys.exit()
 
-bucket = sys.argv[1]
+config = Config()
+bucket = sys.argv[2]
 
-tempFilename = DIRECTORY + bucket + "_new.txt"
-finalFilename = DIRECTORY + bucket + ".txt"
+tempFilename = config.DIRECTORY_BUCKET_LIST + bucket + "_new.txt"
+finalFilename = config.DIRECTORY_BUCKET_LIST + bucket + ".txt"
 
 out = io.open(tempFilename, mode="w", encoding="utf-8")
 

@@ -5,21 +5,23 @@
 import boto3
 import io
 import os 
+from Config import *
+
+config = Config()
 
 searchFile = "info.json"
-target = "/Volumes/FCBH/info_json/"
-source = "/Volumes/FCBH/bucket_data/dbp-prod.txt"
+source = config.DIRECTORY_BUCKET_LIST + config.S3_DBP_BUCKET + ".txt"
 
-session = boto3.Session(profile_name='FCBH_BibleApp')
+session = boto3.Session(profile_name=config.S3_AWS_DBP_PROFILE)
 client = session.client('s3')
 
 input = io.open(source, mode="r", encoding="utf-8")
 for line in input:
 	line = line.split("\t")[0]
 	if line.endswith(searchFile):
-		filename = target + line.replace("/", ":")
+		filename = config.DIRECTORY_INFO_JSON + line.replace("/", ":")
 		try:
-			client.download_file('dbp-prod', line, filename)
+			client.download_file(config.S3_DBP_BUCKET, line, filename)
 			print("Done ", line)
 		except:
 			print("Error Failed ", line)

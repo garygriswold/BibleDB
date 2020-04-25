@@ -5,13 +5,13 @@ export BIBLE_DB_PROJ=$HOME/ShortSands/BibleDB/
 
 cd $BIBLE_DB_PROJ
 
+sh scripts/FetchData.sh
+
 rm Versions.db
 
 sqlite3 Versions.db < sql/CreateTables.sql
 
 sh scripts/TypeTables.sh
-
-sh scripts/FetchData.sh
 
 cd $FCBH_PROJ
 time python3 load/Validate.py test bucketlists

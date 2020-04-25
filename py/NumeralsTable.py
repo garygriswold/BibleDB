@@ -14,11 +14,11 @@ from SqliteUtility import *
 config = Config()
 
 numberMap = {}
-files = os.listdir(config.DIRECTORY_INFO_JSON)
+files = os.listdir(config.DIRECTORY_DBP_INFO_JSON)
 for file in files:
 	if not file.startswith(".") and file.endswith("info.json"):
 		#print(file)
-		input = io.open(config.DIRECTORY_INFO_JSON + file, mode="r", encoding="utf-8")
+		input = io.open(config.DIRECTORY_DBP_INFO_JSON + file, mode="r", encoding="utf-8")
 		data = input.read()
 		try:
 			info = json.loads(data)

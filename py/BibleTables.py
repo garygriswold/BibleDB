@@ -266,7 +266,7 @@ class BibleTables:
     ## read and parse a info.json file for a bibleId, filesetId
 	def readInfoJson(self, bibleId, filesetId):
 		info = None
-		filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_INFO_JSON, bibleId, filesetId)
+		filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_DBP_INFO_JSON, bibleId, filesetId)
 		if os.path.isfile(filename):
 			fp = io.open(filename, mode="r", encoding="utf-8")
 			data = fp.read()
@@ -493,7 +493,7 @@ class BibleTables:
 			name = ",".join(nameSet) #if len(nameSet) > 0 else None
 			nameLocal = ",".join(nameLocalSet) #if len(nameLocalSet) > 0 else None
 			values.append((bibleId, iso3, abbreviation, script, numerals, name, nameLocal))
-		self.insert("Versions", ("bibleId", "iso3", "abbreviation", "script",
+		self.insert("Bibles", ("bibleId", "iso3", "abbreviation", "script",
 				"numerals", "name", "nameLocal"), values)
 
 
@@ -506,7 +506,7 @@ class BibleTables:
 					locales.add(locale)
 			for locale in locales:
 				values.append((locale, bibleId))
-		self.insert("VersionLocales", ("locale", "bibleId"), values)
+		self.insert("BibleLocales", ("locale", "bibleId"), values)
 
 
 	def insertBibles(self, bibleIdMap):
@@ -530,7 +530,7 @@ class BibleTables:
 				value = (bible.filesetId, bible.bibleId, mediaType, bible.scope,
 					bucket, bitrate)
 				values.append(value)
-		self.insert("Bibles", ("filesetId","bibleId","mediaType","scope",
+		self.insert("BibleFilesets", ("filesetId","bibleId","mediaType","scope",
 			"bucket", "bitrate"), values)
 		## skipping agency, copyrightYear, filenameTemplate
 
@@ -591,7 +591,7 @@ class BibleTables:
 
 	def unloadDB(self):
 		print("unloadDB")
-		tables = ["Versions", "VersionLocales", "Bibles", "BibleBooks"]
+		tables = ["Bibles", "BibleLocales", "BibleFilesets", "BibleBooks"]
 		tables.reverse()
 		for table in tables:
 			self.db.execute("DELETE FROM %s" % (table), ())

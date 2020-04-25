@@ -170,8 +170,8 @@ CREATE TABLE Agencies ( -- I think my only source for this is DBP API
   -- could we have a message without preceeding copyright symbols. so that we prepend
   -- copyright date
 
-DROP TABLE IF EXISTS Versions;
-CREATE TABLE Versions (
+DROP TABLE IF EXISTS Bibles;
+CREATE TABLE Bibles (
   bibleId TEXT NOT NULL PRIMARY KEY,
   iso3 TEXT NOT NULL, -- I think iso3 and version code are how I associate items in a set
   abbreviation TEXT NOT NULL, -- (e.g. KJV)
@@ -183,16 +183,16 @@ CREATE TABLE Versions (
   priority INT NOT NULL DEFAULT 0, -- affects position in version list, manually set
   FOREIGN KEY (iso3) REFERENCES Languages (iso3));
 
-DROP TABLE IF EXISTS VersionLocales;
-CREATE TABLE VersionLocales (
+DROP TABLE IF EXISTS BibleLocales;
+CREATE TABLE BibleLocales (
   locale TEXT NOT NULL,
   bibleId TEXT NOT NULL,
   PRIMARY KEY (locale, bibleId), -- lookup by locale is most frequent
-  FOREIGN KEY (bibleId) REFERENCES Versions (bibleId),
+  FOREIGN KEY (bibleId) REFERENCES Bibles (bibleId),
   FOREIGN KEY (locale) REFERENCES Locales (identifier));
 
-DROP TABLE IF EXISTS Bibles;
-CREATE TABLE Bibles (
+DROP TABLE IF EXISTS BibleFilesets;
+CREATE TABLE BibleFilesets (
   filesetId TEXT NOT NULL PRIMARY KEY, -- use fileset_id for now or GUID
   bibleId TEXT NOT NULL,
   mediaType TEXT NOT NULL CHECK (mediaType IN ('audio', 'drama', 'video', 'text')),
@@ -202,7 +202,7 @@ CREATE TABLE Bibles (
   agency TEXT NULL, -- should be NOT NULL, but source unknown
   copyrightYear INT NULL, -- should be NOT NULL, but source unknown
   filenameTemplate TEXT NULL, -- should be NOT NULL, but not yet available
-  FOREIGN KEY (bibleId) REFERENCES Versions (bibleId));
+  FOREIGN KEY (bibleId) REFERENCES Bibles (bibleId));
   -- FOREIGN KEY (agency) REFERENCES Agencies (uid));
 
 DROP TABLE IF EXISTS VideoBibles;
@@ -223,19 +223,19 @@ CREATE TABLE BibleBooks (
   nameS3 TEXT NULL, -- bookname in S3 files
   numChapters INT NOT NULL,
   PRIMARY KEY (filesetId, book),
-  FOREIGN KEY (filesetId) REFERENCES Bibles (filesetId),
+  FOREIGN KEY (filesetId) REFERENCES BibleFilesets (filesetId),
   FOREIGN KEY (book) REFERENCES Books (usfm3));
 
 -- duration would need to be stored for each audio file, identified by fileset_id, book_id, 
 
 DROP TABLE IF EXISTS BibleTimestamps;
 CREATE TABLE BibleTimestamps(
-  systemId TEXT NOT NULL,
+  filesetId TEXT NOT NULL,
   book TEXT NOT NULL,
   chapter INT NOT NULL,
   versePositions TEXT NOT NULL,-- this is not normalized, but this is more efficient.
-  PRIMARY KEY (systemId, book, chapter),
-  FOREIGN KEY (systemId, book) REFERENCES BibleBooks (systemId, book));
+  PRIMARY KEY (filesetId, book, chapter),
+  FOREIGN KEY (filesetId, book) REFERENCES BibleBooks (filesetId, book));
 
 -- Use logical keys, because the database will always be recreated, not updated.
 

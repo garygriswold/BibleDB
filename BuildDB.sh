@@ -20,6 +20,7 @@ cd $BIBLE_DB_PROJ
 time python3 py/BibleTables.py dev > bibleTables.out
 
 # Correct chinese script codes
+###### This must be done inside BibleTables
 sqlite3 Versions.db <<END_SQL1
 update Versions set script='Hans' where bibleId='CMNUN1';
 update Versions set script='Hant' where bibleId='CMNUNV';

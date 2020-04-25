@@ -54,6 +54,8 @@ class Config:
 
 		self.S3_DBP_BUCKET = self._get("S3_DBP_BUCKET")
 		self.S3_DBP_VIDEO_BUCKET = self._get("S3_DBP_VIDEO_BUCKET")
+		self.S3_MY_BUCKET = self._get("S3_MY_BUCKET")
+		
 		self.S3_AWS_DBP_PROFILE = self._get("S3_AWS_DBP_PROFILE")
 		self.S3_AWS_MY_PROFILE = self._get("S3_AWS_MY_PROFILE")
 

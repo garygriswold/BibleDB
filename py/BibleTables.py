@@ -109,6 +109,21 @@ class BibleTables:
 				permittedMap[key] = bible
 		print("COUNT: IN LPTS IN S3 WITH PERMISSION %d" % (len(permittedMap.keys())))
 
+		shortSandsMap = self.getShortSandsMap()
+		print("COUNT: Short Sands text Bibles in S3 %d" % (len(shortSandsMap.keys())))
+
+		for key, bible in shortSandsMap.items():
+			permittedBible = permittedMap.get(key)
+			if permittedBible != None:
+				print("ERROR_13 DBP Bible overwritten by ShortSands", permittedBible.toString())
+				bible.iso3 = permittedBible.iso3
+				bible.script = permittedBible.script
+				bible.country = permittedBible.country
+			else:
+				bible.iso3 = bible.bibleId[:3].lower()
+			#permittedMap[key] = bible
+		print("COUNT: ShortSands added to LPTS IN S3 WITH PERMISSION %d" % (len(permittedMap.keys())))
+
 		withLocaleMap = self.selectWithLocale(permittedMap)
 		print("COUNT: IN LPTS WITH PERMISSION IN S3 AND LOCALE %d" % (len(withLocaleMap.keys())))	
 
@@ -201,6 +216,21 @@ class BibleTables:
 						print("ERROR_02 Duplicate Key in bucket %s" % (bible.key))
 					else:
 						results[bible.key] = bible
+		return results
+
+
+	def getShortSandsMap(self):
+		results = {}
+		filename = self.config.DIRECTORY_BUCKET_LIST + self.config.S3_MY_BUCKET + ".txt"
+		fp = io.open(filename, mode="r", encoding="utf-8")
+		for line in fp:
+			parts = line.split("\t")
+			(typeCode, bibleId, filesetId, filename) = parts[0].split("/")
+			bible = Bible("s3", "shortsands", typeCode, bibleId, filesetId)
+			results[bible.key] = bible
+		fp.close()
+		#for key, bible in results.items():
+		#	print(key, bible.toString())
 		return results
 
 
@@ -493,7 +523,7 @@ class BibleTables:
 			name = ",".join(nameSet) #if len(nameSet) > 0 else None
 			nameLocal = ",".join(nameLocalSet) #if len(nameLocalSet) > 0 else None
 			values.append((bibleId, iso3, abbreviation, script, numerals, name, nameLocal))
-		self.insert("Bibles", ("bibleId", "iso3", "abbreviation", "script",
+		self.insert("Versions", ("versionId", "iso3", "abbreviation", "script",
 				"numerals", "name", "nameLocal"), values)
 
 
@@ -506,7 +536,7 @@ class BibleTables:
 					locales.add(locale)
 			for locale in locales:
 				values.append((locale, bibleId))
-		self.insert("BibleLocales", ("locale", "bibleId"), values)
+		self.insert("VersionLocales", ("locale", "versionId"), values)
 
 
 	def insertBibles(self, bibleIdMap):
@@ -530,7 +560,7 @@ class BibleTables:
 				value = (bible.filesetId, bible.bibleId, mediaType, bible.scope,
 					bucket, bitrate)
 				values.append(value)
-		self.insert("BibleFilesets", ("filesetId","bibleId","mediaType","scope",
+		self.insert("Bibles", ("systemId","versionId","mediaType","scope",
 			"bucket", "bitrate"), values)
 		## skipping agency, copyrightYear, filenameTemplate
 
@@ -555,7 +585,7 @@ class BibleTables:
 								self.appendBook(values, bible, priorRow, nameLocalMap)
 						priorRow = row
 					self.appendBook(values, bible, priorRow, nameLocalMap)
-		self.insert("BibleBooks", ("filesetId", "book", "sequence",
+		self.insert("BibleBooks", ("systemId", "book", "sequence",
   				"nameLocal", "nameS3", "numChapters"), values)
 
 
@@ -591,7 +621,7 @@ class BibleTables:
 
 	def unloadDB(self):
 		print("unloadDB")
-		tables = ["Bibles", "BibleLocales", "BibleFilesets", "BibleBooks"]
+		tables = ["Versions", "VersionLocales", "Bibles", "BibleBooks"]
 		tables.reverse()
 		for table in tables:
 			self.db.execute("DELETE FROM %s" % (table), ())

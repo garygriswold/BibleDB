@@ -19,6 +19,13 @@ time python3 load/Validate.py test bucketlists
 cd $BIBLE_DB_PROJ
 time python3 py/BibleTables.py dev > bibleTables.out
 
+# Correct chinese script codes
+sqlite3 Versions.db <<END_SQL1
+update Versions set script='Hans' where bibleId='CMNUN1';
+update Versions set script='Hant' where bibleId='CMNUNV';
+update Versions set script='Hant' where bibleId='YUEUNV';
+select * from Versions where Script in ('Hani', 'Hans','Hant');
+END_SQL1
 
 exit
 

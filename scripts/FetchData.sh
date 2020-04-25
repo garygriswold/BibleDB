@@ -6,6 +6,9 @@ time python3 py/ListBucket.py dev dbp-prod
 # Download dbp-vid bucket list
 time python3 py/ListBucket.py dev dbp-vid
 
+# Download shortsands bucket list
+time python3 py/ListBucket.py dev text-us-east-1-shortsands
+
 # Download info.json files
 time python3 py/DownloadInfo.py dev
 

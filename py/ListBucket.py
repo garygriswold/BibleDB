@@ -23,7 +23,10 @@ finalFilename = config.DIRECTORY_BUCKET_LIST + bucket + ".txt"
 
 out = io.open(tempFilename, mode="w", encoding="utf-8")
 
-session = boto3.Session(profile_name='FCBH_Gary')
+if "shortsands" in bucket:
+	session = boto3.Session(profile_name=config.S3_AWS_MY_PROFILE)
+else:
+	session = boto3.Session(profile_name=config.S3_AWS_DBP_PROFILE)
 client = session.client('s3')
 
 request = { 'Bucket':bucket, 'MaxKeys':1000 }

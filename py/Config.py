@@ -64,7 +64,9 @@ class Config:
 		self.DIRECTORY_ACCEPTED = self._getPath("DIRECTORY_ACCEPTED")
 		self.DIRECTORY_QUARANTINE = self._getPath("DIRECTORY_QUARANTINE")
 		self.DIRECTORY_DUPLICATE = self._getPath("DIRECTORY_DUPLICATE")
-		self.DIRECTORY_INFO_JSON = self._getPath("DIRECTORY_INFO_JSON")
+
+		self.DIRECTORY_DBP_INFO_JSON = self._getPath("DIRECTORY_DBP_INFO_JSON")
+		self.DIRECTORY_MY_INFO_JSON = self._getPath("DIRECTORY_MY_INFO_JSON")
 
 	def _get(self, name):
 		value = self.hashMap.get(name)

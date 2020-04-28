@@ -182,6 +182,7 @@ CREATE TABLE Versions (
   nameTranslated TEXT NULL, -- from google translate
   priority INT NOT NULL DEFAULT 0, -- affects position in version list, manually set
   FOREIGN KEY (iso3) REFERENCES Languages (iso3));
+CREATE UNIQUE INDEX versions_iso_abbrev_script ON Versions(iso3, abbreviation, script);
 
 DROP TABLE IF EXISTS VersionLocales;
 CREATE TABLE VersionLocales (

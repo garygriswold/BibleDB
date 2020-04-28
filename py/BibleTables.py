@@ -28,7 +28,7 @@ class Bible:
 		self.bibleId = bibleId
 		self.filesetId = filesetId
 		self.key = "%s/%s/%s" % (typeCode, bibleId, filesetId)
-		self.abbreviation = filesetId[3:]
+		self.abbreviation = filesetId[3:6]
 		self.iso3 = None
 		self.script = None
 		self.country = None
@@ -148,7 +148,7 @@ class BibleTables:
 		#for item in withLocaleMap2.values():
 		#	print(item.toString(), item.scope)
 
-		bibleGroupMap = self.groupByBibleId(withLocaleMap)
+		bibleGroupMap = self.groupByVersion(withLocaleMap)
 		print("COUNT: IN BibleId MAP %d" % (len(bibleGroupMap.keys())))
 
 		hasTextGroupMap = self.removeNonText(bibleGroupMap) # remove Version w/o text
@@ -164,11 +164,6 @@ class BibleTables:
 
 		### ERRROR the 16 bit rate audios are missing from the LPTS SET
 		### Do I want them?
-
-
-	def displaySet(self, keySet):
-		for key in sorted(keySet):
-			print(key)
 
 
 	def getLPTSMap(self):
@@ -303,13 +298,13 @@ class BibleTables:
 		return results
 
 
-	def groupByBibleId(self, bibleMap):
+	def groupByVersion(self, bibleMap):
 		results = {}
 		for bible in bibleMap.values():
 			bible.versionKey = "%s-%s-%s" % (bible.iso3, bible.abbreviation, bible.script)
-			bibles = results.get(bible.versionKey, [])
-			bibles.append(bible)
-			results[bible.versionKey] = bibles
+			bibleList = results.get(bible.versionKey, [])
+			bibleList.append(bible)
+			results[bible.versionKey] = bibleList
 		return results
 
 
@@ -462,42 +457,14 @@ class BibleTables:
 				return "P"
 
 
-	## not used, but might be useful
-	def testUniqueKeys(self, records):
-		results1 = {}
-		results2 = {}
-		results3 = {}
-		for rec in records:
-			print(rec)
-			print("LANG:", rec["bible_id"], rec["fileset_id"], rec["iso3"], rec.get("script"), rec.get("country"), rec["locales"])
-			records1 = results1.get(rec["bible_id"], [])
-			if len(records1) > 0:
-				print("\nWARN: bible_id DUP", rec, records1)
-			records1.append(rec)
-			results1[rec["bible_id"]] = records1
-			if len(rec["fileset_id"]) != 6:
-				print("\nERROR: filesetid len not 6", rec)
-			records2 = results2.get(rec["fileset_id"], [])
-			if len(records2) > 0:
-				print("\nWARN: fileset_id DUP", rec, records2)
-			records2.append(rec)
-			results2[rec["fileset_id"]] = records2
-			key = rec["iso3"] + "/" + rec["abbreviation"]
-			records3 = results3.get(key, [])
-			if len(records3) > 0:
-				print("\nWARN: iso/abbrev DUP", rec, records2)
-			records3.append(rec)
-			results3[key] = records3
-
-
 	def removeDupBibles(self, bibleIdMap):
 		results = {}
-		for bibleId in sorted(bibleIdMap.keys()):
+		for versionKey in sorted(bibleIdMap.keys()):
 			textSet = set()
 			audioSet = set()
 			dramaSet = set()
 			values = []
-			for bible in bibleIdMap[bibleId]:
+			for bible in bibleIdMap[versionKey]:
 				if bible.typeCode == "text":
 					textSet.add(bible)
 				elif bible.typeCode == "audio":
@@ -510,7 +477,7 @@ class BibleTables:
 			self._removeDups(values, textSet)
 			self._removeDups(values, audioSet)
 			self._removeDups(values, dramaSet)
-			results[bibleId] = values
+			results[versionKey] = values
 		return results
 
 
@@ -529,7 +496,7 @@ class BibleTables:
 	def insertVersions(self, bibleIdMap):
 		values = []
 		versionId = 0
-		for bibleId in sorted(bibleIdMap.keys()):
+		for versionKey in sorted(bibleIdMap.keys()):
 			versionId += 1
 			versionKeyList = []
 			isoSet = set()
@@ -538,9 +505,8 @@ class BibleTables:
 			numeralsSet = set()
 			nameSet = set()
 			nameLocalSet = set()
-			for bible in bibleIdMap[bibleId]:
+			for bible in bibleIdMap[versionKey]:
 				bible.versionId = versionId
-				#bibleIdMap[bibleId] = bible
 				if bible.typeCode == "text":
 					versionKeyList.append(bible.versionKey)
 					isoSet.add(bible.iso3)
@@ -588,8 +554,8 @@ class BibleTables:
 	def insertBibles(self, bibleIdMap):
 		values = []
 		systemId = 0
-		for bibleId in sorted(bibleIdMap.keys()):
-			for bible in bibleIdMap[bibleId]:
+		for versionKey in sorted(bibleIdMap.keys()):
+			for bible in bibleIdMap[versionKey]:
 				mediaType = bible.typeCode
 				bitrate = None
 				if bible.typeCode == "audio":
@@ -602,16 +568,12 @@ class BibleTables:
 						bitrate = 64
 				systemId += 1
 				bible.systemId = systemId
-				value = (bible.systemId, bible.bibleId, mediaType, bible.scope,
-						bible.bucket, bitrate, bible.filePrefix)
+				value = (bible.systemId, bible.versionId, mediaType, bible.scope,
+						bitrate, bible.bucket, bible.filePrefix)
 				values.append(value)
 		self.insert("Bibles", ("systemId","versionId","mediaType","scope",
-			"bucket", "bitrate", "filePrefix"), values)
+			"bitrate", "bucket", "filePrefix"), values)
 		## skipping agency, copyrightYear, filenameTemplate
-
-
-	def insertVideoFilesets(self, bibleId, filesetId, infoJson):
-		print("video filesets to be done")
 
 
 	def insertBibleBooks(self, bibleIdMap):
@@ -631,6 +593,8 @@ class BibleTables:
 									self.appendBook(values, bible, priorRow, nameLocalMap)
 							priorRow = row
 						self.appendBook(values, bible, priorRow, nameLocalMap)
+				else:
+					print("WOW NO BOOKS", bible.bibleId, bible.filesetId, bible.bucket)
 		self.insert("BibleBooks", ("systemId", "book", "sequence",
   				"nameLocal", "nameS3", "numChapters"), values)
 

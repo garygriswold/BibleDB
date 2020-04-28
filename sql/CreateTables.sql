@@ -172,7 +172,7 @@ CREATE TABLE Agencies ( -- I think my only source for this is DBP API
 
 DROP TABLE IF EXISTS Versions;
 CREATE TABLE Versions (
-  versionId TEXT NOT NULL PRIMARY KEY,
+  versionId INT NOT NULL PRIMARY KEY,
   iso3 TEXT NOT NULL, -- I think iso3 and version code are how I associate items in a set
   abbreviation TEXT NOT NULL, -- (e.g. KJV)
   script TEXT NULL,
@@ -186,15 +186,15 @@ CREATE TABLE Versions (
 DROP TABLE IF EXISTS VersionLocales;
 CREATE TABLE VersionLocales (
   locale TEXT NOT NULL,
-  versionId TEXT NOT NULL,
+  versionId INT NOT NULL,
   PRIMARY KEY (locale, versionId), -- lookup by locale is most frequent
   FOREIGN KEY (versionId) REFERENCES Versions (versionId),
   FOREIGN KEY (locale) REFERENCES Locales (identifier));
 
 DROP TABLE IF EXISTS Bibles;
 CREATE TABLE Bibles (
-  systemId TEXT NOT NULL PRIMARY KEY, -- use fileset_id for now or GUID
-  versionId TEXT NOT NULL,
+  systemId INT NOT NULL PRIMARY KEY, -- use fileset_id for now or GUID
+  versionId INT NOT NULL,
   mediaType TEXT NOT NULL CHECK (mediaType IN ('audio', 'drama', 'video', 'text')),
   scope TEXT NOT NULL, -- NT,OT, NTOT, NTP, etc.
   bitrate INT NULL CHECK (bitrate IN (16, 32, 64, 128)),
@@ -208,7 +208,7 @@ CREATE TABLE Bibles (
 
 DROP TABLE IF EXISTS VideoBibles;
 CREATE TABLE VideoBibles (
-  systemId TEXT NOT NULL PRIMARY KEY,
+  systemId INT NOT NULL PRIMARY KEY,
   title TEXT NOT NULL,
   lengthMs INT NOT NULL,
   hlsUrl TEXT NOT NULL,
@@ -217,7 +217,7 @@ CREATE TABLE VideoBibles (
 
 DROP TABLE IF EXISTS BibleBooks;
 CREATE TABLE BibleBooks (
-  systemId TEXT NOT NULL,
+  systemId INT NOT NULL,
   book TEXT NOT NULL,
   sequence INT NOT NULL,
   nameLocal TEXT NULL, -- The bookname used in table of contents
@@ -231,7 +231,7 @@ CREATE TABLE BibleBooks (
 
 DROP TABLE IF EXISTS BibleTimestamps;
 CREATE TABLE BibleTimestamps(
-  systemId TEXT NOT NULL,
+  systemId INT NOT NULL,
   book TEXT NOT NULL,
   chapter INT NOT NULL,
   versePositions TEXT NOT NULL,-- this is not normalized, but this is more efficient.

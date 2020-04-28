@@ -19,6 +19,9 @@ from LookupTables import *
 class Bible:
 
 	def __init__(self, srcType, source, typeCode, bibleId, filesetId):
+		self.versionKey = None
+		self.versionId = None
+		self.systemId = None
 		self.srcType = srcType # LPTS | S3 | DBP
 		self.source = source
 		self.typeCode = typeCode # text | audio | video
@@ -142,8 +145,8 @@ class BibleTables:
 
 		self.getScopeByCSVFile(withLocaleMap2)
 
-		for item in withLocaleMap2.values():
-			print(item.toString(), item.scope)
+		#for item in withLocaleMap2.values():
+		#	print(item.toString(), item.scope)
 
 		bibleGroupMap = self.groupByBibleId(withLocaleMap)
 		print("COUNT: IN BibleId MAP %d" % (len(bibleGroupMap.keys())))
@@ -303,9 +306,10 @@ class BibleTables:
 	def groupByBibleId(self, bibleMap):
 		results = {}
 		for bible in bibleMap.values():
-			bibles = results.get(bible.bibleId, [])
+			bible.versionKey = "%s-%s-%s" % (bible.iso3, bible.abbreviation, bible.script)
+			bibles = results.get(bible.versionKey, [])
 			bibles.append(bible)
-			results[bible.bibleId] = bibles
+			results[bible.versionKey] = bibles
 		return results
 
 
@@ -524,7 +528,10 @@ class BibleTables:
 
 	def insertVersions(self, bibleIdMap):
 		values = []
+		versionId = 0
 		for bibleId in sorted(bibleIdMap.keys()):
+			versionId += 1
+			versionKeyList = []
 			isoSet = set()
 			abbrevSet = set()
 			scriptSet = set()
@@ -532,8 +539,10 @@ class BibleTables:
 			nameSet = set()
 			nameLocalSet = set()
 			for bible in bibleIdMap[bibleId]:
-				print("version", bible.key)
+				bible.versionId = versionId
+				#bibleIdMap[bibleId] = bible
 				if bible.typeCode == "text":
+					versionKeyList.append(bible.versionKey)
 					isoSet.add(bible.iso3)
 					abbrevSet.add(bible.abbreviation)
 					if bible.script != None:
@@ -544,32 +553,41 @@ class BibleTables:
 						nameSet.add(bible.name)
 					if bible.nameLocal != None:
 						nameLocalSet.add(bible.nameLocal)
+			if len(versionKeyList) > 1:
+				print("ERROR versionKey is not set correctly")
+				sys.exit()
 			iso3 = ",".join(isoSet) if len(isoSet) > 0 else None
 			abbreviation = ",".join(abbrevSet) if len(abbrevSet) > 0 else None
 			script = ",".join(scriptSet) if len(scriptSet) > 0 else None
 			numerals = ",".join(numeralsSet) if len(numeralsSet) > 0 else None
 			name = ",".join(nameSet) #if len(nameSet) > 0 else None
 			nameLocal = ",".join(nameLocalSet) #if len(nameLocalSet) > 0 else None
-			values.append((bibleId, iso3, abbreviation, script, numerals, name, nameLocal))
+			values.append((versionId, iso3, abbreviation, script, numerals, name, nameLocal))
 		self.insert("Versions", ("versionId", "iso3", "abbreviation", "script",
 				"numerals", "name", "nameLocal"), values)
 
 
 	def insertVersionLocales(self, bibleIdMap):
 		values = []
-		for bibleId in sorted(bibleIdMap.keys()):
+		for versionKey in sorted(bibleIdMap.keys()):
 			locales = set()
-			for bible in bibleIdMap[bibleId]:
+			versionIdSet = set()
+			for bible in bibleIdMap[versionKey]:
+				versionIdSet.add(bible.versionId)
 				for locale in bible.locales:
 					locales.add(locale)
+			if len(versionIdSet) > 1:
+				print("FATAL ERROR in versionId set")
+				sys.exit()
+			versionId = list(versionIdSet)[0]
 			for locale in locales:
-				values.append((locale, bibleId))
+				values.append((locale, versionId))
 		self.insert("VersionLocales", ("locale", "versionId"), values)
 
 
 	def insertBibles(self, bibleIdMap):
 		values = []
-		systemIdMap = {}
+		systemId = 0
 		for bibleId in sorted(bibleIdMap.keys()):
 			for bible in bibleIdMap[bibleId]:
 				mediaType = bible.typeCode
@@ -582,14 +600,11 @@ class BibleTables:
 						bitrate = int(lastTwo)
 					else:
 						bitrate = 64
-				if bible.filesetId in systemIdMap.keys():
-					priorBible = systemIdMap[bible.filesetId]
-					print("ERROR_14 duplicate filesetId NEW: %s  PRIOR: %s" % (priorBible.toString(), bible.toString()))
-				else:
-					systemIdMap[bible.filesetId] = bible
-					value = (bible.filesetId, bible.bibleId, mediaType, bible.scope,
+				systemId += 1
+				bible.systemId = systemId
+				value = (bible.systemId, bible.bibleId, mediaType, bible.scope,
 						bible.bucket, bitrate, bible.filePrefix)
-					values.append(value)
+				values.append(value)
 		self.insert("Bibles", ("systemId","versionId","mediaType","scope",
 			"bucket", "bitrate", "filePrefix"), values)
 		## skipping agency, copyrightYear, filenameTemplate
@@ -602,10 +617,10 @@ class BibleTables:
 	def insertBibleBooks(self, bibleIdMap):
 		values = []
 		self.pkeyCheck = set()
-		for bibleId in sorted(bibleIdMap.keys()):
-			for bible in bibleIdMap[bibleId]:
-				nameLocalMap = self.getLocalBookNames(bible.typeCode, bibleId, bible.filesetId)
-				filename = self.getCSVFilename(bible.typeCode, bibleId, bible.filesetId)
+		for versionKey in sorted(bibleIdMap.keys()):
+			for bible in bibleIdMap[versionKey]:
+				nameLocalMap = self.getLocalBookNames(bible.typeCode, bible.bibleId, bible.filesetId)
+				filename = self.getCSVFilename(bible.typeCode, bible.bibleId, bible.filesetId)
 				if filename != None:
 					priorRow = None
 					with open(filename, newline='\n') as csvfile:
@@ -639,7 +654,7 @@ class BibleTables:
 	def appendBook(self, values, bible, row, nameLocalMap):
 		bookId = row["book_id"]
 		nameLocal = nameLocalMap.get(bookId)
-		value = ((bible.filesetId, bookId, row["sequence"], nameLocal, 
+		value = ((bible.systemId, bookId, row["sequence"], nameLocal, 
 			row["book_name"], row["chapter_start"]))
 		values.append(value)
 		if row["verse_start"] != "1":

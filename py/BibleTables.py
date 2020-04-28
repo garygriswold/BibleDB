@@ -324,6 +324,8 @@ class BibleTables:
 	def readInfoJson(self, bibleId, filesetId):
 		info = None
 		filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_DBP_INFO_JSON, bibleId, filesetId)
+		if not os.path.isfile(filename):
+			filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_MY_INFO_JSON, bibleId, filesetId)
 		if os.path.isfile(filename):
 			fp = io.open(filename, mode="r", encoding="utf-8")
 			data = fp.read()
@@ -340,14 +342,14 @@ class BibleTables:
     # extract fileset data from info.json data
 	def getFilesetData(self, bible, info):
 		if info != None:
-			bible.nameLocal = info["name"]
-			bible.name = info["nameEnglish"]
-			country = info["countryCode"] if info["countryCode"] != '' else None
+			bible.nameLocal = info.get("name")
+			bible.name = info.get("nameEnglish")
+			country = info.get("countryCode") if info.get("countryCode") != "" else None
 			if bible.country == None:
 				bible.country = country
 			if country != None and country != bible.country:
 				print("ERROR_03 %s in LPTS %s in info.json %s" % (bible.key, bible.country, country))
-			iso3 = info["lang"].lower()
+			iso3 = info.get("lang").lower() if info.get("lang") != None else None
 			if iso3 != bible.iso3:
 				print("ERROR_04 %s in LPTS iso %s in info.json %s" % (bible.key, bible.iso3, iso3))
 
@@ -595,6 +597,13 @@ class BibleTables:
 						self.appendBook(values, bible, priorRow, nameLocalMap)
 				else:
 					print("WOW NO BOOKS", bible.bibleId, bible.filesetId, bible.bucket)
+					print("WOW len", len(nameLocalMap))
+					for bookId in nameLocalMap.keys():
+						print("WOW1 bookid", bookId)
+						(sequence, chapter, nameLocal) = nameLocalMap[bookId]
+						print("WOW2 ", sequence, chapter, nameLocal)
+						value = (bible.systemId, bookId, sequence, nameLocal, None, chapter)
+						values.append(value)
 		self.insert("BibleBooks", ("systemId", "book", "sequence",
   				"nameLocal", "nameS3", "numChapters"), values)
 
@@ -606,18 +615,24 @@ class BibleTables:
 			if info != None:
 				books = info["divisions"]
 				names = info["divisionNames"]
-				if len(books) != len(names):
+				chapters = {}
+				for section in info["sections"]:
+					bookId = section[:3]
+					chapter = section[3:]
+					chapters[bookId] = chapter # The last one is remembered
+				if len(books) != len(names) or len(books) != len(chapters):
 					print("ERROR_07 books and names not equal in %s/%s/%s" % (typeCode, bibleId, filesetId))
 					sys.exit()
 				for index in range(len(books)):
 					book = books[index]
-					result[book] = names[index]
+					result[book] = (index, chapters[bookId], names[index])
 		return result
 
 
 	def appendBook(self, values, bible, row, nameLocalMap):
 		bookId = row["book_id"]
-		nameLocal = nameLocalMap.get(bookId)
+		#nameLocal = nameLocalMap.get(bookId)
+		(sequence, chapters, nameLocal) = nameLocalMap.get(bookId, (None, None, None))
 		value = ((bible.systemId, bookId, row["sequence"], nameLocal, 
 			row["book_name"], row["chapter_start"]))
 		values.append(value)

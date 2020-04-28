@@ -33,6 +33,10 @@ class Bible:
 		self.allowAPI = False
 		self.locales = []
 		self.scope = None
+		self.priority = 0
+		self.bucket = None
+		self.filePrefix = None
+		self.fileTemplate = None
 		## Text only data
 		self.name = None
 		self.nameLocal = None
@@ -116,12 +120,7 @@ class BibleTables:
 			permittedBible = permittedMap.get(key)
 			if permittedBible != None:
 				print("ERROR_13 DBP Bible overwritten by ShortSands", permittedBible.toString())
-				bible.iso3 = permittedBible.iso3
-				bible.script = permittedBible.script
-				bible.country = permittedBible.country
-			else:
-				bible.iso3 = bible.bibleId[:3].lower()
-			#permittedMap[key] = bible
+			permittedMap[key] = bible
 		print("COUNT: ShortSands added to LPTS IN S3 WITH PERMISSION %d" % (len(permittedMap.keys())))
 
 		withLocaleMap = self.selectWithLocale(permittedMap)
@@ -182,6 +181,11 @@ class BibleTables:
 						bible.iso3 = lptsRec.ISO()
 						scriptName = lptsRec.Orthography(index)
 						bible.script = LookupTables.scriptCode(scriptName)
+						if typeCode == "video":
+							bible.bucket = self.config.S3_DBP_VIDEO_BUCKET
+						else:
+							bible.bucket = self.config.S3_DBP_BUCKET
+						bible.filePrefix = bible.key
 						countryName = lptsRec.Country()
 						if countryName not in {None, "Region-wide"}:
 							bible.country = self.countryMap[countryName] # fail fast
@@ -221,17 +225,41 @@ class BibleTables:
 
 	def getShortSandsMap(self):
 		results = {}
-		filename = self.config.DIRECTORY_BUCKET_LIST + self.config.S3_MY_BUCKET + ".txt"
-		fp = io.open(filename, mode="r", encoding="utf-8")
-		for line in fp:
-			parts = line.split("\t")
-			(typeCode, bibleId, filesetId, filename) = parts[0].split("/")
-			bible = Bible("s3", "shortsands", typeCode, bibleId, filesetId)
-			results[bible.key] = bible
-		fp.close()
-		#for key, bible in results.items():
-		#	print(key, bible.toString())
+		with open("data/shortsands_bibles.csv", newline='\n') as csvfile:
+			reader = csv.reader(csvfile)
+			for (sqliteName, abbr, iso3, scope, versionPriority, name, englishName,
+				localizedName, textBucket, textId, keyTemplate, 
+				audioBucket, otDamId, ntDamId, ios1, script, country) in reader:
+					bestFileset = self._findBestFileset(textId, otDamId, ntDamId)
+					bibleId = bestFileset.split("/")[1]
+					filesetId = textId.split("/")[2]
+					bible = Bible("SS", "shortsands", "text", bibleId, filesetId)
+					bible.abbreviation = abbr
+					bible.iso3 = iso3
+					bible.script = script
+					bible.country = country
+					bible.allowApp = True
+					bible.allowAPI = True
+					if scope == "B":
+						bible.scope = "NTOT"
+					elif scope == "N":
+						bible.scope = "NT"
+					bible.priority = versionPriority
+					bible.bucket = "text-%R-shortsands"
+					bible.filePrefix = textId
+					bible.fileTemplate = keyTemplate
+					bible.name = englishName
+					bible.nameLocal = name
+					results[bible.key] = bible
 		return results
+
+
+	def _findBestFileset(self, textId, otDamId, ntDamId):
+		prefSeq = [ntDamId, otDamId, textId]
+		for did in (otDamId, ntDamId, textId):
+			if did != None and did != "":
+				return did
+		return None # should not happen
 
 
 	def rebuildMapFromSet(self, bibleSubset, bibleMap):
@@ -541,6 +569,7 @@ class BibleTables:
 
 	def insertBibles(self, bibleIdMap):
 		values = []
+		systemIdMap = {}
 		for bibleId in sorted(bibleIdMap.keys()):
 			for bible in bibleIdMap[bibleId]:
 				mediaType = bible.typeCode
@@ -553,15 +582,16 @@ class BibleTables:
 						bitrate = int(lastTwo)
 					else:
 						bitrate = 64
-				if bible.typeCode == "video":
-					bucket = self.config.S3_DBP_VIDEO_BUCKET
+				if bible.filesetId in systemIdMap.keys():
+					priorBible = systemIdMap[bible.filesetId]
+					print("ERROR_14 duplicate filesetId NEW: %s  PRIOR: %s" % (priorBible.toString(), bible.toString()))
 				else:
-					bucket = self.config.S3_DBP_BUCKET
-				value = (bible.filesetId, bible.bibleId, mediaType, bible.scope,
-					bucket, bitrate)
-				values.append(value)
+					systemIdMap[bible.filesetId] = bible
+					value = (bible.filesetId, bible.bibleId, mediaType, bible.scope,
+						bible.bucket, bitrate, bible.filePrefix)
+					values.append(value)
 		self.insert("Bibles", ("systemId","versionId","mediaType","scope",
-			"bucket", "bitrate"), values)
+			"bucket", "bitrate", "filePrefix"), values)
 		## skipping agency, copyrightYear, filenameTemplate
 
 
@@ -576,15 +606,16 @@ class BibleTables:
 			for bible in bibleIdMap[bibleId]:
 				nameLocalMap = self.getLocalBookNames(bible.typeCode, bibleId, bible.filesetId)
 				filename = self.getCSVFilename(bible.typeCode, bibleId, bible.filesetId)
-				priorRow = None
-				with open(filename, newline='\n') as csvfile:
-					reader = csv.DictReader(csvfile)
-					for row in reader:
-						if priorRow != None:
-							if row["book_id"] != priorRow["book_id"]:
-								self.appendBook(values, bible, priorRow, nameLocalMap)
-						priorRow = row
-					self.appendBook(values, bible, priorRow, nameLocalMap)
+				if filename != None:
+					priorRow = None
+					with open(filename, newline='\n') as csvfile:
+						reader = csv.DictReader(csvfile)
+						for row in reader:
+							if priorRow != None:
+								if row["book_id"] != priorRow["book_id"]:
+									self.appendBook(values, bible, priorRow, nameLocalMap)
+							priorRow = row
+						self.appendBook(values, bible, priorRow, nameLocalMap)
 		self.insert("BibleBooks", ("systemId", "book", "sequence",
   				"nameLocal", "nameS3", "numChapters"), values)
 

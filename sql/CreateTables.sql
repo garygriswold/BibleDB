@@ -197,11 +197,12 @@ CREATE TABLE Bibles (
   versionId TEXT NOT NULL,
   mediaType TEXT NOT NULL CHECK (mediaType IN ('audio', 'drama', 'video', 'text')),
   scope TEXT NOT NULL, -- NT,OT, NTOT, NTP, etc.
-  bucket TEXT NOT NULL,
   bitrate INT NULL CHECK (bitrate IN (16, 32, 64, 128)),
   agency TEXT NULL, -- should be NOT NULL, but source unknown
   copyrightYear INT NULL, -- should be NOT NULL, but source unknown
-  filenameTemplate TEXT NULL, -- should be NOT NULL, but not yet available
+  bucket TEXT NOT NULL,
+  filePrefix TEXT NOT NULL,
+  fileTemplate TEXT NULL, -- should be NOT NULL, but not yet available
   FOREIGN KEY (versionId) REFERENCES Versions (versionId));
   -- FOREIGN KEY (agency) REFERENCES Agencies (uid));
 
@@ -238,6 +239,11 @@ CREATE TABLE BibleTimestamps(
   FOREIGN KEY (systemId, book) REFERENCES BibleBooks (systemId, book));
 
 -- Use logical keys, because the database will always be recreated, not updated.
+
+CREATE VIEW BiblesView AS
+SELECT v.versionId, v.iso3, v.abbreviation, v.script, v.name, b.systemId, b.scope, b.bucket, b.filePrefix
+FROM Versions v, Bibles b
+WHERE v.versionId=b.versionId;
 
 
 

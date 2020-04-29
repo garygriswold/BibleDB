@@ -373,6 +373,8 @@ class BibleTables:
 		return None
 
 
+	## This table was taken from a type table in DBP.  I don't think 
+	## that it is entirely correct.
 	def getNumberCode(self, script, iso3):
 		if script == "Arab":
 			if iso3 in {"fas", "pes" }:

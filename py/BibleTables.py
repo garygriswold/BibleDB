@@ -141,17 +141,12 @@ class BibleTables:
 				scriptCode = self.getScriptCode(info)
 				if bible.script != None and bible.script != scriptCode:
 					print("ERROR_05 %s script in LPTS %s, computed %s" % (bible.key, bible.script, scriptCode))
-				#if scriptCode != None and scriptCode != 'Latn': # Latn is often an error
-				#	bible.script = scriptCode
 				bible.numerals = self.getNumberCode(bible.script, bible.iso3)
 
 		withLocaleMap2 = self.selectWithLocale(withLocaleMap)
 		print("COUNT: IN LPTS WITH PERMISS IN S3 AND REPEAT LOCALE %d" % (len(withLocaleMap2)))
 
 		self.getScopeByCSVFile(withLocaleMap2)
-
-		#for item in withLocaleMap2.values():
-		#	print(item.toString(), item.scope)
 
 		bibleGroupMap = self.groupByVersion(withLocaleMap)
 		print("COUNT: IN BibleId MAP %d" % (len(bibleGroupMap.keys())))
@@ -406,8 +401,6 @@ class BibleTables:
 		return None
 
 
-	## This table was taken from a type table in DBP.  I don't think 
-	## that it is entirely correct.
 	def getNumberCode(self, script, iso3):
 		if script == "Arab":
 			if iso3 in {"fas", "pes" }:
@@ -415,7 +408,7 @@ class BibleTables:
 			elif iso3 == "urd": 
 				return "urdu"
 			else:
-				return "eastern-arabic"
+				return "arabic"
 		if script == "Deva":
 			if iso3 == "ben":
 				return "bengali"
@@ -424,11 +417,21 @@ class BibleTables:
 			else:
 				return "devanagari"
 		numerals = {
+			"Beng": "bengali",
+			"Cyrl": "western",
+			"Ethi": "western",
+			"Grek": "western",
 			"Gujr": "gujarati",
 			"Guru": "gurmukhi",
 			"Hani": "chinese",
+			"Hant": "chinese",
+			"Hans": "chinese",
+			"Jpan": "western",
 			"Khmr": "khmer",
+			"Kore": "korean",
+			"Knda": "kannada",
 			"Laoo": "lao",
+			"Latn": "western",
 			"Limb": "limbu",
 			"Mlym": "malayalam",
 			"Mymr": "burmese",
@@ -436,8 +439,12 @@ class BibleTables:
 			"Syrc": "syriac",
 			"Taml": "tamil",
 			"Telu": "telugu",
+			"Thaa": "western",
 			"Thai": "thai"}
-		return numerals.get(script, "western-arabic")
+		result = numerals.get(script)
+		if result == None:
+			print("ERROR_18 unknown script %s for iso %s in getNumberCode" % (script, iso3))
+		return result
 
 
 	## compute size code for each 

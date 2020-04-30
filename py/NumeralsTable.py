@@ -28,11 +28,11 @@ for file in files:
 			#print(file, name)
 			name = name.replace("DIGIT EIGHT", "").strip()
 			if len(name) == 0:
-				name = "western-arabic"
+				name = "western" # offical name is western-arabic
 			elif name == "ARABIC-INDIC":
-				name = "eastern-arabic"
+				name = "arabic"
 			elif name == "EXTENDED ARABIC-INDIC":
-				name = "extended eastern-arabic"
+				name = "arabic" # official name is eastern-arabic
 			else:
 				name = name.lower()
 			numberMap[name] = numbers

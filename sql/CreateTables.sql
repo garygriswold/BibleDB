@@ -134,7 +134,7 @@ CREATE TABLE Locales (
 
 DROP TABLE IF EXISTS Numerals;
 CREATE TABLE Numerals (
-  name TEXT NOT NULL,
+  name TEXT NOT NULL PRIMARY KEY,
   numbers TEXT NOT NULL); -- numbers are stored as text in a comma delimited array
   -- unicode_zero -- possibly, this would work, but maybe not after 9 
 

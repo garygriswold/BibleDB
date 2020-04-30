@@ -175,13 +175,15 @@ CREATE TABLE Versions (
   versionId INT NOT NULL PRIMARY KEY,
   iso3 TEXT NOT NULL, -- I think iso3 and version code are how I associate items in a set
   abbreviation TEXT NOT NULL, -- (e.g. KJV)
-  script TEXT NULL,
-  numerals TEXT NULL,  
+  script TEXT NOT NULL,
+  country TEXT NOT NULL,
+  numerals TEXT NOT NULL,
   name TEXT NOT NULL, -- from info.json
   nameLocal TEXT NOT NULL, -- from info.json
   nameTranslated TEXT NULL, -- from google translate
   priority INT NOT NULL DEFAULT 0, -- affects position in version list, manually set
   FOREIGN KEY (iso3) REFERENCES Languages (iso3));
+-- Index could be reduced to iso3/abbreviation
 CREATE UNIQUE INDEX versions_iso_abbrev_script ON Versions(iso3, abbreviation, script);
 
 DROP TABLE IF EXISTS VersionLocales;
@@ -204,6 +206,7 @@ CREATE TABLE Bibles (
   bucket TEXT NOT NULL,
   filePrefix TEXT NOT NULL,
   fileTemplate TEXT NULL, -- should be NOT NULL, but not yet available
+  bibleZipFile TEXT NULL,
   FOREIGN KEY (versionId) REFERENCES Versions (versionId));
   -- FOREIGN KEY (agency) REFERENCES Agencies (uid));
 

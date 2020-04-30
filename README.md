@@ -13,6 +13,7 @@ data
 
 py
 	BibleTables.py
+	BiblesReport.py
 	Config.py
 	DownloadInfo.py
 	LanguagesTable.py

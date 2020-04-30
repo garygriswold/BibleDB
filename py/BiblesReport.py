@@ -22,14 +22,17 @@ class BiblesReport:
 		filename = "BiblesReport.csv"
 		with open(filename, 'w', newline='') as csvfile:
 			writer = csv.writer(csvfile, quoting=csv.QUOTE_MINIMAL)
-			sql = ("SELECT versionId, iso3, abbreviation, script, numerals, name, nameLocal, priority"
-				" FROM Versions ORDER BY iso3, script, abbreviation")
+			sql = ("SELECT v.versionId, v.iso3, v.abbreviation, v.script, v.country, v.numerals, v.name, v.nameLocal, v.priority, l.name"
+				" FROM Versions v, Languages l"
+				" WHERE v.iso3 = l.iso3"
+				" ORDER BY v.iso3, v.script, v.abbreviation")
 			versionList = self.db.select(sql, ())
 			for vers in versionList:
-				writer.writerow((vers[1], vers[3], vers[2], vers[4], vers[5], vers[6], vers[7], vers[0]))
-				sql = "SELECT locale FROM VersionLocales WHERE versionId=?"
+				locale = "%s-%s-%s" % (vers[1], vers[3], vers[4])
+				writer.writerow((vers[9], vers[2], locale, vers[5], vers[6], vers[7], vers[8], vers[0]))
+				sql = "SELECT locale FROM VersionLocales WHERE versionId=? ORDER BY length(locale) desc"
 				localesList = self.db.select(sql, (vers[0],))
-				row = [None, None, None]
+				row = [None, None]
 				for loc in localesList:
 					row.append(loc[0])
 				writer.writerow(row)

@@ -28,7 +28,11 @@ class Bible:
 		self.bibleId = bibleId
 		self.filesetId = filesetId
 		self.key = "%s/%s/%s" % (typeCode, bibleId, filesetId)
-		self.abbreviation = filesetId[3:6]
+		abbrev = filesetId[3:6]
+		if abbrev == "WTC":
+			self.abbreviation = "ERV"
+		else:
+			self.abbreviation = abbrev
 		self.iso3 = None
 		self.script = None
 		self.country = None
@@ -44,6 +48,7 @@ class Bible:
 		self.name = None
 		self.nameLocal = None
 		self.numerals = None
+		self.bibleZipFile = None
 
 	def toString(self):
 		allow = "app " if self.allowApp else ""
@@ -136,8 +141,8 @@ class BibleTables:
 				scriptCode = self.getScriptCode(info)
 				if bible.script != None and bible.script != scriptCode:
 					print("ERROR_05 %s script in LPTS %s, computed %s" % (bible.key, bible.script, scriptCode))
-				if scriptCode != None and scriptCode != 'Latn': # Latn is often an error
-					bible.script = scriptCode
+				#if scriptCode != None and scriptCode != 'Latn': # Latn is often an error
+				#	bible.script = scriptCode
 				bible.numerals = self.getNumberCode(bible.script, bible.iso3)
 
 		withLocaleMap2 = self.selectWithLocale(withLocaleMap)
@@ -177,16 +182,41 @@ class BibleTables:
 					for damId in damIds:
 						bible = Bible("LPTS", stockNum, typeCode, bibleId, damId)
 						bible.iso3 = lptsRec.ISO()
+						countryName = lptsRec.Country()
+						if countryName not in {None, "Region-wide"}:
+							bible.country = self.countryMap[countryName] # fail fast
+						if bible.iso3 == "spa":
+							if bible.abbreviation == "RVC":
+								bible.country = "ES"
+							elif bible.abbreviation in {"ERV", "BDA", "NVI", "R60"}:
+								bible.country = "419"
 						scriptName = lptsRec.Orthography(index)
 						bible.script = LookupTables.scriptCode(scriptName)
+						if bible.script == None or bible.script == "" or bible.script == "Hani":
+							if bible.bibleId == "CMNUN1":
+								bible.script = "Hans"
+							elif bible.bibleId == "CMNUNV":
+								bible.script = "Hant"
+								bible.country = "HK"
+							elif bible.bibleId == "DIVWYI":
+								bible.script = "Thaa"
+							elif bible.bibleId == "HAUCLV":
+								bible.script = "Latn"
+							elif bible.bibleId == "UIGUMK":
+								bible.script = "Arab"
+							elif bible.bibleId == "YUEUNV":
+								bible.script = "Hant"
+							elif bible.iso3 in {"eng", "ind", "por", "spa"}:
+								bible.script = "Latn"
+							else:
+								print("ERROR_19 script is blank or Hani %s" % (bible.toString()))
+						if bible.bibleId == "HAKTHV":
+							bible.script = "Hant"
 						if typeCode == "video":
 							bible.bucket = self.config.S3_DBP_VIDEO_BUCKET
 						else:
 							bible.bucket = self.config.S3_DBP_BUCKET
 						bible.filePrefix = bible.key
-						countryName = lptsRec.Country()
-						if countryName not in {None, "Region-wide"}:
-							bible.country = self.countryMap[countryName] # fail fast
 						if typeCode == "text":
 							bible.allowAPI = (lptsRec.APIDevText() == "-1")
 							bible.allowApp = (lptsRec.MobileText() == "-1")
@@ -225,13 +255,14 @@ class BibleTables:
 		results = {}
 		with open("data/shortsands_bibles.csv", newline='\n') as csvfile:
 			reader = csv.reader(csvfile)
-			for (sqliteName, abbr, iso3, scope, versionPriority, name, englishName,
+			for (bibleZipFile, abbr, iso3, scope, versionPriority, name, englishName,
 				localizedName, textBucket, textId, keyTemplate, 
 				audioBucket, otDamId, ntDamId, ios1, script, country) in reader:
 					bestFileset = self._findBestFileset(textId, otDamId, ntDamId)
 					bibleId = bestFileset.split("/")[1]
 					filesetId = textId.split("/")[2]
 					bible = Bible("SS", "shortsands", "text", bibleId, filesetId)
+					bible.bibleZipFile = bibleZipFile
 					bible.abbreviation = abbr
 					bible.iso3 = iso3
 					bible.script = script
@@ -301,7 +332,9 @@ class BibleTables:
 	def groupByVersion(self, bibleMap):
 		results = {}
 		for bible in bibleMap.values():
-			bible.versionKey = "%s-%s-%s" % (bible.iso3, bible.abbreviation, bible.script)
+			# putting script in key looses audios and videos that have no script
+			# bible.versionKey = "%s-%s-%s" % (bible.iso3, bible.abbreviation, bible.script)
+			bible.versionKey = "%s-%s" % (bible.iso3, bible.abbreviation)
 			bibleList = results.get(bible.versionKey, [])
 			bibleList.append(bible)
 			results[bible.versionKey] = bibleList
@@ -507,6 +540,7 @@ class BibleTables:
 			abbrevSet = set()
 			scriptSet = set()
 			numeralsSet = set()
+			countrySet = set()
 			nameSet = set()
 			nameLocalSet = set()
 			for bible in bibleIdMap[versionKey]:
@@ -519,6 +553,8 @@ class BibleTables:
 						scriptSet.add(bible.script)
 					if bible.numerals != None:
 						numeralsSet.add(bible.numerals)
+					if bible.country != None:
+						countrySet.add(bible.country)
 					if bible.name != None:
 						nameSet.add(bible.name)
 					if bible.nameLocal != None:
@@ -530,11 +566,12 @@ class BibleTables:
 			abbreviation = ",".join(abbrevSet) if len(abbrevSet) > 0 else None
 			script = ",".join(scriptSet) if len(scriptSet) > 0 else None
 			numerals = ",".join(numeralsSet) if len(numeralsSet) > 0 else None
+			country = ",".join(countrySet) if len(countrySet) > 0 else None
 			name = ",".join(nameSet) #if len(nameSet) > 0 else None
 			nameLocal = ",".join(nameLocalSet) #if len(nameLocalSet) > 0 else None
-			values.append((versionId, iso3, abbreviation, script, numerals, name, nameLocal))
+			values.append((versionId, iso3, abbreviation, script, country, numerals, name, nameLocal))
 		self.insert("Versions", ("versionId", "iso3", "abbreviation", "script",
-				"numerals", "name", "nameLocal"), values)
+				"country", "numerals", "name", "nameLocal"), values)
 
 
 	def insertVersionLocales(self, bibleIdMap):
@@ -573,10 +610,10 @@ class BibleTables:
 				systemId += 1
 				bible.systemId = systemId
 				value = (bible.systemId, bible.versionId, mediaType, bible.scope,
-						bitrate, bible.bucket, bible.filePrefix)
+						bitrate, bible.bucket, bible.filePrefix, bible.bibleZipFile)
 				values.append(value)
 		self.insert("Bibles", ("systemId","versionId","mediaType","scope",
-			"bitrate", "bucket", "filePrefix"), values)
+			"bitrate", "bucket", "filePrefix", "bibleZipFile"), values)
 		## skipping agency, copyrightYear, filenameTemplate
 
 
@@ -598,12 +635,8 @@ class BibleTables:
 							priorRow = row
 						self.appendBook(values, bible, priorRow, nameLocalMap)
 				else:
-					print("WOW NO BOOKS", bible.bibleId, bible.filesetId, bible.bucket)
-					print("WOW len", len(nameLocalMap))
 					for bookId in nameLocalMap.keys():
-						print("WOW1 bookid", bookId)
 						(sequence, chapter, nameLocal) = nameLocalMap[bookId]
-						print("WOW2 ", sequence, chapter, nameLocal)
 						value = (bible.systemId, bookId, sequence, nameLocal, None, chapter)
 						values.append(value)
 		self.insert("BibleBooks", ("systemId", "book", "sequence",

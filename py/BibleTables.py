@@ -33,6 +33,7 @@ class Bible:
 			self.abbreviation = "ERV"
 		else:
 			self.abbreviation = abbrev
+		self.lptsStockNo = None
 		self.iso3 = None
 		self.script = None
 		self.country = None
@@ -176,6 +177,7 @@ class BibleTables:
 					damIds = lptsRec.DamIds(typeCode, index)
 					for damId in damIds:
 						bible = Bible("LPTS", stockNum, typeCode, bibleId, damId)
+						bible.lptsStockNo = lptsRec.Reg_StockNumber()
 						bible.iso3 = lptsRec.ISO()
 						countryName = lptsRec.Country()
 						if countryName not in {None, "Region-wide"}:
@@ -248,7 +250,7 @@ class BibleTables:
 
 	def getShortSandsMap(self):
 		results = {}
-		with open("data/shortsands_bibles.csv", newline='\n') as csvfile:
+		with open("data/ShortsandsBibles.csv", newline='\n') as csvfile:
 			reader = csv.reader(csvfile)
 			for (bibleZipFile, abbr, iso3, scope, versionPriority, name, englishName,
 				localizedName, textBucket, textId, keyTemplate, 
@@ -617,10 +619,11 @@ class BibleTables:
 				systemId += 1
 				bible.systemId = systemId
 				value = (bible.systemId, bible.versionId, mediaType, bible.scope,
-						bitrate, bible.bucket, bible.filePrefix, bible.bibleZipFile)
+						bitrate, bible.bucket, bible.filePrefix, bible.bibleZipFile,
+						bible.lptsStockNo)
 				values.append(value)
 		self.insert("Bibles", ("systemId","versionId","mediaType","scope",
-			"bitrate", "bucket", "filePrefix", "bibleZipFile"), values)
+			"bitrate", "bucket", "filePrefix", "bibleZipFile", "lptsStockNo"), values)
 		## skipping agency, copyrightYear, filenameTemplate
 
 

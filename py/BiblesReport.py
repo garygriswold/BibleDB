@@ -36,11 +36,11 @@ class BiblesReport:
 				for loc in localesList:
 					row.append(loc[0])
 				writer.writerow(row)
-				sql = ("SELECT systemId, mediaType, scope, bucket, filePrefix, fileTemplate"
+				sql = ("SELECT systemId, mediaType, scope, bucket, filePrefix, fileTemplate, lptsStockNo"
 						" FROM Bibles WHERE versionId=?")
 				biblesList = self.db.select(sql, (vers[0],))
 				for bib in biblesList:
-					writer.writerow((None, None, bib[1], bib[2], bib[3], bib[4], bib[5], bib[0]))
+					writer.writerow((None, bib[1], bib[2], bib[3], bib[4], bib[5], bib[6], bib[0]))
 
 
 				#print(row[1], row[2], row[3])

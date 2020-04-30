@@ -207,6 +207,7 @@ CREATE TABLE Bibles (
   filePrefix TEXT NOT NULL,
   fileTemplate TEXT NULL, -- should be NOT NULL, but not yet available
   bibleZipFile TEXT NULL,
+  lptsStockNo TEXT NULL,
   FOREIGN KEY (versionId) REFERENCES Versions (versionId));
   -- FOREIGN KEY (agency) REFERENCES Agencies (uid));
 

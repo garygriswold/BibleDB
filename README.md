@@ -9,6 +9,7 @@ data
 	AppleLang2020.txt
 	Region.txt
 	ScriptCodes.txt
+	ShortsandsBibles.csv
 	USFMBookCodes.txt
 
 py

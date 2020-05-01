@@ -118,7 +118,8 @@ class BibleTables:
 
 		permittedMap = {}
 		for key, bible in inLptsAndS3Map.items():
-			if bible.allowAPI or bible.allowApp:
+			#if bible.allowAPI or bible.allowApp:
+			if bible.allowAPI:
 				permittedMap[key] = bible
 		print("COUNT: IN LPTS IN S3 WITH PERMISSION %d" % (len(permittedMap.keys())))
 

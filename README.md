@@ -28,6 +28,7 @@ py
 
 scripts
 	FetchData.sh
+	SqliteCompare.sh
 	TypeTables.sh
 
 sql

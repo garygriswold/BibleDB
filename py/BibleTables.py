@@ -28,6 +28,10 @@ class Bible:
 		self.bibleId = bibleId
 		self.filesetId = filesetId
 		self.key = "%s/%s/%s" % (typeCode, bibleId, filesetId)
+		if typeCode == "text":
+			self.s3Key = "%s/%s/%s" % (typeCode, bibleId, filesetId[:6])
+		else:
+			self.s3Key = self.key
 		abbrev = filesetId[3:6]
 		if abbrev == "WTC":
 			self.abbreviation = "ERV"
@@ -100,21 +104,10 @@ class BibleTables:
 		s3Map = self.getS3Map(False) # exclude rejected 
 		print("COUNT: S3 %d" % (len(s3Map.keys())))
 
-		inS3SetNotLPTS = set(s3Map.keys()).difference(lptsMap.keys())
-		print("COUNT: IN S3 NOT LPTS %d" % (len(inS3SetNotLPTS)))
-		for key in sorted(inS3SetNotLPTS):
-			print("ERROR_11 IN S3 NOT LPTS %s" % (key))
-
-		inLPTSNotS3 = set(lptsMap.keys()).difference(s3Map.keys())
-		print("COUNT: IN LPTS NOT S3 %s" % (len(inLPTSNotS3)))
-		for key in sorted(inLPTSNotS3):
-			print("ERROR_12 IN LPTS NOT s3 %s" % (key))
-
-		inLptsAndS3Set = set(lptsMap.keys()).intersection(s3Map.keys())
-		print("COUNT: IN LPTS IN S3 %d" % (len(inLptsAndS3Set)))
-
-		inLptsAndS3Map = self.rebuildMapFromSet(inLptsAndS3Set, lptsMap)
-		print("COUNT: IN LPTS IN S3 REBUILT %d" % (len(inLptsAndS3Map.keys())))
+		self.differenceMap(s3Map, lptsMap, "ERROR_11 IN S3 NOT LPTS %s", "COUNT: IN S3 NOT LPTS %d")
+		self.differenceMap(lptsMap, s3Map, "ERROR_12 IN LPTS NOT s3 %s", "COUNT: IN LPTS NOT S3 %d")
+		inLptsAndS3Map = self.intersectionMap(lptsMap, s3Map)
+		print("COUNT: IN LPTS IN S3 %d" % (len(inLptsAndS3Map)))
 
 		permittedMap = {}
 		for key, bible in inLptsAndS3Map.items():
@@ -249,6 +242,31 @@ class BibleTables:
 		return results
 
 
+	## Report errors on those Bibles that are in primary, but not secondary
+	def differenceMap(self, primaryMap, secondaryMap, errMsg, countMsg):
+		secondaryS3Map = {}
+		for secBible in secondaryMap.values():
+			secondaryS3Map[secBible.s3Key] = secBible
+		missingCount = 0
+		for primBible in primaryMap.values():
+			primS3Key = primBible.s3Key
+			secBible = secondaryS3Map.get(primS3Key)
+			if secBible == None:
+				missingCount += 1
+				print(errMsg % (primBible.key))
+		print(countMsg % (missingCount))
+
+
+	def intersectionMap(self, lptsMap, s3Map):
+		results = {}
+		for lptsBible in lptsMap.values():
+			lptsKey = lptsBible.s3Key
+			s3Bible = s3Map.get(lptsKey)
+			if s3Bible != None:
+				results[lptsBible.key] = lptsBible
+		return results
+
+
 	def getShortSandsMap(self):
 		results = {}
 		with open("data/ShortsandsBibles.csv", newline='\n') as csvfile:
@@ -287,14 +305,6 @@ class BibleTables:
 			if did != None and did != "":
 				return did
 		return None # should not happen
-
-
-	def rebuildMapFromSet(self, bibleSubset, bibleMap):
-		results = {}
-		for key in bibleSubset:
-			bible = bibleMap[key]
-			results[key] = bible
-		return results
 
 
 	def selectWithLocale(self, bibleMap):
@@ -354,9 +364,10 @@ class BibleTables:
     ## read and parse a info.json file for a bibleId, filesetId
 	def readInfoJson(self, bibleId, filesetId):
 		info = None
-		filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_DBP_INFO_JSON, bibleId, filesetId)
+
+		filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_DBP_INFO_JSON, bibleId, filesetId[:6])
 		if not os.path.isfile(filename):
-			filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_MY_INFO_JSON, bibleId, filesetId)
+			filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_MY_INFO_JSON, bibleId, filesetId[:6])
 		if os.path.isfile(filename):
 			fp = io.open(filename, mode="r", encoding="utf-8")
 			data = fp.read()
@@ -556,7 +567,7 @@ class BibleTables:
 			for bible in bibleIdMap[versionKey]:
 				bible.versionId = versionId
 				if bible.typeCode == "text":
-					versionKeyList.append(bible.versionKey)
+					versionKeyList.append(bible.key)
 					isoSet.add(bible.iso3)
 					abbrevSet.add(bible.abbreviation)
 					if bible.script != None:
@@ -570,8 +581,7 @@ class BibleTables:
 					if bible.nameLocal != None:
 						nameLocalSet.add(bible.nameLocal)
 			if len(versionKeyList) > 1:
-				print("ERROR versionKey is not set correctly")
-				sys.exit()
+				print("ERROR_17 multiple texts for versionKey=%s." % (versionKey), versionKeyList)
 			iso3 = ",".join(isoSet) if len(isoSet) > 0 else None
 			abbreviation = ",".join(abbrevSet) if len(abbrevSet) > 0 else None
 			script = ",".join(scriptSet) if len(scriptSet) > 0 else None

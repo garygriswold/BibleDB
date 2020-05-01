@@ -117,12 +117,6 @@ class LPTSExtractReader:
 					statuses = self.filesetIdMap.get(damId, [])
 					statuses.append((status, lptsRecord))
 					self.filesetIdMap[damId] = statuses
-			#for damId, recs in self.filesetIdMap.items():
-			#	if len(recs) > 1:
-			#		print("")
-			#		for (status, rec) in recs:
-			#			print("DUPLICATE: %s %s %s" % (damId, status, rec.Reg_StockNumber()))
-			#sys.exit()
 		return self.filesetIdMap.get(filesetId[:10], None)
 
 
@@ -225,8 +219,6 @@ class LPTSRecord:
 		for key in hasKeys:
 			statusKey = damIdDict[key]
 			damId = self.record[key]
-			if typeCode == "text":
-				damId = damId[:6]
 			status = self.record.get(statusKey)
 			if status in {"Live", "live"}:
 				results.add(damId)

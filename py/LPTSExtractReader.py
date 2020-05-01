@@ -191,8 +191,17 @@ class LPTSRecord:
 	def recordLen(self):
 		return len(self.record.keys())
 
-	## Return the damId's of a record in a set of damIds
+	## Return the damId's of a record in a set of damIds, which are Live
 	def DamIds(self, typeCode, index):
+		damIdMap = self.DamIdMap(typeCode, index)
+		results = set()
+		for (damId, status) in damIdMap.items():
+			if status in {"Live", "live"}:
+				results.add(damId)
+		return results
+
+	## Return a map of damId: status of the damIds in a record
+	def DamIdMap(self, typeCode, index):
 		if not typeCode in {"audio", "text", "video"}:
 			print("ERROR: Unknown typeCode '%s', audio, text, or video is expected." % (typeCode))
 		if not index in {1, 2, 3}:
@@ -215,13 +224,12 @@ class LPTSRecord:
 		elif typeCode == "video":
 			damIdDict = LPTSRecord.videoDamIdDict
 		hasKeys = set(damIdDict.keys()).intersection(set(self.record.keys()))
-		results = set()
+		results = {}
 		for key in hasKeys:
 			statusKey = damIdDict[key]
 			damId = self.record[key]
 			status = self.record.get(statusKey)
-			if status in {"Live", "live"}:
-				results.add(damId)
+			results[damId] = status
 		return results
 
 	def AltName(self):

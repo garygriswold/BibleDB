@@ -582,13 +582,13 @@ class BibleTables:
 						nameLocalSet.add(bible.nameLocal)
 			if len(versionKeyList) > 1:
 				print("ERROR_17 multiple texts for versionKey=%s." % (versionKey), versionKeyList)
-			iso3 = ",".join(isoSet) if len(isoSet) > 0 else None
-			abbreviation = ",".join(abbrevSet) if len(abbrevSet) > 0 else None
-			script = ",".join(scriptSet) if len(scriptSet) > 0 else None
-			numerals = ",".join(numeralsSet) if len(numeralsSet) > 0 else None
-			country = ",".join(countrySet) if len(countrySet) > 0 else None
-			name = ",".join(nameSet) #if len(nameSet) > 0 else None
-			nameLocal = ",".join(nameLocalSet) #if len(nameLocalSet) > 0 else None
+			iso3 = ";".join(isoSet) if len(isoSet) > 0 else None
+			abbreviation = ";".join(abbrevSet) if len(abbrevSet) > 0 else None
+			script = ";".join(scriptSet) if len(scriptSet) > 0 else None
+			numerals = ";".join(numeralsSet) if len(numeralsSet) > 0 else None
+			country = ";".join(countrySet) if len(countrySet) > 0 else None
+			name = ";".join(nameSet) #if len(nameSet) > 0 else None
+			nameLocal = ";".join(nameLocalSet) #if len(nameLocalSet) > 0 else None
 			values.append((versionId, iso3, abbreviation, script, country, numerals, name, nameLocal))
 		self.insert("Versions", ("versionId", "iso3", "abbreviation", "script",
 				"country", "numerals", "name", "nameLocal"), values)

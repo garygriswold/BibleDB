@@ -178,13 +178,13 @@ CREATE TABLE Versions (
   script TEXT NOT NULL,
   country TEXT NOT NULL,
   numerals TEXT NOT NULL,
-  name TEXT NOT NULL, -- from info.json
-  nameLocal TEXT NOT NULL, -- from info.json
+  name TEXT NOT NULL, -- from LPTS
+  nameLocal TEXT NOT NULL, -- Possibly from google translate and eliminate nameTranslated
   nameTranslated TEXT NULL, -- from google translate
   priority INT NOT NULL DEFAULT 0, -- affects position in version list, manually set
   FOREIGN KEY (iso3) REFERENCES Languages (iso3));
 -- Index could be reduced to iso3/abbreviation
-CREATE UNIQUE INDEX versions_iso_abbrev_script ON Versions(iso3, abbreviation, script);
+CREATE UNIQUE INDEX versions_iso_abbrev ON Versions(iso3, abbreviation);
 
 DROP TABLE IF EXISTS VersionLocales;
 CREATE TABLE VersionLocales (

@@ -41,8 +41,9 @@ class Bible:
 		self.iso3 = None
 		self.script = None
 		self.country = None
-		self.allowApp = False
 		self.allowAPI = False
+		self.allowApp = False
+		self.allowWeb = False
 		self.locales = []
 		self.scope = None
 		self.priority = 0
@@ -56,8 +57,14 @@ class Bible:
 		self.bibleZipFile = None
 
 	def toString(self):
-		allow = "app " if self.allowApp else ""
-		allow += "api" if self.allowAPI else ""
+		permiss = []
+		if self.allowAPI:
+			permiss.append("api")
+		if self.allowApp:
+			permiss.append("app")
+		if self.allowWeb:
+			permiss.append("web")
+		allow = " ".join(permiss)
 		locales = "locales: %s" % (",".join(self.locales))
 		return "%s, src=%s, allow:%s, %s_%s_%s, %s" % (self.key, self.srcType, allow, self.iso3, self.script, self.country, locales)
 
@@ -200,12 +207,15 @@ class BibleTables:
 						if typeCode == "text":
 							bible.allowAPI = (lptsRec.APIDevText() == "-1")
 							bible.allowApp = (lptsRec.MobileText() == "-1")
+							bible.allowWeb = (lptsRec.HubText() == "-1")
 						elif typeCode == "audio":
 							bible.allowAPI = (lptsRec.APIDevAudio() == "-1")
 							bible.allowApp = (lptsRec.DBPMobile() == "-1")
+							bible.allowWeb = (lptsRec.DBPWebHub() == "-1")
 						elif typeCode == "video":
 							bible.allowAPI = (lptsRec.APIDevVideo() == "-1")
 							bible.allowApp = (lptsRec.MobileVideo() == "-1")
+							bible.allowWeb = (lptsRec.WebHubVideo() == "-1")
 						if typeCode == "text":
 							bible.name = lptsRec.Version()
 							if bible.name == None or bible.name == "":
@@ -560,7 +570,7 @@ class BibleTables:
 			script = ":".join(scriptSet) if len(scriptSet) > 0 else None
 			numerals = ":".join(numeralsSet) if len(numeralsSet) > 0 else None
 			country = ":".join(countrySet) if len(countrySet) > 0 else None
-			name = ":".join(nameSet) #if len(nameSet) > 0 else None
+			name = max(nameSet, key=len)
 			nameLocal = ":".join(nameLocalSet) #if len(nameLocalSet) > 0 else None
 			values.append((versionId, iso3, abbreviation, script, country, numerals, name, nameLocal))
 		self.insert("Versions", ("versionId", "iso3", "abbreviation", "script",

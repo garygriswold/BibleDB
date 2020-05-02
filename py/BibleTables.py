@@ -129,10 +129,7 @@ class BibleTables:
 		withLocaleMap = self.selectWithLocale(permittedMap)
 		print("COUNT: IN LPTS WITH PERMISSION IN S3 AND LOCALE %d" % (len(withLocaleMap.keys())))	
 
-		for key, bible in withLocaleMap.items():
-			if bible.typeCode == "text":
-				bible.numerals = self.getNumberCode(bible.script, bible.iso3)
-
+		self.getNumberCode(withLocaleMap)
 		self.getScopeByCSVFile(withLocaleMap)
 
 		bibleGroupMap = self.groupByVersion(withLocaleMap)
@@ -376,50 +373,54 @@ class BibleTables:
 		return info
 
 
-	def getNumberCode(self, script, iso3):
-		if script == "Arab":
-			if iso3 in {"fas", "pes" }:
-				return "persian"
-			elif iso3 == "urd": 
-				return "urdu"
-			else:
-				return "arabic"
-		if script == "Deva":
-			if iso3 == "ben":
-				return "bengali"
-			elif iso3 == "kan":
-				return "kannada"
-			else:
-				return "devanagari"
-		numerals = {
-			"Beng": "bengali",
-			"Cyrl": "western",
-			"Ethi": "western",
-			"Grek": "western",
-			"Gujr": "gujarati",
-			"Guru": "gurmukhi",
-			"Hani": "chinese",
-			"Hant": "chinese",
-			"Hans": "chinese",
-			"Jpan": "western",
-			"Khmr": "khmer",
-			"Kore": "korean",
-			"Knda": "kannada",
-			"Laoo": "lao",
-			"Latn": "western",
-			"Limb": "limbu",
-			"Mlym": "malayalam",
-			"Mymr": "burmese",
-			"Orya": "oriya",
-			"Syrc": "syriac",
-			"Taml": "tamil",
-			"Telu": "telugu",
-			"Thaa": "western",
-			"Thai": "thai"}
-		result = numerals.get(script)
-		if result == None:
-			print("ERROR_18 unknown script %s for iso %s in getNumberCode" % (script, iso3))
-		return result
+	def getNumberCode(self, bibleMap):
+		for key, bible in bibleMap.items():
+			if bible.typeCode == "text":
+				iso3 = bible.iso3
+				script = bible.script
+				if script == "Arab":
+					if iso3 in {"fas", "pes" }:
+						bible.numerals = "persian"
+					elif iso3 == "urd": 
+						bible.numerals = "urdu"
+					else:
+						 bible.numerals = "arabic"
+				elif script == "Deva":
+					if iso3 == "ben":
+						bible.numerals = "bengali"
+					elif iso3 == "kan":
+						bible.numerals = "kannada"
+					else:
+						bible.numerals = "devanagari"
+				else:
+					numerals = {
+						"Beng": "bengali",
+						"Cyrl": "western",
+						"Ethi": "western",
+						"Grek": "western",
+						"Gujr": "gujarati",
+						"Guru": "gurmukhi",
+						"Hani": "chinese",
+						"Hant": "chinese",
+						"Hans": "chinese",
+						"Jpan": "western",
+						"Khmr": "khmer",
+						"Kore": "korean",
+						"Knda": "kannada",
+						"Laoo": "lao",
+						"Latn": "western",
+						"Limb": "limbu",
+						"Mlym": "malayalam",
+						"Mymr": "burmese",
+						"Orya": "oriya",
+						"Syrc": "syriac",
+						"Taml": "tamil",
+						"Telu": "telugu",
+						"Thaa": "western",
+						"Thai": "thai"}
+					bible.numerals = numerals.get(script)
+					if bible.numerals == None:
+						print("ERROR_18 unknown script %s for iso %s in getNumberCode" % (script, iso3))
 
 
 	## compute size code for each 

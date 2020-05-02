@@ -464,6 +464,18 @@ class BibleTables:
 	## compute size code for each 
 	def getScopeByCSVFile(self, bibleMap):
 		for bible in bibleMap.values():
+			if bible.typeCode == "text" and len(bible.filesetId) > 9:
+				sizeCode = bible.filesetId[6:7]
+				print("WOW", bible.filesetId, sizeCode)
+				if sizeCode == "N":
+					bible.scope = "NT"
+				elif sizeCode == "O":
+					bible.scope = "OT"
+				elif sizeCode == "P":
+					bible.scope = "?TP"
+				else:
+					print("ERROR_?? unexpected size code in %s" % (bible.key))
+					sys.exit()
 			filename = self.getCSVFilename(bible.typeCode, bible.bibleId, bible.filesetId)
 			if filename != None:
 				bookIdSet = set()

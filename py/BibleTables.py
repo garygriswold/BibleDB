@@ -131,17 +131,9 @@ class BibleTables:
 
 		for key, bible in withLocaleMap.items():
 			if bible.typeCode == "text":
-				info = self.readInfoJson(bible.bibleId, bible.filesetId)
-				self.getFilesetData(bible, info)
-				scriptCode = self.getScriptCode(info)
-				if bible.script != None and bible.script != scriptCode:
-					print("ERROR_05 %s script in LPTS %s, computed %s" % (bible.key, bible.script, scriptCode))
 				bible.numerals = self.getNumberCode(bible.script, bible.iso3)
 
-		withLocaleMap2 = self.selectWithLocale(withLocaleMap)
-		print("COUNT: IN LPTS WITH PERMISS IN S3 AND REPEAT LOCALE %d" % (len(withLocaleMap2)))
-
-		self.getScopeByCSVFile(withLocaleMap2)
+		self.getScopeByCSVFile(withLocaleMap)
 
 		bibleGroupMap = self.groupByVersion(withLocaleMap)
 		print("COUNT: IN BibleId MAP %d" % (len(bibleGroupMap.keys())))
@@ -217,6 +209,10 @@ class BibleTables:
 						elif typeCode == "video":
 							bible.allowAPI = (lptsRec.APIDevVideo() == "-1")
 							bible.allowApp = (lptsRec.MobileVideo() == "-1")
+						if typeCode == "text":
+							bible.name = lptsRec.Version()
+							if bible.name == None or bible.name == "":
+								bible.name = lptsRec.Volumne_Name()
 						if results.get(bible.key) != None:
 							print("ERROR_01 Duplicate Key in LPTS %s" % (bible.key))
 						else:
@@ -364,7 +360,6 @@ class BibleTables:
     ## read and parse a info.json file for a bibleId, filesetId
 	def readInfoJson(self, bibleId, filesetId):
 		info = None
-
 		filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_DBP_INFO_JSON, bibleId, filesetId[:6])
 		if not os.path.isfile(filename):
 			filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_MY_INFO_JSON, bibleId, filesetId[:6])
@@ -379,40 +374,6 @@ class BibleTables:
 		else:
 			print("ERROR: info.json NOT FOUND,", bibleId, filesetId)
 		return info
-
-
-    # extract fileset data from info.json data
-	def getFilesetData(self, bible, info):
-		if info != None:
-			bible.nameLocal = info.get("name")
-			bible.name = info.get("nameEnglish")
-			country = info.get("countryCode") if info.get("countryCode") != "" else None
-			if bible.country == None:
-				bible.country = country
-			if country != None and country != bible.country:
-				print("ERROR_03 %s in LPTS %s in info.json %s" % (bible.key, bible.country, country))
-			iso3 = info.get("lang").lower() if info.get("lang") != None else None
-			if iso3 != bible.iso3:
-				print("ERROR_04 %s in LPTS iso %s in info.json %s" % (bible.key, bible.iso3, iso3))
-
-
-	## extract script code from book name text in info.json
-	def getScriptCode(self, info):
-		if info != None:
-			bookNames = info["divisionNames"]
-			if bookNames != None:
-				for bookName in bookNames:
-					for bookChar in bookName:
-						name = unicodedata.name(bookChar)
-						if name != None:
-							parts = name.split(" ")
-							if parts[0] == "TAI" and len(parts) > 1:
-								firstPart = parts[0] + " " + parts[1]
-							else:
-								firstPart = parts[0]
-							scriptCode = self.scriptMap.get(firstPart)
-							return scriptCode
-		return None
 
 
 	def getNumberCode(self, script, iso3):
@@ -466,7 +427,6 @@ class BibleTables:
 		for bible in bibleMap.values():
 			if bible.typeCode == "text" and len(bible.filesetId) > 9:
 				sizeCode = bible.filesetId[6:7]
-				print("WOW", bible.filesetId, sizeCode)
 				if sizeCode == "N":
 					bible.scope = "NT"
 				elif sizeCode == "O":
@@ -588,19 +548,19 @@ class BibleTables:
 						numeralsSet.add(bible.numerals)
 					if bible.country != None:
 						countrySet.add(bible.country)
-					if bible.name != None:
+					if bible.name != None and bible.name != "":
 						nameSet.add(bible.name)
-					if bible.nameLocal != None:
+					if bible.nameLocal != None and bible.nameLocal != "":
 						nameLocalSet.add(bible.nameLocal)
 			if len(versionKeyList) > 1:
 				print("ERROR_17 multiple texts for versionKey=%s." % (versionKey), versionKeyList)
-			iso3 = ";".join(isoSet) if len(isoSet) > 0 else None
-			abbreviation = ";".join(abbrevSet) if len(abbrevSet) > 0 else None
-			script = ";".join(scriptSet) if len(scriptSet) > 0 else None
-			numerals = ";".join(numeralsSet) if len(numeralsSet) > 0 else None
-			country = ";".join(countrySet) if len(countrySet) > 0 else None
-			name = ";".join(nameSet) #if len(nameSet) > 0 else None
-			nameLocal = ";".join(nameLocalSet) #if len(nameLocalSet) > 0 else None
+			iso3 = ":".join(isoSet) if len(isoSet) > 0 else None
+			abbreviation = ":".join(abbrevSet) if len(abbrevSet) > 0 else None
+			script = ":".join(scriptSet) if len(scriptSet) > 0 else None
+			numerals = ":".join(numeralsSet) if len(numeralsSet) > 0 else None
+			country = ":".join(countrySet) if len(countrySet) > 0 else None
+			name = ":".join(nameSet) #if len(nameSet) > 0 else None
+			nameLocal = ":".join(nameLocalSet) #if len(nameLocalSet) > 0 else None
 			values.append((versionId, iso3, abbreviation, script, country, numerals, name, nameLocal))
 		self.insert("Versions", ("versionId", "iso3", "abbreviation", "script",
 				"country", "numerals", "name", "nameLocal"), values)

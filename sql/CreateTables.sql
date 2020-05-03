@@ -183,7 +183,6 @@ CREATE TABLE Versions (
   nameTranslated TEXT NULL, -- from google translate
   priority INT NOT NULL DEFAULT 0, -- affects position in version list, manually set
   FOREIGN KEY (iso3) REFERENCES Languages (iso3));
--- Index could be reduced to iso3/abbreviation
 CREATE UNIQUE INDEX versions_iso_abbrev ON Versions(iso3, abbreviation);
 
 DROP TABLE IF EXISTS VersionLocales;
@@ -199,7 +198,7 @@ CREATE TABLE Bibles (
   systemId INT NOT NULL PRIMARY KEY, -- use fileset_id for now or GUID
   versionId INT NOT NULL,
   mediaType TEXT NOT NULL CHECK (mediaType IN ('audio', 'drama', 'video', 'text')),
-  scope TEXT NOT NULL, -- NT,OT, NTOT, NTP, etc.
+  scope TEXT NULL, -- NT,OT, NTOT, NTP, etc.
   bitrate INT NULL CHECK (bitrate IN (16, 32, 64, 128)),
   agency TEXT NULL, -- should be NOT NULL, but source unknown
   copyrightYear INT NULL, -- should be NOT NULL, but source unknown

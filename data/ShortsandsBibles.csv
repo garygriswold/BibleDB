@@ -1,6 +1,6 @@
 ERV-ARB.db,ERV,arb,B,1,"بِعَهْدَيْهِ القَدِيمِ وَالجَدِيد الكِتَابُ المُقَدَّسُ","Easy-to-Read Holy Bible","من السهل قراءة الكتاب المقدس",text-%R-shortsands,text/ARBERV/ARBERV,%I_%O_%B_%C.html,dbp-prod,audio/ARBWTC/ARBWTCO1DA,audio/ARBWTC/ARBWTCN1DA,ar,Arab,SA
 ARBVDPD.db,VDV,arb,B,1,"الكتاب المقدس ترجمة فان دايك","Van Dyck Holy Bible","فان دايك الكتاب المقدس",text-%R-shortsands,text/ARBVDV/ARBVDV,%I_%O_%B_%C.html,dbp-prod,audio/ARBVDV/ARZVDVO2DA,audio/ARBVDV/ARZVDVN2DA,ar,Arab,SA
-ERV-AWA.db,ERV,awa,B,1,"पवित्तर बाइबिल","Easy-to-Read Holy Bible","पवित्तर बाइबिल",text-%R-shortsands,text/AWAERV/AWAERV,%I_%O_%B_%C.html,dbp-prod,,audio/AWAWTC/AWAWTCN2DA,awa,"",IN
+ERV-AWA.db,ERV,awa,B,1,"पवित्तर बाइबिल","Easy-to-Read Holy Bible","पवित्तर बाइबिल",text-%R-shortsands,text/AWAERV/AWAERV,%I_%O_%B_%C.html,dbp-prod,,audio/AWAWTC/AWAWTCN2DA,awa,Deva,IN
 ERV-BEN.db,ERV,ben,B,1,"পবিত্র বাইবেল","Easy-to-Read Holy Bible","সহজ বাইবেল বাইবেল পড়ুন",text-%R-shortsands,text/BENERV/BENERV,%I_%O_%B_%C.html,dbp-prod,,audio/BENWTC/BNGWTCN2DA,bn,Beng,BD
 ERV-BUL.db,ERV,bul,N,1,"Новият завет, съвременен превод","Easy-to-Read Holy Bible","Лесна за четене Библия",text-%R-shortsands,text/BULERV/BULERV,%I_%O_%B_%C.html,dbp-prod,,audio/BULPRB/BLGAMBN1DA,bg,Cyrl,BG
 ERV-CMN.db,ERV,cmn,B,1,"圣经–普通话本","Easy-to-Read Holy Bible","易于阅读的圣经",text-%R-shortsands,text/CMNERV/CMNERV,%I_%O_%B_%C.html,dbp-prod,audio/CMNUNV/CHNUNVO2DA,audio/CMNUNV/CHNUNVN2DA,zh,Hans,CN

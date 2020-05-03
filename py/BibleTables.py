@@ -145,7 +145,9 @@ class BibleTables:
 		hasTextGroupMap = self.removeNonText(bibleGroupMap) # remove Version w/o text
 		print("COUNT: IN BibleId MAP with TEXT %d" % (len(hasTextGroupMap.keys())))
 
-		dupBiblesRemovedMap = self.removeDupBibles(hasTextGroupMap)
+#TBD This is not working right. Fix scope first
+#		dupBiblesRemovedMap = self.removeDupBibles(hasTextGroupMap)
+		dupBiblesRemovedMap = hasTextGroupMap
 		print("COUNT: IN BibleId MAP with TEXT, DUPS REMOVED %d" % (len(dupBiblesRemovedMap.keys())))
 
 		self.insertVersions(dupBiblesRemovedMap)
@@ -303,11 +305,12 @@ class BibleTables:
 
 
 	def _findBestFileset(self, textId, otDamId, ntDamId):
-		prefSeq = [ntDamId, otDamId, textId]
-		for did in (otDamId, ntDamId, textId):
-			if did != None and did != "":
-				return did
-		return None # should not happen
+		return textId
+		#prefSeq = [ntDamId, otDamId, textId]
+		#for did in (otDamId, ntDamId, textId):
+		#	if did != None and did != "":
+		#		return did
+		#return None # should not happen
 
 
 	def selectWithLocale(self, bibleMap):
@@ -364,7 +367,8 @@ class BibleTables:
 		return results
 
 
-    ## read and parse a info.json file for a bibleId, filesetId
+    ## deprecated.  I should actual listings from buckets
+    ## And I should get local chapter names from USX files.
 	def readInfoJson(self, bibleId, filesetId):
 		info = None
 		filename = "%stext:%s:%s:info.json" % (self.config.DIRECTORY_DBP_INFO_JSON, bibleId, filesetId[:6])
@@ -447,7 +451,7 @@ class BibleTables:
 				else:
 					print("ERROR_?? unexpected size code in %s" % (bible.key))
 					sys.exit()
-			filename = self.getCSVFilename(bible.typeCode, bible.bibleId, bible.filesetId)
+			filename = self.getCSVFilename(bible.s3Key)
 			if filename != None:
 				bookIdSet = set()
 				with open(filename, newline='\n') as csvfile:
@@ -457,8 +461,8 @@ class BibleTables:
 				bible.scope = self.getScope(bookIdSet)
 
 
-	def getCSVFilename(self, typeCode, bibleId, filesetId):
-		filename = "%s_%s_%s.csv" % (typeCode, bibleId, filesetId)
+	def getCSVFilename(self, s3FilePrefix):
+		filename = s3FilePrefix.replace("/", "_") + ".csv"
 		filePath = self.config.DIRECTORY_ACCEPTED + filename
 		if os.path.isfile(filePath):
 			return filePath
@@ -622,65 +626,78 @@ class BibleTables:
 
 
 	def insertBibleBooks(self, bibleIdMap):
+		shortSandsBookMap = self.readShortsandsBucket()
 		values = []
-		self.pkeyCheck = set()
 		for versionKey in sorted(bibleIdMap.keys()):
 			for bible in bibleIdMap[versionKey]:
-				nameLocalMap = self.getLocalBookNames(bible.typeCode, bible.bibleId, bible.filesetId)
-				filename = self.getCSVFilename(bible.typeCode, bible.bibleId, bible.filesetId)
-				if filename != None:
-					priorRow = None
-					with open(filename, newline='\n') as csvfile:
-						reader = csv.DictReader(csvfile)
-						for row in reader:
-							if priorRow != None:
-								if row["book_id"] != priorRow["book_id"]:
-									self.appendBook(values, bible, priorRow, nameLocalMap)
-							priorRow = row
-						self.appendBook(values, bible, priorRow, nameLocalMap)
+				bookList = shortSandsBookMap.get(bible.key)
+				if bookList == None:
+					bookList = self.readCVSFileBooks(bible)
+				if bookList == None:
+					print("ERROR_?? books not found for %s" % (bible.toString()))
+					sys.exit()
 				else:
-					for bookId in nameLocalMap.keys():
-						(sequence, chapter, nameLocal) = nameLocalMap[bookId]
-						value = (bible.systemId, bookId, sequence, nameLocal, None, chapter)
+					for (sequence, bookId, chapter) in bookList:
+						# ?? Add nameS3 of audio files
+						value = (bible.systemId, bookId, sequence, None, None, chapter)
 						values.append(value)
 		self.insert("BibleBooks", ("systemId", "book", "sequence",
   				"nameLocal", "nameS3", "numChapters"), values)
 
 
-	def getLocalBookNames(self, typeCode, bibleId, filesetId):
-		result = {}
-		if typeCode == "text":
-			info = self.readInfoJson(bibleId, filesetId)
-			if info != None:
-				books = info["divisions"]
-				names = info["divisionNames"]
-				chapters = {}
-				for section in info["sections"]:
-					bookId = section[:3]
-					chapter = section[3:]
-					chapters[bookId] = chapter # The last one is remembered
-				if len(books) != len(names) or len(books) != len(chapters):
-					print("ERROR_07 books and names not equal in %s/%s/%s" % (typeCode, bibleId, filesetId))
-					sys.exit()
-				for index in range(len(books)):
-					book = books[index]
-					result[book] = (index, chapters[bookId], names[index])
-		return result
+	def readCVSFileBooks(self, bible):
+		filename = self.getCSVFilename(bible.s3Key)
+		if filename == None:
+			return None
+		results = {}
+		with open(filename, newline='\n') as csvfile:
+			reader = csv.DictReader(csvfile)
+			for row in reader:
+				key = "%s/%s" % (row["sequence"], row["book_id"])
+				chaptStr = row["chapter_start"]
+				if chaptStr.isdigit():
+					chapter = int(chaptStr)
+					currChapter = results.get(key, 0)
+					if chapter > currChapter:
+						results[key] = chapter
+		results2 = []
+		for key, chapter in results.items():
+			(sequence, bookId) = key.split("/")
+			results2.append((sequence, bookId, chapter))
+		results3 = sorted(results2, key=lambda tup: tup[0])
+		return results3
 
 
-	def appendBook(self, values, bible, row, nameLocalMap):
-		bookId = row["book_id"]
-		#nameLocal = nameLocalMap.get(bookId)
-		(sequence, chapters, nameLocal) = nameLocalMap.get(bookId, (None, None, None))
-		value = ((bible.systemId, bookId, row["sequence"], nameLocal, 
-			row["book_name"], row["chapter_start"]))
-		values.append(value)
-		if row["verse_start"] != "1":
-			print("ERROR_08 verse_start should be 1 in %s" % (bible.key))
-		key = bible.filesetId + "/" + bookId
-		if key in self.pkeyCheck:
-			print("ERROR_09 duplicate %s in %s" % (key, bible.bibleId))
-		self.pkeyCheck.add(key)
+	# Returns a map text/bibleId/filesetId : [(sequence, bookId, chapter)]
+	def readShortsandsBucket(self):
+		results = {}
+		filePath = self.config.DIRECTORY_BUCKET_LIST + self.config.S3_MY_BUCKET + ".txt"
+		fp = io.open(filePath, mode="r", encoding="utf-8")
+		for line in fp:
+			fileRef = line.split("\t")[0]
+			if fileRef.endswith(".html"):
+				fileRef = fileRef.split(".")[0]
+				(typeCode, bibleId, filesetId, filename) = fileRef.split("/")
+				parts = filename.split("_")
+				sequence = parts[1]
+				bookId = parts[2]
+				key = "%s/%s/%s/%s/%s" % (typeCode, bibleId, filesetId, sequence, bookId)
+				chapter = int(parts[3]) if len(parts) > 3 else 0
+				currChapter = results.get(key, 0)
+				if chapter > currChapter:
+					results[key] = chapter
+		fp.close()
+		results2 = {}
+		for key, chapter in results.items():
+			(typeCode, bibleId, filesetId, seqStr, bookId) = key.split("/")
+			sequence = int(seqStr)
+			key = "%s/%s/%s" % (typeCode, bibleId, filesetId)
+			chapters = results2.get(key, [])
+			chapters.append((sequence, bookId, chapter))
+			results2[key] = chapters
+		for key, values in results2.items():
+			results2[key] = sorted(values, key=lambda tup: tup[0])
+		return results2
 
 
 	def unloadDB(self):

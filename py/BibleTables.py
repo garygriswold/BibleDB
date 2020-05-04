@@ -149,12 +149,8 @@ class BibleTables:
 		self.insertBibleBooks(hasTextGroupMap)
 
 		self.setScopeByBibleBooks()
-
-		#TBD This is not working right. Fix scope first
-#		dupBiblesRemovedMap = self.removeDupBibles(hasTextGroupMap)
-#		dupBiblesRemovedMap = hasTextGroupMap
-#		print("COUNT: IN BibleId MAP with TEXT, DUPS REMOVED %d" % (len(dupBiblesRemovedMap.keys())))
-
+		dupCount = self.removeDupBibles()
+		print("COUNT: NUM DUPS REMOVED %d" % (dupCount))
 
 		### ERRROR the 16 bit rate audios are missing from the LPTS SET
 		### Do I want them?
@@ -449,42 +445,6 @@ class BibleTables:
 		return None
 
 
-	def removeDupBibles(self, bibleIdMap):
-		results = {}
-		for versionKey in sorted(bibleIdMap.keys()):
-			textSet = set()
-			audioSet = set()
-			dramaSet = set()
-			values = []
-			for bible in bibleIdMap[versionKey]:
-				if bible.typeCode == "text":
-					textSet.add(bible)
-				elif bible.typeCode == "audio":
-					if bible.filesetId[7:8] == "1":
-						audioSet.add(bible)
-					else:
-						dramaSet.add(bible)
-				else:
-					values.append(bible)
-			self._removeDups(values, textSet)
-			self._removeDups(values, audioSet)
-			self._removeDups(values, dramaSet)
-			results[versionKey] = values
-		return results
-
-
-	def _removeDups(self, values, bibleSet):
-		hasNTOT = None
-		for bible in bibleSet:
-			if bible.scope == "NTOT":
-				hasNTOT = bible
-		if hasNTOT:
-			values.append(hasNTOT)
-		else:
-			for bible in bibleSet:
-				values.append(bible)
-
-
 	def insertVersions(self, bibleIdMap):
 		values = []
 		versionId = 0
@@ -697,6 +657,59 @@ class BibleTables:
 		else:
 			return None
 
+
+	def removeDupBibles(self):
+		values = []
+		versionList = self.db.selectList("SELECT versionId FROM Versions", ())
+		for versionId in versionList:
+			textSet = []
+			audioSet = []
+			dramaSet = []
+			sql = ("SELECT systemId, mediaType, ntScope, otScope, filePrefix"
+				" FROM Bibles WHERE versionId = ?")
+			resultSet = self.db.select(sql, (versionId,))
+			for row in resultSet:
+				mediaType = row[1]
+				if mediaType == "text":
+					textSet.append(row)
+				elif mediaType == "audio":
+					audioSet.append(row)
+				elif mediaType == "drama":
+					audioSet.append(row)
+			self._removeDups(values, textSet)
+			self._removeDups(values, audioSet)
+			self._removeDups(values, dramaSet)
+		delete = "DELETE FROM Bibles WHERE systemId = ?"
+		self.db.executeBatch(delete, values)
+		return len(values)
+
+
+	def _removeDups(self, values, rows):
+		hasNTOT = False
+		hasNTOnly = False
+		hasOTOnly = False
+		for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
+			if ntScope == None and otScope == None:
+				values.append((systemId,))
+			if ntScope == "NT" and otScope == "OT":
+				hasNTOT = True
+			if ntScope == "NT" and otScope != "OT":
+				hasNTOnly = True
+			if otScope == "OT" and ntScope != "NT":
+				hasOTOnly = True
+		if hasNTOT:
+			for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
+				if ntScope != "NT" or otScope != "OT":
+					values.append((systemId,))
+		elif hasNTOnly:
+			for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
+				if ntScope == "NP":
+					values.append((systemId,))
+		elif hasOTOnly:
+			for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
+				if otScope != "OP":
+					values.append((systemId,))
+		
 
 	def unloadDB(self):
 		print("unloadDB")

@@ -19,7 +19,7 @@ ORDER BY iso3, abbreviation, script;
 
 -- SELECT locale, versionId FROM VersionLocales ORDER BY versionId, locale;
 
-SELECT mediaType, scope, bucket, filePrefix, fileTemplate,
+SELECT mediaType, ntScope, otScope, bucket, filePrefix, fileTemplate,
 bibleZipFile, lptsStockNo FROM Bibles
 ORDER BY bucket, filePrefix
 
@@ -35,7 +35,7 @@ ORDER BY iso3, abbreviation, script;
 
 -- SELECT locale, versionId FROM VersionLocales ORDER BY versionId, locale;
 
-SELECT mediaType, scope, bucket, filePrefix, fileTemplate,
+SELECT mediaType, ntScope, otScope, bucket, filePrefix, fileTemplate,
 bibleZipFile, lptsStockNo FROM Bibles
 ORDER BY bucket, filePrefix
 

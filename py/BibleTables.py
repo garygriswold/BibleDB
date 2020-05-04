@@ -659,20 +659,10 @@ class BibleTables:
 		sql = ("SELECT systemId, mediaType, filePrefix FROM Bibles")
 		resultSet = self.db.select(sql, ())
 		for (systemId, mediaType, filePrefix) in resultSet:
-			print(systemId, mediaType, filePrefix)
 			sql2 = ("SELECT book FROM BibleBooks WHERE systemId=?")
 			bookSet = self.db.selectSet(sql2, (str(systemId),))
-			scopeCode = filePrefix[-4:-3] if len(filePrefix) > 19 else "C"
-			print(scopeCode)
-			ntScope = None
-			otScope = None
-			if scopeCode in {"C", "N", "P"}:
-				ntScope = self.getNewTestamentScope(bookSet)
-			if scopeCode in {"C", "O", "P"}:
-				otScope = self.getOldTestamentScope(bookSet)
-			if scopeCode not in {"C", "N", "O", "P"}:
-				print("ERROR_16 Unexpected type in %s" % (filePrefix))
-				sys.exit()
+			ntScope = self.getNewTestamentScope(bookSet)
+			otScope = self.getOldTestamentScope(bookSet)
 			values.append((ntScope, otScope, systemId))			
 		update = "UPDATE Bibles SET ntScope = ?, otScope = ? WHERE systemId = ?"
 		self.db.executeBatch(update, values)
@@ -683,7 +673,7 @@ class BibleTables:
 		count = len(ntBooks)
 		if count >= 27:
 			return "NT"
-		elif count >= 0:
+		elif count >= 1:
 			return "NP"
 		else:
 			return None
@@ -694,7 +684,7 @@ class BibleTables:
 		count = len(otBooks)
 		if count >= 39:
 			return "OT"
-		elif count >= 0:
+		elif count >= 1:
 			return "OP"
 		else:
 			return None

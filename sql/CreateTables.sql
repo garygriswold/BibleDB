@@ -198,7 +198,8 @@ CREATE TABLE Bibles (
   systemId INT NOT NULL PRIMARY KEY, -- use fileset_id for now or GUID
   versionId INT NOT NULL,
   mediaType TEXT NOT NULL CHECK (mediaType IN ('audio', 'drama', 'video', 'text')),
-  scope TEXT NULL, -- NT,OT, NTOT, NTP, etc.
+  ntScope TEXT NULL CHECK (ntScope IN ('NT', 'NP')),
+  otScope TEXT NULL CHECK (otScope IN ('OT', 'OP')),
   bitrate INT NULL CHECK (bitrate IN (16, 32, 64, 128)),
   agency TEXT NULL, -- should be NOT NULL, but source unknown
   copyrightYear INT NULL, -- should be NOT NULL, but source unknown

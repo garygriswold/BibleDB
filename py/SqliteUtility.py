@@ -106,12 +106,12 @@ class SqliteUtility:
 		return results		
 
 
-#	def selectList(self, statement, values):
-#		resultSet = self.select(statement, values)
-#		results = []
-#		for row in resultSet:
-#			results.append(row[0])
-#		return results
+	def selectList(self, statement, values):
+		resultSet = self.select(statement, values)
+		results = []
+		for row in resultSet:
+			results.append(row[0])
+		return results
 
 
 	def selectMap(self, statement, values):

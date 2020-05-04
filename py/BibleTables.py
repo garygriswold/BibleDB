@@ -45,7 +45,6 @@ class Bible:
 		self.allowApp = False
 		self.allowWeb = False
 		self.locales = []
-		self.scope = None
 		self.priority = 0
 		self.bucket = None
 		self.filePrefix = None
@@ -137,7 +136,6 @@ class BibleTables:
 		print("COUNT: IN LPTS WITH PERMISSION IN S3 AND LOCALE %d" % (len(withLocaleMap.keys())))	
 
 		self.getNumberCode(withLocaleMap)
-		self.getScopeByCSVFile(withLocaleMap)
 
 		bibleGroupMap = self.groupByVersion(withLocaleMap)
 		print("COUNT: IN BibleId MAP %d" % (len(bibleGroupMap.keys())))
@@ -145,15 +143,18 @@ class BibleTables:
 		hasTextGroupMap = self.removeNonText(bibleGroupMap) # remove Version w/o text
 		print("COUNT: IN BibleId MAP with TEXT %d" % (len(hasTextGroupMap.keys())))
 
-#TBD This is not working right. Fix scope first
-#		dupBiblesRemovedMap = self.removeDupBibles(hasTextGroupMap)
-		dupBiblesRemovedMap = hasTextGroupMap
-		print("COUNT: IN BibleId MAP with TEXT, DUPS REMOVED %d" % (len(dupBiblesRemovedMap.keys())))
+		self.insertVersions(hasTextGroupMap)
+		self.insertVersionLocales(hasTextGroupMap)
+		self.insertBibles(hasTextGroupMap)
+		self.insertBibleBooks(hasTextGroupMap)
 
-		self.insertVersions(dupBiblesRemovedMap)
-		self.insertVersionLocales(dupBiblesRemovedMap)
-		self.insertBibles(dupBiblesRemovedMap)
-		self.insertBibleBooks(dupBiblesRemovedMap)
+		self.setScopeByBibleBooks()
+
+		#TBD This is not working right. Fix scope first
+#		dupBiblesRemovedMap = self.removeDupBibles(hasTextGroupMap)
+#		dupBiblesRemovedMap = hasTextGroupMap
+#		print("COUNT: IN BibleId MAP with TEXT, DUPS REMOVED %d" % (len(dupBiblesRemovedMap.keys())))
+
 
 		### ERRROR the 16 bit rate audios are missing from the LPTS SET
 		### Do I want them?
@@ -437,30 +438,6 @@ class BibleTables:
 						print("ERROR_18 unknown script %s for iso %s in getNumberCode" % (script, iso3))
 
 
-	## compute size code for each 
-	def getScopeByCSVFile(self, bibleMap):
-		for bible in bibleMap.values():
-			if bible.typeCode == "text" and len(bible.filesetId) > 9:
-				sizeCode = bible.filesetId[6:7]
-				if sizeCode == "N":
-					bible.scope = "NT"
-				elif sizeCode == "O":
-					bible.scope = "OT"
-				elif sizeCode == "P":
-					bible.scope = "?TP"
-				else:
-					print("ERROR_?? unexpected size code in %s" % (bible.key))
-					sys.exit()
-			filename = self.getCSVFilename(bible.s3Key)
-			if filename != None:
-				bookIdSet = set()
-				with open(filename, newline='\n') as csvfile:
-					reader = csv.DictReader(csvfile)
-					for row in reader:
-						bookIdSet.add(row["book_id"])
-				bible.scope = self.getScope(bookIdSet)
-
-
 	def getCSVFilename(self, s3FilePrefix):
 		filename = s3FilePrefix.replace("/", "_") + ".csv"
 		filePath = self.config.DIRECTORY_ACCEPTED + filename
@@ -470,36 +447,6 @@ class BibleTables:
 		if os.path.isfile(filePath):
 			return filePath
 		return None
-
-
-	def getScope(self, bookIdSet):
-		otBooks = bookIdSet.intersection(self.OTBookSet)
-		ntBooks = bookIdSet.intersection(self.NTBookSet)
-		hasNT = len(ntBooks)
-		hasOT = len(otBooks)
-		if hasNT >= 27:
-			if hasOT >= 39:
-				return "NTOT"#"C"
-			elif hasOT > 0:
-				return "NTOTP"
-			else:
-				return "NT"
-
-		elif hasNT > 0:
-			if hasOT >= 39:
-				return "OTNTP"
-			elif hasOT > 0:
-				return "NTPOTP"
-			else:
-				return "NTP"
-
-		else:
-			if hasOT >= 39:
-				return "OT"
-			elif hasOT > 0:
-				return "OTP"
-			else:
-				return "P"
 
 
 	def removeDupBibles(self, bibleIdMap):
@@ -616,12 +563,12 @@ class BibleTables:
 						bitrate = 64
 				systemId += 1
 				bible.systemId = systemId
-				value = (bible.systemId, bible.versionId, mediaType, bible.scope,
-						bitrate, bible.bucket, bible.filePrefix, bible.bibleZipFile,
+				value = (bible.systemId, bible.versionId, mediaType, bitrate,
+						bible.bucket, bible.filePrefix, bible.bibleZipFile,
 						bible.lptsStockNo)
 				values.append(value)
-		self.insert("Bibles", ("systemId","versionId","mediaType","scope",
-			"bitrate", "bucket", "filePrefix", "bibleZipFile", "lptsStockNo"), values)
+		self.insert("Bibles", ("systemId","versionId","mediaType", "bitrate",
+			"bucket", "filePrefix", "bibleZipFile", "lptsStockNo"), values)
 		## skipping agency, copyrightYear, filenameTemplate
 
 
@@ -700,6 +647,59 @@ class BibleTables:
 		return results2
 
 
+	## compute size code for each Bible from the Biblebooks table
+	def setScopeByBibleBooks(self):
+		sql = "SELECT systemId FROM Bibles where systemId NOT IN (SELECT systemId FROM BibleBooks)"
+		resultSet = self.db.selectList(sql, ())
+		for item in resultSet:
+			print("ERROR_15 systemId %s has no books" % (item))
+		if len(resultSet) > 0:
+			sys.exit()
+		values = []
+		sql = ("SELECT systemId, mediaType, filePrefix FROM Bibles")
+		resultSet = self.db.select(sql, ())
+		for (systemId, mediaType, filePrefix) in resultSet:
+			print(systemId, mediaType, filePrefix)
+			sql2 = ("SELECT book FROM BibleBooks WHERE systemId=?")
+			bookSet = self.db.selectSet(sql2, (str(systemId),))
+			scopeCode = filePrefix[-4:-3] if len(filePrefix) > 19 else "C"
+			print(scopeCode)
+			ntScope = None
+			otScope = None
+			if scopeCode in {"C", "N", "P"}:
+				ntScope = self.getNewTestamentScope(bookSet)
+			if scopeCode in {"C", "O", "P"}:
+				otScope = self.getOldTestamentScope(bookSet)
+			if scopeCode not in {"C", "N", "O", "P"}:
+				print("ERROR_16 Unexpected type in %s" % (filePrefix))
+				sys.exit()
+			values.append((ntScope, otScope, systemId))			
+		update = "UPDATE Bibles SET ntScope = ?, otScope = ? WHERE systemId = ?"
+		self.db.executeBatch(update, values)
+
+
+	def getNewTestamentScope(self, bookIdSet):
+		ntBooks = bookIdSet.intersection(self.NTBookSet)
+		count = len(ntBooks)
+		if count >= 27:
+			return "NT"
+		elif count >= 0:
+			return "NP"
+		else:
+			return None
+
+
+	def getOldTestamentScope(self, bookIdSet):
+		otBooks = bookIdSet.intersection(self.OTBookSet)
+		count = len(otBooks)
+		if count >= 39:
+			return "OT"
+		elif count >= 0:
+			return "OP"
+		else:
+			return None
+
+
 	def unloadDB(self):
 		print("unloadDB")
 		tables = ["Versions", "VersionLocales", "Bibles", "BibleBooks"]
@@ -715,6 +715,7 @@ class BibleTables:
 			print(places, len(places))
 			sql = "INSERT INTO %s (%s) VALUES (%s)" % (table, ",".join(columns), ",".join(places))
 			self.db.executeBatch(sql, values)
+
 
 
 if __name__ == "__main__":

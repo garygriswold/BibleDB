@@ -37,7 +37,7 @@ class BiblesReport:
 					row.append(loc[0])
 				writer.writerow(row)
 				sql = ("SELECT systemId, mediaType, ntScope, otScope, bucket, filePrefix, fileTemplate, lptsStockNo"
-						" FROM Bibles WHERE versionId=?")
+						" FROM Bibles WHERE versionId=? ORDER BY mediaType, bucket")
 				biblesList = self.db.select(sql, (vers[0],))
 				for bib in biblesList:
 					scope = []

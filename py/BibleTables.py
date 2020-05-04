@@ -661,8 +661,16 @@ class BibleTables:
 		for (systemId, mediaType, filePrefix) in resultSet:
 			sql2 = ("SELECT book FROM BibleBooks WHERE systemId=?")
 			bookSet = self.db.selectSet(sql2, (str(systemId),))
-			ntScope = self.getNewTestamentScope(bookSet)
-			otScope = self.getOldTestamentScope(bookSet)
+			scopeCode = filePrefix[-4:-3] if mediaType == "text" and len(filePrefix) > 19 else "C"
+			ntScope = None
+			otScope = None
+			if scopeCode in {"C", "N", "P"}:
+				ntScope = self.getNewTestamentScope(bookSet)
+			if scopeCode in {"C", "O", "P"}:
+				otScope = self.getOldTestamentScope(bookSet)
+			if scopeCode not in {"C", "N", "O", "P"}:
+				print("FATAL ERROR invalid scope code in %s" % (filePrefix))
+				sys.exit()
 			values.append((ntScope, otScope, systemId))			
 		update = "UPDATE Bibles SET ntScope = ?, otScope = ? WHERE systemId = ?"
 		self.db.executeBatch(update, values)

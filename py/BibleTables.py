@@ -675,7 +675,7 @@ class BibleTables:
 				elif mediaType == "audio":
 					audioSet.append(row)
 				elif mediaType == "drama":
-					audioSet.append(row)
+					dramaSet.append(row)
 			self._removeDups(values, textSet)
 			self._removeDups(values, audioSet)
 			self._removeDups(values, dramaSet)
@@ -686,29 +686,42 @@ class BibleTables:
 
 	def _removeDups(self, values, rows):
 		hasNTOT = False
-		hasNTOnly = False
-		hasOTOnly = False
+		hasNT = False
+		hasOT = False
 		for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
 			if ntScope == None and otScope == None:
 				values.append((systemId,))
 			if ntScope == "NT" and otScope == "OT":
 				hasNTOT = True
-			if ntScope == "NT" and otScope != "OT":
-				hasNTOnly = True
-			if otScope == "OT" and ntScope != "NT":
-				hasOTOnly = True
+			if ntScope == "NT":
+				hasNT = True
+			if otScope == "OT":
+				hasOT = True
 		if hasNTOT:
 			for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
 				if ntScope != "NT" or otScope != "OT":
 					values.append((systemId,))
-		elif hasNTOnly:
-			for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
-				if ntScope == "NP":
-					values.append((systemId,))
-		elif hasOTOnly:
-			for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
-				if otScope != "OP":
-					values.append((systemId,))
+		else:
+			if hasNT:
+				foundNT = False
+				for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
+					if ntScope == "NT":
+						if foundNT:
+					 		values.append((systemId,))
+						else:
+							foundNT = True
+					if ntScope == "NP":
+						values.append((systemId,))
+			if hasOT:
+				foundOT = False
+				for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
+					if otScope == "OT":
+						if foundOT:
+							values.append((systemId,))
+						else:
+							foundOT = True
+					if otScope == "OP":
+						values.append((systemId,))
 		
 
 	def unloadDB(self):

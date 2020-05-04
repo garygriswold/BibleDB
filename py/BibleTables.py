@@ -117,9 +117,10 @@ class BibleTables:
 
 		permittedMap = {}
 		for key, bible in inLptsAndS3Map.items():
-			#if bible.allowAPI or bible.allowApp:
 			if bible.allowAPI:
 				permittedMap[key] = bible
+			elif bible.allowApp or bible.allowWeb:
+				print("ERROR_06 allow App or Web, but not API %s" % (bible.toString()))
 		print("COUNT: IN LPTS IN S3 WITH PERMISSION %d" % (len(permittedMap.keys())))
 
 		shortSandsMap = self.getShortSandsMap()
@@ -194,6 +195,8 @@ class BibleTables:
 								bible.script = "Hant"
 							elif bible.iso3 in {"eng", "ind", "por", "spa"}:
 								bible.script = "Latn"
+							elif bible.iso3 == "arb":
+								bible.script = "Arab"
 							else:
 								print("ERROR_19 script is blank or Hani %s" % (bible.toString()))
 						if bible.bibleId == "HAKTHV":
@@ -287,6 +290,7 @@ class BibleTables:
 					bible.country = country
 					bible.allowApp = True
 					bible.allowAPI = True
+					bible.allowWeb = True
 					if scope == "B":
 						bible.scope = "NTOT"
 					elif scope == "N":
@@ -474,8 +478,8 @@ class BibleTables:
 						nameSet.add(bible.name)
 					if bible.nameLocal != None and bible.nameLocal != "":
 						nameLocalSet.add(bible.nameLocal)
-			if len(versionKeyList) > 1:
-				print("ERROR_17 multiple texts for versionKey=%s." % (versionKey), versionKeyList)
+			#if len(versionKeyList) > 1:
+			#	print("ERROR_17 multiple texts for versionKey=%s." % (versionKey), versionKeyList)
 			iso3 = ":".join(isoSet) if len(isoSet) > 0 else None
 			abbreviation = ":".join(abbrevSet) if len(abbrevSet) > 0 else None
 			script = ":".join(scriptSet) if len(scriptSet) > 0 else None
@@ -725,7 +729,6 @@ class BibleTables:
 		
 
 	def unloadDB(self):
-		print("unloadDB")
 		tables = ["Versions", "VersionLocales", "Bibles", "BibleBooks"]
 		tables.reverse()
 		for table in tables:

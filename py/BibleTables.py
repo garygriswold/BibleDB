@@ -584,9 +584,9 @@ class BibleTables:
 					print("ERROR_?? books not found for %s" % (bible.toString()))
 					sys.exit()
 				else:
-					for (sequence, bookId, chapter) in bookList:
+					for (sequence, bookId, bookName, chapter) in bookList:
 						# ?? Add nameS3 of audio files
-						value = (bible.systemId, bookId, sequence, None, None, chapter)
+						value = (bible.systemId, bookId, sequence, None, bookName, chapter)
 						values.append(value)
 		self.insert("BibleBooks", ("systemId", "book", "sequence",
   				"nameLocal", "nameS3", "numChapters"), values)
@@ -600,7 +600,7 @@ class BibleTables:
 		with open(filename, newline='\n') as csvfile:
 			reader = csv.DictReader(csvfile)
 			for row in reader:
-				key = "%s/%s" % (row["sequence"], row["book_id"])
+				key = "%s/%s/%s" % (row["sequence"], row["book_id"], row["book_name"])
 				chaptStr = row["chapter_start"]
 				if chaptStr.isdigit():
 					chapter = int(chaptStr)
@@ -609,8 +609,8 @@ class BibleTables:
 						results[key] = chapter
 		results2 = []
 		for key, chapter in results.items():
-			(sequence, bookId) = key.split("/")
-			results2.append((sequence, bookId, chapter))
+			(sequence, bookId, bookName) = key.split("/")
+			results2.append((sequence, bookId, bookName, chapter))
 		results3 = sorted(results2, key=lambda tup: tup[0])
 		return results3
 
@@ -640,7 +640,7 @@ class BibleTables:
 			sequence = int(seqStr)
 			key = "%s/%s/%s" % (typeCode, bibleId, filesetId)
 			chapters = results2.get(key, [])
-			chapters.append((sequence, bookId, chapter))
+			chapters.append((sequence, bookId, None, chapter))
 			results2[key] = chapters
 		for key, values in results2.items():
 			results2[key] = sorted(values, key=lambda tup: tup[0])

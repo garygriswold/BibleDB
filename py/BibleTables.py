@@ -279,8 +279,7 @@ class BibleTables:
 			for (bibleZipFile, abbr, iso3, scope, versionPriority, name, englishName,
 				localizedName, textBucket, textId, keyTemplate, 
 				audioBucket, otDamId, ntDamId, ios1, script, country) in reader:
-					bestFileset = self._findBestFileset(textId, otDamId, ntDamId)
-					bibleId = bestFileset.split("/")[1]
+					bibleId = textId.split("/")[1]
 					filesetId = textId.split("/")[2]
 					bible = Bible("SS", "shortsands", "text", bibleId, filesetId)
 					bible.bibleZipFile = bibleZipFile
@@ -303,15 +302,6 @@ class BibleTables:
 					bible.nameLocal = name
 					results[bible.key] = bible
 		return results
-
-
-	def _findBestFileset(self, textId, otDamId, ntDamId):
-		return textId
-		#prefSeq = [ntDamId, otDamId, textId]
-		#for did in (otDamId, ntDamId, textId):
-		#	if did != None and did != "":
-		#		return did
-		#return None # should not happen
 
 
 	def selectWithLocale(self, bibleMap):
@@ -528,11 +518,11 @@ class BibleTables:
 				systemId += 1
 				bible.systemId = systemId
 				value = (bible.systemId, bible.versionId, mediaType, bitrate,
-						bible.bucket, bible.filePrefix, bible.bibleZipFile,
-						bible.lptsStockNo)
+						bible.bucket, bible.filePrefix, bible.fileTemplate, 
+						bible.bibleZipFile, bible.lptsStockNo)
 				values.append(value)
 		self.insert("Bibles", ("systemId","versionId","mediaType", "bitrate",
-			"bucket", "filePrefix", "bibleZipFile", "lptsStockNo"), values)
+			"bucket", "filePrefix", "fileTemplate", "bibleZipFile", "lptsStockNo"), values)
 		## skipping agency, copyrightYear, filenameTemplate
 
 

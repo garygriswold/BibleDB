@@ -144,6 +144,8 @@ class BibleTables:
 		hasTextGroupMap = self.removeNonText(bibleGroupMap) # remove Version w/o text
 		print("COUNT: IN BibleId MAP with TEXT %d" % (len(hasTextGroupMap.keys())))
 
+		self.setfileTemplate(hasTextGroupMap)
+
 		self.insertVersions(hasTextGroupMap)
 		self.insertVersionLocales(hasTextGroupMap)
 		self.insertBibles(hasTextGroupMap)
@@ -437,6 +439,19 @@ class BibleTables:
 		if os.path.isfile(filePath):
 			return filePath
 		return None
+
+
+	def setfileTemplate(self, bibleIdMap):
+		for versionKey, bibles in bibleIdMap.items():
+			for bible in bibles:
+				if bible.fileTemplate == None:
+					if bible.typeCode == "text":
+						bible.fileTemplate = "%I_%O_%B_%C.html"
+					elif bible.typeCode == "audio":
+						bible.fileTemplate = "%O__%C_%N_%I10.mp3"
+					elif bible.typeCode == "video":
+						bible.fileTemplate = "%L_%B_%C-%VS-%VS_av%Rp.m3u8"
+				
 
 
 	def insertVersions(self, bibleIdMap):

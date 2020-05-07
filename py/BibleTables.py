@@ -696,59 +696,44 @@ class BibleTables:
 
 	def _removeDups(self, values, rows):
 		hasNTOT = False
-		#hasNTOTNotC = False
 		hasNT = False
 		hasOT = False
 		for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
 			if ntScope == "NT" and otScope == "OT":
 				hasNTOT = True
-				#if filePrefix[-4:-3] == "C":
-					#hasNTOTC = True
-				#else:
-				#	hasNTOTNotC = True
-			if ntScope == "NT":# and otScope != "OT":
+			if ntScope == "NT":
 				hasNT = True
-			if otScope == "OT":# and ntScope != "NT":
+			if otScope == "OT":
 				hasOT = True
 
-		print("hasNTOT", hasNTOT, "hasNT", hasNT, "hasOT", hasOT)
 		foundNT = False
 		foundOT = False
 		for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
-			print("TRY", ntScope, otScope, filePrefix)
 			if ntScope == None and otScope == None:
-				print("DELETE on null scope", filePrefix)
 				values.append((systemId,))
 			elif ntScope == "NT" and otScope == "OT":
 				if len(filePrefix) > 19 and filePrefix[-4:-3] == "C":
-					print("DELETE on DUP C", filePrefix)
 					values.append((systemId,))
-				#else:
 				elif foundNT and foundOT:
-					print("DELETE DUP NT-OT", filePrefix)
 					values.append((systemId,))
 				else:
 					foundNT = True
 					foundOT = True
 			elif ntScope == "NT":
 				if foundNT:
-					print("DELETE DUP NT", filePrefix)
 					values.append((systemId,))
 				else:
 					foundNT = True
 			elif ntScope == "NP":
 				if hasNT:
-					print("DELETE NP, because have NT", filePrefix)
 					values.append((systemId,))					
 			elif otScope == "OT":
 				if foundOT:
-					print("DELETE DUP OT", filePrefix)
 					values.append((systemId,))
 				else:
 					foundOT = True
 			elif otScope == "OP":
 				if hasOT:
-					print("DELETE OP, because have OT", filePrefix)
 					values.append((systemId,))
 
 

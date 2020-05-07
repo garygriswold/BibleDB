@@ -723,6 +723,10 @@ class BibleTables:
 				if len(filePrefix) > 19 and filePrefix[-4:-3] == "C":
 					print("DELETE on DUP C", filePrefix)
 					values.append((systemId,))
+				#else:
+				elif foundNT and foundOT:
+					print("DELETE DUP NT-OT", filePrefix)
+					values.append((systemId,))
 				else:
 					foundNT = True
 					foundOT = True

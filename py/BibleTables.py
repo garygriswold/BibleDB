@@ -446,11 +446,19 @@ class BibleTables:
 			for bible in bibles:
 				if bible.fileTemplate == None:
 					if bible.typeCode == "text":
-						bible.fileTemplate = "%I_%O_%B_%C.html"
+						if bible.s3Key == "text/CMNUNV/CHNUNV":
+							bible.fileTemplate = "CMNUNV_%O_%B_%C.html"
+						elif bible.s3Key == "text/KORKRV/KORKRV":
+							bible.fileTemplate = "KKNKRV_%O_%B_%C.html"
+						else:
+							bible.fileTemplate = "%I_%O_%B_%C.html"
 					elif bible.typeCode == "audio":
-						bible.fileTemplate = "%O__%C_%N_%I10.mp3"
+						if bible.filePrefix == "audio/ZLMTMV/MLYBSMN2DA":
+							bible.fileTemplate = "%O__%c_%N%U%___N2MLYBSM.mp3"
+						else:
+							bible.fileTemplate = "%O__%c_%N%U%I.mp3"
 					elif bible.typeCode == "video":
-						bible.fileTemplate = "%L_%B_%C-%VS-%VS_av%Rp.m3u8"
+						bible.fileTemplate = "%L_%B_%C-%S-%E_av%Rp.m3u8"
 				
 
 

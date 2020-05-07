@@ -17,6 +17,7 @@ data
 py
 	BiblesReport.py
 	BibleTables.py
+	BibleValidate.py
 	Config.py
 	DownloadInfo.py
 	LanguagesTable.py

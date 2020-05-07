@@ -156,7 +156,8 @@ CREATE INDEX script_code_idx ON Scripts(iso);
 DROP TABLE IF EXISTS Books;
 CREATE TABLE Books ( -- This is needed as an integrity constraint
   usfm3 TEXT NOT NULL PRIMARY KEY,
-  sequenceNum INT NOT NULL,
+  usfm2 TEXT NULL,
+  sequence INT NOT NULL,
   name TEXT NOT NULL);
 
 DROP TABLE IF EXISTS Agencies;

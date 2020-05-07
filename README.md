@@ -5,6 +5,8 @@ This code builds a "Card Catalog" database of a library of text, audio, and vide
 This is a list of active files used by this project:
 
 data
+	iso-639-3 (directory)
+	KOGVideo (directory)
 	AppleLang.txt - keep only for historical reasons
 	AppleLang2020.txt
 	Region.txt
@@ -13,15 +15,15 @@ data
 	USFMBookCodes.txt
 
 py
-	BibleTables.py
 	BiblesReport.py
+	BibleTables.py
 	Config.py
 	DownloadInfo.py
 	LanguagesTable.py
 	ListBucket.py
-	LPTSExtractReader.py
 	LocalesTable.py
-	LookupTables.py (only needed if getting script from LPTS)
+	LPTSExtractReader.py
+	LookupTables.py
 	NumeralsTable.py
 	SqliteUtility.py
 	TestUnicode.py

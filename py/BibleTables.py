@@ -674,8 +674,9 @@ class BibleTables:
 			textSet = []
 			audioSet = []
 			dramaSet = []
+			# ORDER BY insures that text-shortsands is first
 			sql = ("SELECT systemId, mediaType, ntScope, otScope, filePrefix"
-				" FROM Bibles WHERE versionId = ?")
+				" FROM Bibles WHERE versionId = ? ORDER BY bucket desc")
 			resultSet = self.db.select(sql, (versionId,))
 			for row in resultSet:
 				mediaType = row[1]
@@ -695,43 +696,57 @@ class BibleTables:
 
 	def _removeDups(self, values, rows):
 		hasNTOT = False
+		#hasNTOTNotC = False
 		hasNT = False
 		hasOT = False
 		for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
-			if ntScope == None and otScope == None:
-				values.append((systemId,))
 			if ntScope == "NT" and otScope == "OT":
 				hasNTOT = True
-			if ntScope == "NT":
+				#if filePrefix[-4:-3] == "C":
+					#hasNTOTC = True
+				#else:
+				#	hasNTOTNotC = True
+			if ntScope == "NT":# and otScope != "OT":
 				hasNT = True
-			if otScope == "OT":
+			if otScope == "OT":# and ntScope != "NT":
 				hasOT = True
-		if hasNTOT:
-			for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
-				if ntScope != "NT" or otScope != "OT":
+
+		print("hasNTOT", hasNTOT, "hasNT", hasNT, "hasOT", hasOT)
+		foundNT = False
+		foundOT = False
+		for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
+			print("TRY", ntScope, otScope, filePrefix)
+			if ntScope == None and otScope == None:
+				print("DELETE on null scope", filePrefix)
+				values.append((systemId,))
+			elif ntScope == "NT" and otScope == "OT":
+				if len(filePrefix) > 19 and filePrefix[-4:-3] == "C":
+					print("DELETE on DUP C", filePrefix)
 					values.append((systemId,))
-		else:
-			if hasNT:
-				foundNT = False
-				for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
-					if ntScope == "NT":
-						if foundNT:
-					 		values.append((systemId,))
-						else:
-							foundNT = True
-					if ntScope == "NP":
-						values.append((systemId,))
-			if hasOT:
-				foundOT = False
-				for (systemId, mediaType, ntScope, otScope, filePrefix) in rows:
-					if otScope == "OT":
-						if foundOT:
-							values.append((systemId,))
-						else:
-							foundOT = True
-					if otScope == "OP":
-						values.append((systemId,))
-		
+				else:
+					foundNT = True
+					foundOT = True
+			elif ntScope == "NT":
+				if foundNT:
+					print("DELETE DUP NT", filePrefix)
+					values.append((systemId,))
+				else:
+					foundNT = True
+			elif ntScope == "NP":
+				if hasNT:
+					print("DELETE NP, because have NT", filePrefix)
+					values.append((systemId,))					
+			elif otScope == "OT":
+				if foundOT:
+					print("DELETE DUP OT", filePrefix)
+					values.append((systemId,))
+				else:
+					foundOT = True
+			elif otScope == "OP":
+				if hasOT:
+					print("DELETE OP, because have OT", filePrefix)
+					values.append((systemId,))
+
 
 	def unloadDB(self):
 		tables = ["Versions", "VersionLocales", "Bibles", "BibleBooks"]

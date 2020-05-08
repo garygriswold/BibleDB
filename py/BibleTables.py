@@ -442,21 +442,31 @@ class BibleTables:
 
 
 	def setfileTemplate(self, bibleIdMap):
+		textMap = {"text/CMNUNV/CHNUNV": "CMNUNV_%O_%B_%C.html",
+					"text/KORKRV/KORKRV": "KKNKRV_%O_%B_%C.html"}
+		audioMap = {"audio/CMNUN1/CHNUN1O1DA": "%O__%c_%N%UCHNUNVO1DA.mp3",
+					"audio/CMNUN1/CHNUN1O2DA": "%O__%c_%N%UCHNUNVO2DA.mp3",
+					"audio/DIVWYI/DIVWYIP1DA": "%O__%c_%N%u%I.mp3",
+					"audio/FRNTLS/FRNTLSN2DA": "%O__%c_%N%U__N2FRATLS.mp3",
+					"audio/FRNTLS/FRNTLSO2DA": "%O__%c_%N%U__O2FRATLS.mp3",
+					"audio/INDASV/INDASVN2DA": "%O__%c_%N%u%I.mp3",
+					"audio/KMRKLA/KM1KLAN1DA": "%O__%c_%N%UKMRKLAN1DA.mp3",
+					"audio/KMRKLA/KM1KLAN2DA": "%O__%c_%N%UKMRKLAN2DA.mp3",
+					"audio/KMRMBN/KM2IBTN2DA": "%O__%c_%N%U__N2KMRIBT.mp3",
+					"audio/KMRMBN/KM2IBTN1DA": "%O__%c_%N%U__N1KMRIBT.mp3",
+					"audio/KMRMBN/KM2IBTP1DA": "%O__%c_%N%UKMRIBTP1DA.mp3",
+					"audio/PESNMV09/PESNMVP1DA": "%O__%c_%N%u%I.mp3",
+					"audio/PRSGNN/PRSGNNN2DA": "%O__%c_%N%U__N2PRSGNN.mp3",
+					"audio/SWESFV/SWESFVO1DA": "%O__%c_%N%USWESFBO1DA.mp3",
+					"audio/SWESFV/SWESFVO2DA": "%O__%c_%N%USWESFBO2DA.mp3",
+					"audio/ZLMTMV/MLYBSMN2DA": "%O__%c_%N%U%___N2MLYBSM.mp3"}
 		for versionKey, bibles in bibleIdMap.items():
 			for bible in bibles:
 				if bible.fileTemplate == None:
 					if bible.typeCode == "text":
-						if bible.s3Key == "text/CMNUNV/CHNUNV":
-							bible.fileTemplate = "CMNUNV_%O_%B_%C.html"
-						elif bible.s3Key == "text/KORKRV/KORKRV":
-							bible.fileTemplate = "KKNKRV_%O_%B_%C.html"
-						else:
-							bible.fileTemplate = "%I_%O_%B_%C.html"
+						bible.fileTemplate = textMap.get(bible.s3Key, "%I_%O_%B_%C.html")
 					elif bible.typeCode == "audio":
-						if bible.filePrefix == "audio/ZLMTMV/MLYBSMN2DA":
-							bible.fileTemplate = "%O__%c_%N%U%___N2MLYBSM.mp3"
-						else:
-							bible.fileTemplate = "%O__%c_%N%U%I.mp3"
+						bible.fileTemplate = audioMap.get(bible.s3Key, "%O__%c_%N%U%I.mp3")
 					elif bible.typeCode == "video":
 						bible.fileTemplate = "%L_%B_%C-%S-%E_av%Rp.m3u8"
 				

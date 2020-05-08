@@ -12,11 +12,19 @@ class SqliteUtility:
 
 	def __init__(self, config):
 		self.conn = sqlite3.connect(config.VERSIONS_DATABASE)
+		self.setForeignKeyConstraint(True)
 
 	def close(self):
 		if self.conn != None:
 			self.conn.close()
 			self.conn = None
+
+
+	def setForeignKeyConstraint(self, onOff):
+		if onOff:
+			self.execute("PRAGMA foreign_keys = ON", ())
+		else:
+			self.execute("PRAGMA foreign_keys = OFF", ())
 
 
 	def execute(self, statement, values):

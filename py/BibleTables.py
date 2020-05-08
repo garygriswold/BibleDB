@@ -699,8 +699,10 @@ class BibleTables:
 			self._removeDups(values, textSet)
 			self._removeDups(values, audioSet)
 			self._removeDups(values, dramaSet)
-		delete = "DELETE FROM Bibles WHERE systemId = ?"
-		self.db.executeBatch(delete, values)
+		delete1 = "DELETE FROM BibleBooks WHERE systemId = ?"
+		self.db.executeBatch(delete1, values)
+		delete2 = "DELETE FROM Bibles WHERE systemId = ?"
+		self.db.executeBatch(delete2, values)
 		return len(values)
 
 

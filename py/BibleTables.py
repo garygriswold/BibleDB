@@ -27,16 +27,18 @@ class Bible:
 		self.typeCode = typeCode # text | audio | video
 		self.bibleId = bibleId
 		self.filesetId = filesetId
-		self.key = "%s/%s/%s" % (typeCode, bibleId, filesetId)
-		if typeCode == "text":
-			self.s3Key = "%s/%s/%s" % (typeCode, bibleId, filesetId[:6])
-		else:
-			self.s3Key = self.key
 		abbrev = filesetId[3:6]
 		if abbrev == "WTC":
 			self.abbreviation = "ERV"
 		else:
 			self.abbreviation = abbrev
+		self.bucket = None
+		self.filePrefix = "%s/%s/%s" % (typeCode, bibleId, filesetId)
+		if typeCode == "text":
+			self.s3Key = "%s/%s/%s" % (typeCode, bibleId, filesetId[:6])
+		else:
+			self.s3Key = self.filePrefix
+		self.fileTemplate = None
 		self.lptsStockNo = None
 		self.iso3 = None
 		self.script = None
@@ -46,9 +48,6 @@ class Bible:
 		self.allowWeb = False
 		self.locales = []
 		self.priority = 0
-		self.bucket = None
-		self.filePrefix = None
-		self.fileTemplate = None
 		## Text only data
 		self.name = None
 		self.nameLocal = None
@@ -65,7 +64,7 @@ class Bible:
 			permiss.append("web")
 		allow = " ".join(permiss)
 		locales = "locales: %s" % (",".join(self.locales))
-		return "%s, src=%s, allow:%s, %s_%s_%s, %s" % (self.key, self.srcType, allow, self.iso3, self.script, self.country, locales)
+		return "%s, src=%s, allow:%s, %s_%s_%s, %s" % (self.filePrefix, self.srcType, allow, self.iso3, self.script, self.country, locales)
 
 
 class BibleTables:
@@ -207,7 +206,6 @@ class BibleTables:
 							bible.bucket = self.config.S3_DBP_VIDEO_BUCKET
 						else:
 							bible.bucket = self.config.S3_DBP_BUCKET
-						bible.filePrefix = bible.key
 						if typeCode == "text":
 							bible.allowAPI = (lptsRec.APIDevText() == "-1")
 							bible.allowApp = (lptsRec.MobileText() == "-1")
@@ -224,10 +222,10 @@ class BibleTables:
 							bible.name = lptsRec.Version()
 							if bible.name == None or bible.name == "":
 								bible.name = lptsRec.Volumne_Name()
-						if results.get(bible.key) != None:
-							print("ERROR_01 Duplicate Key in LPTS %s" % (bible.key))
+						if results.get(bible.filePrefix) != None:
+							print("ERROR_01 Duplicate Key in LPTS %s" % (bible.filePrefix))
 						else:
-							results[bible.key] = bible
+							results[bible.filePrefix] = bible
 		return results
 
 
@@ -242,10 +240,10 @@ class BibleTables:
 				(typeCode, bibleId, filesetId) = filename.split("_")
 				if not filesetId.endswith("16"):
 					bible = Bible("s3", filename, typeCode, bibleId, filesetId)
-					if results.get(bible.key) != None:
-						print("ERROR_02 Duplicate Key in bucket %s" % (bible.key))
+					if results.get(bible.filePrefix) != None:
+						print("ERROR_02 Duplicate Key in bucket %s" % (bible.filePrefix))
 					else:
-						results[bible.key] = bible
+						results[bible.filePrefix] = bible
 		return results
 
 
@@ -260,7 +258,7 @@ class BibleTables:
 			secBible = secondaryS3Map.get(primS3Key)
 			if secBible == None:
 				missingCount += 1
-				print(errMsg % (primBible.key))
+				print(errMsg % (primBible.filePrefix))
 		print(countMsg % (missingCount))
 
 
@@ -270,7 +268,7 @@ class BibleTables:
 			lptsKey = lptsBible.s3Key
 			s3Bible = s3Map.get(lptsKey)
 			if s3Bible != None:
-				results[lptsBible.key] = lptsBible
+				results[lptsBible.filePrefix] = lptsBible
 		return results
 
 
@@ -302,7 +300,7 @@ class BibleTables:
 					bible.fileTemplate = keyTemplate
 					bible.name = englishName
 					bible.nameLocal = name
-					results[bible.key] = bible
+					results[bible.filePrefix] = bible
 		return results
 
 
@@ -488,7 +486,7 @@ class BibleTables:
 			for bible in bibleIdMap[versionKey]:
 				bible.versionId = versionId
 				if bible.typeCode == "text":
-					versionKeyList.append(bible.key)
+					versionKeyList.append(bible.filePrefix)
 					isoSet.add(bible.iso3)
 					abbrevSet.add(bible.abbreviation)
 					if bible.script != None:
@@ -501,8 +499,6 @@ class BibleTables:
 						nameSet.add(bible.name)
 					if bible.nameLocal != None and bible.nameLocal != "":
 						nameLocalSet.add(bible.nameLocal)
-			#if len(versionKeyList) > 1:
-			#	print("ERROR_17 multiple texts for versionKey=%s." % (versionKey), versionKeyList)
 			iso3 = ":".join(isoSet) if len(isoSet) > 0 else None
 			abbreviation = ":".join(abbrevSet) if len(abbrevSet) > 0 else None
 			script = ":".join(scriptSet) if len(scriptSet) > 0 else None
@@ -564,16 +560,15 @@ class BibleTables:
 		values = []
 		for versionKey in sorted(bibleIdMap.keys()):
 			for bible in bibleIdMap[versionKey]:
-				bookList = shortSandsBookMap.get(bible.key)
+				bookList = shortSandsBookMap.get(bible.filePrefix)
 				if bookList == None:
 					bookList = self.readCVSFileBooks(bible)
 				if bookList == None:
 					print("ERROR_?? books not found for %s" % (bible.toString()))
 					sys.exit()
 				else:
-					for (sequence, bookId, bookName, chapter) in bookList:
-						# ?? Add nameS3 of audio files
-						value = (bible.systemId, bookId, sequence, None, bookName, chapter)
+					for (sequence, bookId, nameS3, chapter) in bookList:
+						value = (bible.systemId, bookId, sequence, None, nameS3, chapter)
 						values.append(value)
 		self.insert("BibleBooks", ("systemId", "book", "sequence",
   				"nameLocal", "nameS3", "numChapters"), values)

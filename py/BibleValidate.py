@@ -3,6 +3,7 @@
 
 import io
 import os
+import csv
 from Config import *
 from SqliteUtility import *
 
@@ -33,6 +34,7 @@ class BibleValidate:
 	def loadBuckets(self):
 		self.dbpProdBucket = self.loadOneBucket(config.S3_DBP_BUCKET)
 		self.shortSandsBucket = self.loadOneBucket(config.S3_MY_BUCKET)
+		self.videoBucket = self.loadOneBucket("dbp-vid-m3u8") # extraction of dbp-vid.txt
 
 
 	def loadOneBucket(self, bucketName):
@@ -52,22 +54,31 @@ class BibleValidate:
 		sql = "SELECT systemId, mediaType, bucket, filePrefix, fileTemplate, bibleZipFile FROM Bibles ORDER BY systemId"
 		resultSet = db.select(sql, ())
 		for (systemId, mediaType, bucket, filePrefix, fileTemplate, bibleZipFile) in resultSet:
-			sql = "SELECT book, sequence, nameS3, numChapters FROM BibleBooks WHERE systemId = ? ORDER BY sequence"
-			results = db.select(sql, (systemId,))
-			for (bookId, sequence, nameS3, numChapters) in results:
-				reference = Reference(filePrefix, fileTemplate, bookId, sequence, nameS3, numChapters)
-				print(reference.toString())
-				fullName = self.getFilename(reference)
-				#print("out", fullName)
-				if bucket == config.S3_DBP_BUCKET:
-					if fullName not in self.dbpProdBucket:
-						print("ERROR NOT FOUND in dbp-prod", fullName)
-				elif bucket == config.S3_MY_BUCKET:
-					if fullName not in self.shortSandsBucket:
-						print("ERROR NOT FOUND in text-shortsands", fullName)
-
-				#if not fullName in filenameSet:
-				#	print("ERROR: missing file %s " % (fullName))
+			if mediaType != "video":
+				sql = "SELECT book, sequence, nameS3, numChapters FROM BibleBooks WHERE systemId = ? ORDER BY sequence"
+				results = db.select(sql, (systemId,))
+				for (bookId, sequence, nameS3, numChapters) in results:
+					for chapter in range(1, numChapters + 1):
+						reference = Reference(filePrefix, fileTemplate, bookId, sequence, nameS3, chapter)
+						#print(reference.toString())
+						fullName = self.getFilename(reference)
+						#print("out", fullName)
+						if bucket == config.S3_DBP_BUCKET:
+							if fullName not in self.dbpProdBucket:
+								print("ERROR NOT FOUND in dbp-prod", fullName)
+						elif bucket == config.S3_MY_BUCKET:
+							if fullName not in self.shortSandsBucket:
+								print("ERROR NOT FOUND in text-shortsands", fullName)
+			else:
+				filename = self.config.DIRECTORY_ACCEPTED + filePrefix.replace("/", "_") + ".csv"
+				with open(filename, newline='\n') as csvfile:
+					reader = csv.DictReader(csvfile)
+					for row in reader:
+						file = row["file_name"].split(".")[0]
+						for fileType in ["_av720p.m3u8", "_av480p.m3u8", "_stream.m3u8"]:
+							fullName = filePrefix + "/" + file + fileType
+							if fullName not in self.videoBucket:
+								print("ERROR NOT FOUND in dbp-vid", fullName)
 
 
 	def getFilename(self, reference):

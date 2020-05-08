@@ -457,7 +457,7 @@ class BibleTables:
 					"audio/PRSGNN/PRSGNNN2DA": "%O__%c_%N%U__N2PRSGNN.mp3",
 					"audio/SWESFV/SWESFVO1DA": "%O__%c_%N%USWESFBO1DA.mp3",
 					"audio/SWESFV/SWESFVO2DA": "%O__%c_%N%USWESFBO2DA.mp3",
-					"audio/ZLMTMV/MLYBSMN2DA": "%O__%c_%N%U%___N2MLYBSM.mp3"}
+					"audio/ZLMTMV/MLYBSMN2DA": "%O__%c_%N%U__N2MLYBSM.mp3"}
 		for versionKey, bibles in bibleIdMap.items():
 			for bible in bibles:
 				if bible.fileTemplate == None:
@@ -465,9 +465,6 @@ class BibleTables:
 						bible.fileTemplate = textMap.get(bible.s3Key, "%I_%O_%B_%C.html")
 					elif bible.typeCode == "audio":
 						bible.fileTemplate = audioMap.get(bible.s3Key, "%O__%c_%N%U%I.mp3")
-					elif bible.typeCode == "video":
-						bible.fileTemplate = "%L_%B_%C-%S-%E_av%Rp.m3u8"
-				
 
 
 	def insertVersions(self, bibleIdMap):

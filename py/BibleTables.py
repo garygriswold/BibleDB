@@ -48,6 +48,8 @@ class Bible:
 		self.allowWeb = False
 		self.locales = []
 		self.priority = 0
+		self.licensorName = None
+		self.agencyUid = None
 		## Text only data
 		self.name = None
 		self.nameLocal = None
@@ -145,6 +147,7 @@ class BibleTables:
 
 		self.setfileTemplate(hasTextGroupMap)
 
+		self.insertAgencies(hasTextGroupMap)
 		self.insertVersions(hasTextGroupMap)
 		self.insertVersionLocales(hasTextGroupMap)
 		self.insertBibles(hasTextGroupMap)
@@ -210,14 +213,17 @@ class BibleTables:
 							bible.allowAPI = (lptsRec.APIDevText() == "-1")
 							bible.allowApp = (lptsRec.MobileText() == "-1")
 							bible.allowWeb = (lptsRec.HubText() == "-1")
+							bible.licensorName = lptsRec.Licensor()
 						elif typeCode == "audio":
 							bible.allowAPI = (lptsRec.APIDevAudio() == "-1")
 							bible.allowApp = (lptsRec.DBPMobile() == "-1")
 							bible.allowWeb = (lptsRec.DBPWebHub() == "-1")
+							bible.licensorName = "Hosanna"
 						elif typeCode == "video":
 							bible.allowAPI = (lptsRec.APIDevVideo() == "-1")
 							bible.allowApp = (lptsRec.MobileVideo() == "-1")
 							bible.allowWeb = (lptsRec.WebHubVideo() == "-1")
+							bible.licensorName = "LUMO Film Project"
 						if typeCode == "text":
 							bible.name = lptsRec.Version()
 							if bible.name == None or bible.name == "":
@@ -300,6 +306,14 @@ class BibleTables:
 					bible.fileTemplate = keyTemplate
 					bible.name = englishName
 					bible.nameLocal = name
+					if abbr in {"WTC", "ERV", "ERU"}:
+						bible.licensorName = "Bible League International"
+					elif abbr == "NMV":
+						bible.licensorName = "Elam Ministries"
+					elif abbr == "VDV":
+						bible.licensorName = "Egypt, Bible Society of"
+					elif abbr in {"KJV", "WEB"}:
+						bible.licensorName = "Public Domain"
 					results[bible.filePrefix] = bible
 		return results
 
@@ -467,6 +481,24 @@ class BibleTables:
 						bible.fileTemplate = audioMap.get(bible.s3Key, "%O__%c_%N%U%I.mp3")
 
 
+	def insertAgencies(self, bibleIdMap):
+		licensorNameMap = {}
+		nextAgencyUid = 1 # This is a temporary assignment, must get from DBL
+		for versionKey in bibleIdMap.keys():
+			for bible in bibleIdMap[versionKey]:
+				if bible.licensorName != None:
+					agencyUid = licensorNameMap.get(bible.licensorName)
+					if agencyUid == None:
+						agencyUid = nextAgencyUid
+						nextAgencyUid += 1
+						licensorNameMap[bible.licensorName] = agencyUid
+					bible.agencyUid = agencyUid
+		values = []
+		for (name, uid) in licensorNameMap.items():
+			values.append((uid, "licensor", name))
+		self.insert("Agencies", ("uid", "type", "name"), values)
+
+
 	def insertVersions(self, bibleIdMap):
 		values = []
 		versionId = 0
@@ -543,13 +575,13 @@ class BibleTables:
 						bitrate = 64
 				systemId += 1
 				bible.systemId = systemId
-				value = (bible.systemId, bible.versionId, mediaType, bitrate,
+				value = (bible.systemId, bible.versionId, mediaType, bitrate, bible.agencyUid,
 						bible.bucket, bible.filePrefix, bible.fileTemplate, 
 						bible.bibleZipFile, bible.lptsStockNo)
 				values.append(value)
-		self.insert("Bibles", ("systemId","versionId","mediaType", "bitrate",
+		self.insert("Bibles", ("systemId","versionId","mediaType", "bitrate", "agencyUid",
 			"bucket", "filePrefix", "fileTemplate", "bibleZipFile", "lptsStockNo"), values)
-		## skipping agency, copyrightYear, filenameTemplate
+		## copyrightYear, 
 
 
 	def insertBibleBooks(self, bibleIdMap):
@@ -750,7 +782,7 @@ class BibleTables:
 
 
 	def unloadDB(self):
-		tables = ["Versions", "VersionLocales", "Bibles", "BibleBooks"]
+		tables = ["Agencies", "Versions", "VersionLocales", "Bibles", "BibleBooks"]
 		tables.reverse()
 		for table in tables:
 			self.db.execute("DELETE FROM %s" % (table), ())

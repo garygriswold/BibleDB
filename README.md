@@ -19,6 +19,7 @@ py
 	BibleTables.py
 	BibleValidate.py
 	Config.py
+	DownloadFile.py
 	DownloadInfo.py
 	LanguagesTable.py
 	ListBucket.py

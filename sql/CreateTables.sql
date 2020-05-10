@@ -163,9 +163,11 @@ CREATE TABLE Books ( -- This is needed as an integrity constraint
 DROP TABLE IF EXISTS Agencies;
 CREATE TABLE Agencies ( -- I think my only source for this is DBP API
   uid TEXT PRIMARY KEY NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('rightsHolder', 'contributor')),
+  --- licensor is a LPTS field, rightsholder, contributor are 
+  type TEXT NOT NULL CHECK (type IN ('rightsHolder', 'contributor', 'licensor')),
+  abbr TEXT NULL,
   name TEXT NOT NULL,
-  nameLocal TEXT NOT NULL, -- I don't know if DBL has this
+  nameLocal TEXT NULL, -- I don't know if DBL has this, or LPTS either
   url TEXT NULL); 
   -- copyright_msg TEXT NOT NULL); -- what about the text:, audio:, video: copyright message
   -- could we have a message without preceeding copyright symbols. so that we prepend
@@ -202,7 +204,7 @@ CREATE TABLE Bibles (
   ntScope TEXT NULL CHECK (ntScope IN ('NT', 'NP')),
   otScope TEXT NULL CHECK (otScope IN ('OT', 'OP')),
   bitrate INT NULL CHECK (bitrate IN (16, 32, 64, 128)),
-  agency TEXT NULL, -- should be NOT NULL, but source unknown
+  agencyUid TEXT NULL, -- should be NOT NULL, but source unknown
   copyrightYear INT NULL, -- should be NOT NULL, but source unknown
   bucket TEXT NOT NULL,
   filePrefix TEXT NOT NULL,

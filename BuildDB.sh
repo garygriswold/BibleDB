@@ -19,83 +19,18 @@ time python3 load/Validate.py test bucketlists
 cd $BIBLE_DB_PROJ
 time python3 py/BibleTables.py dev > bibleTables.out
 
-# Correct chinese script codes
-###### This must be done inside BibleTables
-sqlite3 Versions.db <<END_SQL1
-update Versions set script='Hans' where bibleId='CMNUN1';
-update Versions set script='Hant' where bibleId='CMNUNV';
-update Versions set script='Hant' where bibleId='YUEUNV';
-select * from Versions where Script in ('Hani', 'Hans','Hant');
-END_SQL1
+time python3 py/BiblesReport.py dev > biblesReport.out
+
+# Validate Bible Table keys against bucket contents
+time python3 py/BibleValidate.py dev > bibleValidate.out
+grep ERROR bibleValidate.out
 
 exit
 
 
-# Remove script when it is not needed.
-# In order that Language and Bible can match on iso1/script,
-# the Bible table must include script for those languages
-# where it is appropriate, and it must exclude script for
-# all languages where it is not appropriate
-sqlite Versions.db <<END_SQL
--- change all null script to be zero length string
-update Bible set script='' where script is null;
--- delete script for those that should not have one
-update Bible set script='' where iso1 not in (select iso1 from Language where script != '');
--- select those that must have a script
-select bibleId, script from Bible where iso1 in (select iso1 from Language where script != '') order by bibleId;
--- double check results are the same
-select bibleId, script from Bible where script != '' order by bibleId;
--- correct script codes that are in error
-update Bible set script='Arab' where bibleId='AZBEMV';
-update Bible set script='Latn' where bibleId='AZEBSA'; -- must check text to be sure
-update Bible set script='Hans' where bibleId='CMNUNV';
-update Bible set script='Hans' where bibleId='ERV-CMN.db';
-update Bible set script='Guru' where bibleId='ERV-PAN.db';
-update Bible set script='Cyrl' where bibleId='ERV-SRP.db';
-update Bible set script='Arab' where bibleId='UZNIBT';
-update Bible set script='Latn' where bibleId='XMMLAI';
-update Bible set script='Hant' where bibleId='YUEUNV';
-update Bible set script='Arab' where bibleId='ZLMAVB';
-update Bible set script='Arab' where bibleId='ZLMTMV';
-
-DROP TABLE IF EXISTS Owner;
-DROP TABLE IF EXISTS Region;
-END_SQL
-
-# Add Owner table
-sqlite Versions.db < sql/copied_owner.sql
-
-# Add Region table for AWS to know SS Regions
-sqlite Versions.db < sql/copied_region.sql
-
-# Validate Bible Table keys against dbp-prod bucket
-python py/BibleValidate.py
-
-# Remove from Bible any versions that do not have text, or audio
-sqlite Versions.db <<END_SQL2
-delete from Bible where bibleId='ASABST';
-delete from Bible where bibleId='QUJPMC';
-delete from Bible where bibleId='TURTBS';
-delete from Bible where bibleId='YADTBL';
-
-update Bible set textId='text/CMNUNV/CMNUNV' where bibleId='CMNUNV'; -- hack 
-END_SQL2
-
-# Repeat Validate Bible Table keys against dbp-prod bucket
-python py/BibleValidate.py
-
 # Validate the lookup of info.json files and the last chapter.
 # This can be run after permission has been granted.
 python py/BibleValidate2.py
-
-# Patch some with bad entries
-# All downloadable Bibles should come from text-%R-shortsands
-sqlite Versions.db <<END_SQL3
--- INSERT INTO Bible (bibleId, abbr, iso3, name, englishName, textBucket, textId, keyTemplate, audioBucket, otDamId, ntDamId) VALUES 
--- ('KMRIBT', 'IBT', 'kmr', 'Încîl Mizgînî', 'Kurmanji Kurdish New Testament (Latin)', 'dbp-prod', 'KM2IBT', '%I_%O_%B_%C.html', 'dbp-prod', null, 'KMRIBTN2DA');
--- select count(*) from Bible;
--- vacuum;
-END_SQL3
 
 # Create A Copy of DB before Deletions
 cp Versions.db VersionsFull.db
@@ -141,18 +76,6 @@ select count(*) from Language;
 vacuum;
 END_SQL
 
-# Make any needed country code corrections, although it is not used at this time
-sqlite Versions.db <<END_SQL4
-update Bible set country='RU' where bibleId='ERV-RUS.db';
-update Bible set country='IR' where bibleId='NMV.db';
-update Bible set country='GB' where bibleId='KJVPD.db';
-update Bible set country='ES' where bibleId='ERV-SPA.db';
-
-delete from Bible where bibleId='ENGESV'; -- my ENGESV.db was there first, and must remain
-END_SQL4
-
-# Run a final validation to make sure that problems are removed
-python py/BibleValidate.py
 
 # Verify the permissions request file
 python py/FinishPermissionRequest.py

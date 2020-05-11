@@ -21,6 +21,7 @@ py
 	Config.py
 	DownloadFile.py
 	DownloadInfo.py
+	GenPermissionRequest.py
 	LanguagesTable.py
 	ListBucket.py
 	LocalesTable.py

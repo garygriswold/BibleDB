@@ -25,6 +25,9 @@ time python3 py/BiblesReport.py dev > biblesReport.out
 time python3 py/BibleValidate.py dev > bibleValidate.out
 grep ERROR bibleValidate.out
 
+# Generate PermissionsRequest.txt
+time python3 py/GenPermissionsRequest.py dev
+
 exit
 
 
@@ -75,10 +78,6 @@ and iso1 || script not in (select iso1 || script from Bible);
 select count(*) from Language;
 vacuum;
 END_SQL
-
-
-# Verify the permissions request file
-python py/FinishPermissionRequest.py
 
 # Validate the lookup of info.json files and the last chapter
 python py/BibleValidate2.py

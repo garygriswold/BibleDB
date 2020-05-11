@@ -130,8 +130,11 @@ class BibleTables:
 		for key, bible in shortSandsMap.items():
 			permittedBible = permittedMap.get(key)
 			if permittedBible != None:
-				print("ERROR_13 DBP Bible overwritten by ShortSands", permittedBible.toString())
-			permittedMap[key] = bible
+				# This condition never occurs for text becuase of 6 char filesetId
+				print("ERROR_13 ShortSands Bible overwritten by DBP", permittedBible.toString())
+			else:
+				permittedMap[key] = bible			
+
 		print("COUNT: ShortSands added to LPTS IN S3 WITH PERMISSION %d" % (len(permittedMap.keys())))
 
 		withLocaleMap = self.selectWithLocale(permittedMap)
@@ -285,36 +288,54 @@ class BibleTables:
 			for (bibleZipFile, abbr, iso3, scope, versionPriority, name, englishName,
 				localizedName, textBucket, textId, keyTemplate, 
 				audioBucket, otDamId, ntDamId, ios1, script, country) in reader:
-					bibleId = textId.split("/")[1]
-					filesetId = textId.split("/")[2]
-					bible = Bible("SS", "shortsands", "text", bibleId, filesetId)
-					bible.bibleZipFile = bibleZipFile
-					bible.abbreviation = abbr
-					bible.iso3 = iso3
-					bible.script = script
-					bible.country = country
-					bible.allowApp = True
-					bible.allowAPI = True
-					bible.allowWeb = True
-					if scope == "B":
-						bible.scope = "NTOT"
-					elif scope == "N":
-						bible.scope = "NT"
-					bible.priority = versionPriority
-					bible.bucket = "text-%R-shortsands"
-					bible.filePrefix = textId
-					bible.fileTemplate = keyTemplate
-					bible.name = englishName
-					bible.nameLocal = name
+					(text, bibleId, filesetId) = textId.split("/")
+					textBible = Bible("SS", "shortsands", "text", bibleId, filesetId)
+					textBible.bibleZipFile = bibleZipFile
+					textBible.abbreviation = abbr
+					textBible.iso3 = iso3
+					textBible.script = script
+					textBible.country = country
+					textBible.allowApp = True
+					textBible.allowAPI = True
+					textBible.allowWeb = True
+					textBible.priority = versionPriority
+					textBible.bucket = "text-%R-shortsands"
+					textBible.name = englishName
+					textBible.nameLocal = name
 					if abbr in {"WTC", "ERV", "ERU"}:
-						bible.licensorName = "Bible League International"
+						textBible.licensorName = "Bible League International"
 					elif abbr == "NMV":
-						bible.licensorName = "Elam Ministries"
+						textBible.licensorName = "Elam Ministries"
 					elif abbr == "VDV":
-						bible.licensorName = "Egypt, Bible Society of"
+						textBible.licensorName = "Egypt, Bible Society of"
 					elif abbr in {"KJV", "WEB"}:
-						bible.licensorName = "Public Domain"
-					results[bible.filePrefix] = bible
+						textBible.licensorName = "Public Domain"
+					results[textBible.filePrefix] = textBible
+
+					if otDamId != None and otDamId != "" and results.get(otDamId) == None:
+						(audio, bibleId, filesetId) = otDamId.split("/")
+						audioOTBible = Bible("SS", "shortsands", "audio", bibleId, filesetId)
+						audioOTBible.abbreviation = abbr
+						audioOTBible.iso3 = iso3
+						audioOTBible.allowApp = True
+						audioOTBible.allowAPI = True
+						audioOTBible.allowWeb = True
+						audioOTBible.bucket = "dbp-prod"
+						audioOTBible.licensorName = "Hosanna"
+						results[audioOTBible.filePrefix] = audioOTBible
+
+					if ntDamId != None and ntDamId != "" and results.get(ntDamId) == None:
+						(audio, bibleId, filesetId) = ntDamId.split("/")
+						audioNTBible = Bible("SS", "shortsands", "audio", bibleId, filesetId)
+						audioNTBible.abbreviation = abbr
+						audioNTBible.iso3 = iso3
+						########### These permissions are not correct.  I need to check LPTS
+						audioNTBible.allowApp = True
+						audioNTBible.allowAPI = True
+						audioNTBible.allowWeb = True
+						audioNTBible.bucket = "dbp-prod"
+						audioNTBible.licensorName = "Hosanna"
+						results[audioNTBible.filePrefix] = audioNTBible
 		return results
 
 

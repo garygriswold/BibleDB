@@ -3,7 +3,7 @@ ARBVDPD.db,VDV,arb,B,1,"الكتاب المقدس ترجمة فان دايك","V
 ERV-AWA.db,ERV,awa,B,1,"पवित्तर बाइबिल","Easy-to-Read Holy Bible","पवित्तर बाइबिल",text-%R-shortsands,text/AWAERV/AWAERV,%I_%O_%B_%C.html,dbp-prod,,audio/AWAWTC/AWAWTCN2DA,awa,Deva,IN
 ERV-BEN.db,ERV,ben,B,1,"পবিত্র বাইবেল","Easy-to-Read Holy Bible","সহজ বাইবেল বাইবেল পড়ুন",text-%R-shortsands,text/BENERV/BENERV,%I_%O_%B_%C.html,dbp-prod,,audio/BENWTC/BNGWTCN2DA,bn,Beng,BD
 ERV-BUL.db,ERV,bul,N,1,"Новият завет, съвременен превод","Easy-to-Read Holy Bible","Лесна за четене Библия",text-%R-shortsands,text/BULERV/BULERV,%I_%O_%B_%C.html,dbp-prod,,audio/BULPRB/BLGAMBN1DA,bg,Cyrl,BG
-ERV-CMN.db,ERV,cmn,B,1,"圣经–普通话本","Easy-to-Read Holy Bible","易于阅读的圣经",text-%R-shortsands,text/CMNERV/CMNERV,%I_%O_%B_%C.html,dbp-prod,audio/CMNUNV/CHNUNVO2DA,audio/CMNUNV/CHNUNVN2DA,zh,Hans,CN
+ERV-CMN.db,ERV,cmn,B,1,"圣经–普通话本","Easy-to-Read Holy Bible","易于阅读的圣经",text-%R-shortsands,text/CMNERV/CMNERV,%I_%O_%B_%C.html,dbp-prod,audio/CMNUNV/CHNUNVO2DA16,audio/CMNUNV/CHNUNVN2DA,zh,Hans,CN
 ERV-ENG.db,ERV,eng,B,2,"Easy-to-Read Holy Bible","Easy-to-Read Holy Bible","Easy-to-Read Holy Bible",text-%R-shortsands,text/ENGERU/ENGERU,%I_%O_%B_%C.html,dbp-prod,audio/ENGESV/ENGESVO2DA,audio/ENGESV/ENGESVN2DA,en,Latn,US
 KJVPD.db,KJV,eng,B,3,"King James Holy Bible","King James Holy Bible","King James Holy Bible",text-%R-shortsands,text/ENGKJV/ENGKJV,%I_%O_%B_%C.html,dbp-prod,audio/ENGKJV/ENGKJVO2DA,audio/ENGKJV/ENGKJVN2DA,en,Latn,GB
 WEB.db,WEB,eng,B,4,"World English Holy Bible","World English Holy Bible","World English Holy Bible",text-%R-shortsands,text/ENGWEB/ENGWEB,%I_%O_%B_%C.html,dbp-prod,audio/ENGWEB/ENGWEBO2DA,audio/ENGWEB/ENGWEBN2DA,en,Latn,GB

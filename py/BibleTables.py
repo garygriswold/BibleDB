@@ -133,7 +133,9 @@ class BibleTables:
 				# This condition never occurs for text becuase of 6 char filesetId
 				print("ERROR_13 ShortSands Bible overwritten by DBP", permittedBible.toString())
 			else:
-				permittedMap[key] = bible			
+				permittedMap[key] = bible
+				if not key.startswith("text"):
+					print("WARN_13 added audio Bible from shortsands list", bible.toString())			
 
 		print("COUNT: ShortSands added to LPTS IN S3 WITH PERMISSION %d" % (len(permittedMap.keys())))
 
@@ -549,13 +551,14 @@ class BibleTables:
 						nameSet.add(bible.name)
 					if bible.nameLocal != None and bible.nameLocal != "":
 						nameLocalSet.add(bible.nameLocal)
-			iso3 = ":".join(isoSet) if len(isoSet) > 0 else None
-			abbreviation = ":".join(abbrevSet) if len(abbrevSet) > 0 else None
-			script = ":".join(scriptSet) if len(scriptSet) > 0 else None
-			numerals = ":".join(numeralsSet) if len(numeralsSet) > 0 else None
-			country = ":".join(countrySet) if len(countrySet) > 0 else None
+			# The sets are sorted to make results consistent from one run to the next.
+			iso3 = ":".join(sorted(isoSet)) if len(isoSet) > 0 else None
+			abbreviation = ":".join(sorted(abbrevSet)) if len(abbrevSet) > 0 else None
+			script = ":".join(sorted(scriptSet)) if len(scriptSet) > 0 else None
+			numerals = ":".join(sorted(numeralsSet)) if len(numeralsSet) > 0 else None
+			country = ":".join(sorted(countrySet)) if len(countrySet) > 0 else None
 			name = max(nameSet, key=len)
-			nameLocal = ":".join(nameLocalSet) #if len(nameLocalSet) > 0 else None
+			nameLocal = ":".join(sorted(nameLocalSet)) #if len(nameLocalSet) > 0 else None
 			values.append((versionId, iso3, abbreviation, script, country, numerals, name, nameLocal))
 		self.insert("Versions", ("versionId", "iso3", "abbreviation", "script",
 				"country", "numerals", "name", "nameLocal"), values)
@@ -737,9 +740,10 @@ class BibleTables:
 			textSet = []
 			audioSet = []
 			dramaSet = []
-			# ORDER BY insures that text-shortsands is first
+			# ORDER BY insures that text-shortsands is first, and filePrefix makes it
+			# consistent so that each run will sort in the same sequence.
 			sql = ("SELECT systemId, mediaType, ntScope, otScope, filePrefix"
-				" FROM Bibles WHERE versionId = ? ORDER BY bucket desc")
+				" FROM Bibles WHERE versionId = ? ORDER BY bucket desc, filePrefix")
 			resultSet = self.db.select(sql, (versionId,))
 			for row in resultSet:
 				mediaType = row[1]

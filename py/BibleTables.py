@@ -130,7 +130,7 @@ class BibleTables:
 		for key, bible in shortSandsMap.items():
 			permittedBible = permittedMap.get(key)
 			if permittedBible != None:
-				# This condition never occurs for text becuase of 6 char filesetId
+				# This condition never occurs for text because of 6 char filesetId
 				print("ERROR_13 ShortSands Bible overwritten by DBP", permittedBible.toString())
 			else:
 				permittedMap[key] = bible
@@ -313,31 +313,6 @@ class BibleTables:
 					elif abbr in {"KJV", "WEB"}:
 						textBible.licensorName = "Public Domain"
 					results[textBible.filePrefix] = textBible
-
-					if otDamId != None and otDamId != "" and results.get(otDamId) == None:
-						(audio, bibleId, filesetId) = otDamId.split("/")
-						audioOTBible = Bible("SS", "shortsands", "audio", bibleId, filesetId)
-						audioOTBible.abbreviation = abbr
-						audioOTBible.iso3 = iso3
-						audioOTBible.allowApp = True
-						audioOTBible.allowAPI = True
-						audioOTBible.allowWeb = True
-						audioOTBible.bucket = "dbp-prod"
-						audioOTBible.licensorName = "Hosanna"
-						results[audioOTBible.filePrefix] = audioOTBible
-
-					if ntDamId != None and ntDamId != "" and results.get(ntDamId) == None:
-						(audio, bibleId, filesetId) = ntDamId.split("/")
-						audioNTBible = Bible("SS", "shortsands", "audio", bibleId, filesetId)
-						audioNTBible.abbreviation = abbr
-						audioNTBible.iso3 = iso3
-						########### These permissions are not correct.  I need to check LPTS
-						audioNTBible.allowApp = True
-						audioNTBible.allowAPI = True
-						audioNTBible.allowWeb = True
-						audioNTBible.bucket = "dbp-prod"
-						audioNTBible.licensorName = "Hosanna"
-						results[audioNTBible.filePrefix] = audioNTBible
 		return results
 
 

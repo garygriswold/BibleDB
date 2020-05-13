@@ -8,7 +8,6 @@ from SqliteUtility import *
 
 PREFIX = "arn:aws:s3:::"
 
-
 def generatePermissions(results, db, bucket):
 	sql = "SELECT systemId, versionId, mediaType, filePrefix FROM Bibles WHERE bucket = ? ORDER BY systemId"
 	resultSet = db.select(sql, (bucket,))
@@ -26,7 +25,6 @@ def generateLegacyPermissions(results, bucket):
 					results.add(bucket + "/" + otDamId)
 				if ntDamId != None and ntDamId != "":
 					results.add(bucket + "/" + ntDamId)
-
 
 
 config = Config()

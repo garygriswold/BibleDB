@@ -59,6 +59,9 @@ class Config:
 		self.S3_AWS_DBP_PROFILE = self._get("S3_AWS_DBP_PROFILE")
 		self.S3_AWS_MY_PROFILE = self._get("S3_AWS_MY_PROFILE")
 
+		self.DBL_MY_TOKEN = self._get("DBL_MY_TOKEN")
+		self.DBL_MY_SECRET = self._getBytes("DBL_MY_SECRET")
+
 		self.FILENAME_DBP_LPTS_XML = self._getPath("FILENAME_DBP_LPTS_XML")
 
 		self.DIRECTORY_BUCKET_LIST = self._getPath("DIRECTORY_BUCKET_LIST")
@@ -90,6 +93,9 @@ class Config:
 
 	def _getFloat(self, name):
 		return float(self._get(name))
+
+	def _getBytes(self, name):
+		return self._get(name).encode()
 
 
 # Unit Test

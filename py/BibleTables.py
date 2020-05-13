@@ -50,6 +50,7 @@ class Bible:
 		self.priority = 0
 		self.licensorName = None
 		self.agencyUid = None
+		self.copyright = None
 		## Text only data
 		self.name = None
 		self.nameLocal = None
@@ -219,16 +220,19 @@ class BibleTables:
 							bible.allowApp = (lptsRec.MobileText() == "-1")
 							bible.allowWeb = (lptsRec.HubText() == "-1")
 							bible.licensorName = lptsRec.Licensor()
+							bible.copyright = lptsRec.Copyrightc()
 						elif typeCode == "audio":
 							bible.allowAPI = (lptsRec.APIDevAudio() == "-1")
 							bible.allowApp = (lptsRec.DBPMobile() == "-1")
 							bible.allowWeb = (lptsRec.DBPWebHub() == "-1")
 							bible.licensorName = "Hosanna"
+							bible.copyright = lptsRec.Copyrightp()
 						elif typeCode == "video":
 							bible.allowAPI = (lptsRec.APIDevVideo() == "-1")
 							bible.allowApp = (lptsRec.MobileVideo() == "-1")
 							bible.allowWeb = (lptsRec.WebHubVideo() == "-1")
 							bible.licensorName = "LUMO Film Project"
+							bible.copyright = lptsRec.Copyright_Video()
 						if typeCode == "text":
 							bible.name = lptsRec.Version()
 							if bible.name == None or bible.name == "":
@@ -312,6 +316,10 @@ class BibleTables:
 						textBible.licensorName = "Egypt, Bible Society of"
 					elif abbr in {"KJV", "WEB"}:
 						textBible.licensorName = "Public Domain"
+					if textBible.licensorName == "Public Domain":
+						textBible.copyright = textBible.licensorName
+					else:
+						textBible.copyright = "Copyright by " + textBible.licensorName
 					results[textBible.filePrefix] = textBible
 		return results
 
@@ -576,11 +584,10 @@ class BibleTables:
 				bible.systemId = systemId
 				value = (bible.systemId, bible.versionId, mediaType, bitrate, bible.agencyUid,
 						bible.bucket, bible.filePrefix, bible.fileTemplate, 
-						bible.bibleZipFile, bible.lptsStockNo)
+						bible.bibleZipFile, bible.lptsStockNo, bible.copyright)
 				values.append(value)
 		self.insert("Bibles", ("systemId","versionId","mediaType", "bitrate", "agencyUid",
-			"bucket", "filePrefix", "fileTemplate", "bibleZipFile", "lptsStockNo"), values)
-		## copyrightYear, 
+			"bucket", "filePrefix", "fileTemplate", "bibleZipFile", "lptsStockNo", "copyright"), values)
 
 
 	def insertBibleBooks(self, bibleIdMap):

@@ -204,13 +204,13 @@ CREATE TABLE Bibles (
   ntScope TEXT NULL CHECK (ntScope IN ('NT', 'NP')),
   otScope TEXT NULL CHECK (otScope IN ('OT', 'OP')),
   bitrate INT NULL CHECK (bitrate IN (16, 32, 64, 128)),
-  agencyUid TEXT NULL, -- should be NOT NULL, but source unknown
-  copyrightYear INT NULL, -- should be NOT NULL, but source unknown
+  agencyUid TEXT NULL, -- is null, after dups are removed, sure why text/YUEUNV/YUHUNVO2ET has none
   bucket TEXT NOT NULL,
   filePrefix TEXT NOT NULL,
-  fileTemplate TEXT NULL, -- should be NOT NULL, but not yet available
+  fileTemplate TEXT NULL, -- video files have no fileTemplate
   bibleZipFile TEXT NULL,
   lptsStockNo TEXT NULL,
+  copyright TEXT NOT NULL,
   FOREIGN KEY (versionId) REFERENCES Versions (versionId));
   -- FOREIGN KEY (agency) REFERENCES Agencies (uid));
 

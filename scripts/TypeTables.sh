@@ -1,6 +1,6 @@
 #!/bin/sh -ve
 
-# Populate Table regions
+# Populate Table Countries
 sqlite3 Versions.db <<END_SQL1
 .separator '|'
 .import data/Region.txt Countries

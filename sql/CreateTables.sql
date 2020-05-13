@@ -210,9 +210,9 @@ CREATE TABLE Bibles (
   fileTemplate TEXT NULL, -- video files have no fileTemplate
   bibleZipFile TEXT NULL,
   lptsStockNo TEXT NULL,
-  copyright TEXT NOT NULL,
-  FOREIGN KEY (versionId) REFERENCES Versions (versionId));
-  -- FOREIGN KEY (agency) REFERENCES Agencies (uid));
+  copyright TEXT NOT NULL, -- possibly reduce to copyright year
+  FOREIGN KEY (versionId) REFERENCES Versions (versionId),
+  FOREIGN KEY (agencyUid) REFERENCES Agencies (uid));
 
 DROP TABLE IF EXISTS VideoBibles;
 CREATE TABLE VideoBibles (

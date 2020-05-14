@@ -61,6 +61,7 @@ class Config:
 
 		self.DBL_MY_TOKEN = self._get("DBL_MY_TOKEN")
 		self.DBL_MY_SECRET = self._getBytes("DBL_MY_SECRET")
+		self.DBL_MY_API_BIBLE = self._get("DBL_MY_API_BIBLE")
 
 		self.FILENAME_DBP_LPTS_XML = self._getPath("FILENAME_DBP_LPTS_XML")
 

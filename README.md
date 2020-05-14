@@ -27,12 +27,13 @@ py
 	LanguagesTable.py -- Populates languages table from iso-639-3 data
 	ListBucket.py -- Produces bucket lists as a text file
 	LocalesTable.py -- Populates Locales table
-	LocalizableString2.py -- (not yet updated to this version) Uses Google Translate to develop translated Bible names
+	LocalizableString2.py -- (not yet updated to this version) Uses Google Translate to develop localized string files for BibleApp UI
 	LookupTables.py -- Script code lookup table for getting iso standard script codes from names
 	LPTSExtractReader.py -- Class for reading LPTS extract
 	NumeralsTable.py -- Populates Numerals table
 	SqliteUtility.py -- Class for accessing Sqlite3 database
 	TestUnicode.py -- Test program for learning Python unicodedata module
+	TranslateBibleNames.py -- Uses Google Translate to translate Bibles names for each language.
 
 scripts
 	FetchData.sh -- Script to download data needed for proces

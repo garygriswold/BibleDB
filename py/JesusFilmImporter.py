@@ -14,9 +14,11 @@
 # Jan 11, 2019, rewrite in python
 
 import io
-import sqlite3
-import urllib2
+#import urllib2
 import json
+from urllib.request import urlopen
+from Config import *
+from SqliteUtility import *
 
 out = io.open("sql/jesus_film.sql", mode="w", encoding="utf-8")
 out.write(u"DROP TABLE IF EXISTS JesusFilm;\n")
@@ -27,33 +29,40 @@ out.write(u"  languageId TEXT NOT NULL,\n")
 out.write(u"  population INT NOT NULL,\n")
 out.write(u"  PRIMARY KEY(country, iso3, languageId));\n")
 
-countries = []
-db = sqlite3.connect("Versions.db")
-cursor = db.cursor()
-sql = "SELECT countryCode FROM Region order by countryCode"
-values = ()
-cursor.execute(sql, values)
-rows = cursor.fetchall()
-for row in rows:
-	country = row[0]
+config = Config()
+db = SqliteUtility(config)
+sql = "SELECT iso2 FROM Countries ORDER BY iso2"
+countries = db.selectList(sql, ())
+print(countries)
+for country in countries:
+
+	#response = urlopen("http://www.google.com/")
+	#html = response.read()
+	#print(html)
 
 	url = "https://api.arclight.org/v2/media-countries/" + country + "?expand=mediaLanguages&metadataLanguageTags=en"
 	url += "&apiKey=585c557d846f52.04339341"
+	results = None
 	try:
-		answer = urllib2.urlopen(url)
-		response = json.loads(answer.read())
-	except Exception, err:
-		print "Could not process", country, str(err)
+		response = urlopen(url)
+		html = response.read()
+		results = json.loads(html)
+		#response = json.loads(answer.read())
+	except Exception as err:
+		print("Could not process", country, str(err))
 
-	embedded = response["_embedded"] 
-	if embedded != None:
-		jfpLangs = embedded["mediaLanguages"]
-		for lang in jfpLangs:
-			iso3 = lang["iso3"]
-			languageId = lang["languageId"]
-			population = lang["counts"]["countrySpeakerCount"]["value"]
-			sql = "INSERT INTO JesusFilm (country, iso3, languageId, population) VALUES ('%s','%s','%s',%s);\n"
-			out.write(sql % (country, iso3, languageId, population))
+	embedded = results["_embedded"]
+	print("EMBEDDED", embedded)
+	sys.exit()
+#	if embedded != None:
+#		jfpLangs = embedded["mediaLanguages"]
+#		for lang in jfpLangs:
+#			iso3 = lang["iso3"]
+#			languageId = lang["languageId"]
+#			population = lang["counts"]["countrySpeakerCount"]["value"]
+#			sql = "INSERT INTO JesusFilm (country, iso3, languageId, population) VALUES ('%s','%s','%s',%s);\n"
+#			out.write(sql % (country, iso3, languageId, population))
+
 
 out.close()
 db.close()
